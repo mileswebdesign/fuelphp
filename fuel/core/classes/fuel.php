@@ -12,95 +12,94 @@
  * @link       http://fuelphp.com
  */
 
-
 namespace Fuel\Core;
 
 /**
  * The core of the framework.
  *
- * @package        Fuel
- * @subpackage    Core
- * @category    Core
+ * @package		Fuel
+ * @subpackage	Core
+ * @category	Core
  */
 class Fuel {
 
-    /**
-     * Environment Constants.
-     */
-    const TEST = 'test';
-    const DEVELOPMENT = 'dev';
-    const QA = 'qa';
-    const PRODUCTION = 'production';
+	/**
+	 * Environment Constants.
+	 */
+	const TEST = 'test';
+	const DEVELOPMENT = 'dev';
+	const QA = 'qa';
+	const PRODUCTION = 'production';
 
-    const L_NONE = 0;
-    const L_ERROR = 1;
-    const L_DEBUG = 2;
-    const L_INFO = 3;
-    const L_ALL = 4;
+	const L_NONE = 0;
+	const L_ERROR = 1;
+	const L_DEBUG = 2;
+	const L_INFO = 3;
+	const L_ALL = 4;
 
-    const VERSION = '1.0.0-dev';
+	const VERSION = '1.0.0-dev';
 
-    public static $initialized = false;
+	public static $initialized = false;
 
-    public static $env = \Fuel::DEVELOPMENT;
+	public static $env = \Fuel::DEVELOPMENT;
 
-    public static $profiling = false;
+	public static $profiling = false;
 
-    public static $locale;
+	public static $locale;
 
-    public static $encoding = 'UTF-8';
+	public static $encoding = 'UTF-8';
 
-    public static $path_cache = array();
+	public static $path_cache = array();
 
-    public static $caching = false;
+	public static $caching = false;
 
-    /**
-     * The amount of time to cache in seconds.
+	/**
+	 * The amount of time to cache in seconds.
      * @var    int    $cache_lifetime
-     */
-    public static $cache_lifetime = 3600;
+	 */
+	public static $cache_lifetime = 3600;
 
-    protected static $cache_dir = '';
+	protected static $cache_dir = '';
 
-    public static $paths_changed = false;
+	public static $paths_changed = false;
 
-    public static $is_cli = false;
-    public static $is_test = false;
+	public static $is_cli = false;
+	public static $is_test = false;
 
 	protected static $_paths = array();
 	protected static $_active_paths = array();
 
-    protected static $packages = array();
+	protected static $packages = array();
 
-    final private function __construct() { }
+	final private function __construct() { }
 
-    /**
-     * Initializes the framework.  This can only be called once.
-     *
-     * @access    public
-     * @return    void
-     */
-    public static function init($config)
-    {
-        if (static::$initialized)
-        {
-            throw new \Fuel_Exception("You can't initialize Fuel more than once.");
-        }
+	/**
+	 * Initializes the framework.  This can only be called once.
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public static function init($config)
+	{
+		if (static::$initialized)
+		{
+			throw new \Fuel_Exception("You can't initialize Fuel more than once.");
+		}
 
-        register_shutdown_function('fuel_shutdown_handler');
-        set_exception_handler('fuel_exception_handler');
-        set_error_handler('fuel_error_handler');
+		register_shutdown_function('fuel_shutdown_handler');
+		set_exception_handler('fuel_exception_handler');
+		set_error_handler('fuel_error_handler');
 
-        // Start up output buffering
-        ob_start();
+		// Start up output buffering
+		ob_start();
 
-        static::$profiling = isset($config['profiling']) ? $config['profiling'] : false;
+		static::$profiling = isset($config['profiling']) ? $config['profiling'] : false;
 
-        if (static::$profiling)
-        {
-            \Profiler::init();
-            \Profiler::mark(__METHOD__.' Start');
-        }
+		if (static::$profiling)
+		{
+			\Profiler::init();
+			\Profiler::mark(__METHOD__.' Start');
+		}
 
 		static::$cache_dir = isset($config['cache_dir']) ? $config['cache_dir'] : APPPATH.'cache/';
 		static::$caching = isset($config['caching']) ? $config['caching'] : false;
@@ -217,7 +216,7 @@ class Fuel {
 	public static function find_file($directory, $file, $ext = '.php', $multiple = false, $cache = true)
 	{
 		$path = $directory.DS.strtolower($file).$ext;
-		
+
 		if(!isset(static::$_active_paths[$path])) {
 			static::$_active_paths[$path] = array();
 		}
@@ -230,7 +229,7 @@ class Fuel {
 			$active_paths = $active->paths;
 			$paths = array_merge($active_paths, $paths);
 		}
-		
+
 		if (static::$path_cache !== null && array_key_exists($path, static::$path_cache) && (empty($active_paths) || $active_paths == static::$_active_paths[$path]))
 		{
 			return static::$path_cache[$path];
