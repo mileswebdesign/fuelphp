@@ -217,11 +217,8 @@ class Fuel {
 	public static function find_file($directory, $file, $ext = '.php', $multiple = false, $cache = true)
 	{
 		$path = $directory.DS.strtolower($file).$ext;
+		$callee = '_root_';
 		
-		if(!isset(static::$_active_paths[$path])) {
-			static::$_active_paths[$path] = array();
-		}
-
 		$paths = static::$_paths;
 		$active_paths = array ();
 		// get the paths of the active request, and search them first
@@ -229,9 +226,24 @@ class Fuel {
 		{
 			$active_paths = $active->paths;
 			$paths = array_merge($active_paths, $paths);
+			
+			if (!empty($active->module)) {
+				$callee = $active->module;
+			}
 		}
 		
-		if (static::$path_cache !== null && array_key_exists($path, static::$path_cache) && (empty($active_paths) || $active_paths == static::$_active_paths[$path]))
+		if (!isset(static::$_active_paths[$callee])) 
+		{
+			static::$_active_paths[$callee] = array();
+		}
+		
+		if (!isset(static::$_active_paths[$callee][$path])) 
+		{
+			static::$_active_paths[$callee][$path] = array();
+		}
+		
+		
+		if (static::$path_cache !== null && array_key_exists($path, static::$path_cache) && (empty($active_paths) || $active_paths == static::$_active_paths[$callee][$path]))
 		{
 			return static::$path_cache[$path];
 		}
@@ -255,7 +267,7 @@ class Fuel {
 		if ( ! empty($found))
 		{
 			$cache and static::$path_cache[$path] = $found;
-			$cache and static::$_active_paths[$path] = $active_paths;
+			$cache and static::$_active_paths[$callee][$path] = $active_paths;
 			static::$paths_changed = true;
 		}
 
