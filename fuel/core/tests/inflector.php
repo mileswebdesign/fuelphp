@@ -29,7 +29,7 @@ class Tests_Inflector extends TestCase {
 	 */
 	public function test_ascii()
 	{
-		$output = Inflector::ascii('Ingl‚àö¬©s');
+		$output = Inflector::ascii('Inglés');
 		$expected = "Ingles";
 		$this->assertEquals($expected, $output);
 	}
@@ -147,10 +147,6 @@ class Tests_Inflector extends TestCase {
 		$output = Inflector::pluralize('apple');
 		$expected = "apples";
 		$this->assertEquals($expected, $output);
-		
-		$output = Inflector::pluralize('campus');
-		$expected = 'campuses';
-		$this->assertEquals($expected, $output);
 	}
 
 	/**
@@ -162,10 +158,6 @@ class Tests_Inflector extends TestCase {
 	{
 		$output = Inflector::singularize('apples');
 		$expected = "apple";
-		$this->assertEquals($expected, $output);
-		
-		$output = Inflector::singularize('campuses');
-		$expected = 'campus';
 		$this->assertEquals($expected, $output);
 	}
 
