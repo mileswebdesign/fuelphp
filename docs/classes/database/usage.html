@@ -131,7 +131,7 @@ foreach($on_key as $id => $item)
 }
 
 $key_value = $result->as_array('id', 'email');
-foreach($on_key as $id => $email)
+foreach($key_value as $id => $email)
 {
 	// now $email will be the email field.
 	// so you can do something with $id or $email
@@ -218,7 +218,7 @@ list($insert_id, $rows_affected) = DB::insert('users')->columns(array(
 $result = DB::delete('users')->execute(); // (int) 20
 
 // Executes DELETE FROM `users` WHERE `email` LIKE "%@example.com"
-$result = DB::delete('users')->where('email', 'like', '%example.com')->execute(); // (int) 7
+$result = DB::delete('users')->where('email', 'like', '%@example.com')->execute(); // (int) 7
 </code></pre>
 		
 		</article>
