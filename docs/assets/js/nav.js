@@ -101,29 +101,42 @@ var nav = {
 			"Validation":	"classes/validation.html"
 			// "View":			"todo.html"
 		},
-		"Packages": {
-			"Auth": {
-				"Introduction":		"packages/auth/intro.html",
-				"Usage":			"packages/auth/usage.html",
-				"Driver types":		"packages/auth/driver_types.html",
-				"SimpleAuth, Group &amp; Acl":		"packages/auth/simpleauth.html",
-				"Writing drivers":	"packages/auth/drivers.html"
-			},
-			"Oil": {
-				"Introduction":		"packages/oil/intro.html",
-				"Generate":			"packages/oil/generate.html",
-				"Refine":			"packages/oil/refine.html",
-				"Package":			"packages/oil/package.html",
+		"Oil": {
+			"Introduction":		"packages/oil/intro.html",
+			"Generate":			"packages/oil/generate.html",
+			"Refine":			"packages/oil/refine.html",
+			"Package":			"packages/oil/package.html",
 //				"Test":				"packages/oil/test.html",
-				"Console":			"packages/oil/console.html"
+			"Console":			"packages/oil/console.html"
+		},
+		"Auth Package": {
+			"Introduction":		"packages/auth/intro.html",
+			"Usage":			"packages/auth/usage.html",
+			"Driver types": {
+				"Login":		"packages/auth/types/login.html",
+				"Groups":		"packages/auth/types/groups.html",
+				"ACL":			"packages/auth/types/acl.html"
 			},
-			"Orm": {
-				"Introduction":		"packages/orm/intro.html",
-				"Creating Models":	"packages/orm/creating_models.html",
-				"CRUD":				"packages/orm/crud.html",
-				"Relating Models":	"packages/orm/relating_models.html",
-				"Observers":		"packages/orm/observers.html"
-			}
+			"SimpleAuth": {
+				"Login":		"packages/auth/simpleauth/login.html",
+				"Groups":		"packages/auth/simpleauth/groups.html",
+				"ACL":			"packages/auth/simpleauth/acl.html"
+			},
+			"Writing drivers":	"packages/auth/drivers.html"
+		},
+		"Orm Package": {
+			"Introduction":		"packages/orm/intro.html",
+			"Creating Models":	"packages/orm/creating_models.html",
+			"CRUD":				"packages/orm/crud.html",
+			"Relating Models": {
+				"Introduction":	"packages/orm/relations/intro.html",
+				"Belongs To":	"packages/orm/relations/belongs_to.html",
+				"Has One":		"packages/orm/relations/has_one.html",
+				"Has Many":		"packages/orm/relations/has_many.html",
+				"Many to Many":	"packages/orm/relations/many_many.html",
+				"Many Through":	"packages/orm/relations/many_through.html"
+			},
+			"Observers":		"packages/orm/observers.html"
 		}
 };
 
