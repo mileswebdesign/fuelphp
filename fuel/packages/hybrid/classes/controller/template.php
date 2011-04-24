@@ -39,7 +39,7 @@ abstract class Controller_Template extends \Fuel\Core\Controller_Template {
 		{
 			case 401 :
 				\Request::show_404();
-				break;
+			break;
 		}
 	}
 
@@ -49,25 +49,35 @@ abstract class Controller_Template extends \Fuel\Core\Controller_Template {
 		$this->user = \Hybrid\Acl_User::get();
 
 		\Event::trigger('controller_before');
-
-		$file = \Config::get('app.template');
-
-		if (is_file(APPPATH . 'views/themes/' . $file . '.php')) 
-		{
-			$this->template = 'themes/' . $file;
-		}
+		
+		$this->_prepare_template();
 
 		return parent::before();
 	}
 
 	public function after() 
 	{
-		//we dont want to accidentally change our site_name
-		$this->template->site_name = \Config::get('app.site_name');
-
 		\Event::trigger('controller_after');
 
+		$this->_render_template();
+
 		return parent::after();
+	}
+	
+	protected function _prepare_template()
+	{
+		$file = \Config::get('app.template');
+
+		if (is_file(APPPATH . 'views/themes/' . $file . '.php')) 
+		{
+			$this->template = 'themes/' . $file;
+		}
+	}
+	
+	protected function _render_template()
+	{
+		//we dont want to accidentally change our site_name
+		$this->template->site_name = \Config::get('app.site_name');
 	}
 
 }

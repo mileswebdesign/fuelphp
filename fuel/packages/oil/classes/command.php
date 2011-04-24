@@ -65,7 +65,6 @@ class Command
 
 					switch ($action)
 					{
-						case 'config':
 						case 'controller':
 						case 'model':
 						case 'views':
