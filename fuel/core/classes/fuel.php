@@ -1,7 +1,5 @@
 <?php
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -24,12 +22,30 @@ namespace Fuel\Core;
 class Fuel {
 
 	/**
-	 * Environment Constants.
+	 * @var  string  constant used for when in testing mode
 	 */
 	const TEST = 'test';
-	const DEVELOPMENT = 'dev';
+
+	/**
+	 * @var  string  constant used for when in development
+	 */
+	const DEVELOPMENT = 'development';
+
+	/**
+	 * @var         string  constant used for when testing the code in a staging env.
+	 * @deprecated  This will be removed no earlier than v1.1.  Use STAGE instead.
+	 */
 	const QA = 'qa';
+
+	/**
+	 * @var  string  constant used for when in production
+	 */
 	const PRODUCTION = 'production';
+
+	/**
+	 * @var  string  constant used for when testing the app in a staging env.
+	 */
+	const STAGE = 'stage';
 
 	const L_NONE = 0;
 	const L_ERROR = 1;
@@ -113,13 +129,6 @@ class Fuel {
 
 		static::$_paths = array(APPPATH, COREPATH);
 
-		// Load in the routes
-		\Config::load('routes', true);
-
-		\Router::add(\Config::get('routes'));
-
-		\View::$auto_encode = \Config::get('security.auto_encode_view_data');
-
 		if ( ! static::$is_cli)
 		{
 			if (\Config::get('base_url') === null)
@@ -141,6 +150,12 @@ class Fuel {
 		{
 			static::add_package($package);
 		}
+
+		// Load in the routes
+		\Config::load('routes', true);
+		\Router::add(\Config::get('routes'));
+
+		\View::$auto_encode = \Config::get('security.auto_encode_view_data');
 
 		// Set some server options
 		setlocale(LC_ALL, static::$locale);
@@ -215,6 +230,7 @@ class Fuel {
 	public static function find_file($directory, $file, $ext = '.php', $multiple = false, $cache = true)
 	{
 		$cache_id = '';
+
 		$paths = static::$_paths;
 
 		// get extra information of the active request
@@ -222,6 +238,22 @@ class Fuel {
 		{
 			$cache_id = md5($active->uri->uri);
 			$paths = array_merge($active->paths, $paths);
+		}
+
+		// the file requested namespaced?
+		if($pos = strripos(ltrim($file, '\\'), '\\'))
+		{
+			$file = ltrim($file, '\\');
+
+			// get the namespace path
+			if ($path = \Autoloader::namespace_path('\\'.ucfirst(substr($file, 0, $pos))))
+			{
+				// and strip the classes directory as we need the module root
+				$paths = array(substr($path,0, -8));
+
+				// strip the namespace from the filename
+				$file = substr($file, $pos+1);
+			}
 		}
 
 		$path = $directory.DS.strtolower($file).$ext;

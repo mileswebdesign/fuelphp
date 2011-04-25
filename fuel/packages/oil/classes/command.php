@@ -1,7 +1,5 @@
 <?php
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -65,6 +63,7 @@ class Command
 
 					switch ($action)
 					{
+						case 'config':
 						case 'controller':
 						case 'model':
 						case 'views':
@@ -137,6 +136,9 @@ class Command
 
 					// Respect the group option
 					\Cli::option('group') and $command .= ' --group '.\Cli::option('group');
+
+					// Respect the coverage-html option
+					\Cli::option('coverage-html') and $command .= ' --coverage-html '.\Cli::option('coverage-html');
 
 					passthru($command);
 

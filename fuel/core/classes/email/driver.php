@@ -1,8 +1,6 @@
 <?php
 
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * Base driver for Emails.
@@ -373,7 +371,7 @@ abstract class Email_Driver {
 				$origbcc = $this->bcc_recipients;
 				$this->_bcc_batch_running = false;
 				while ($offset < $count && $return)
-				{ // TODO: Add to codeigniter version
+				{ 
 					// Loop while we still have batches of blind carbon copies to send.
 					// Note that the first run outputs any to and cc addresses also.
 					$length = $count >= $offset + $this->bcc_batch_size ? $this->bcc_batch_size : $count % $this->bcc_batch_size;

@@ -1,7 +1,5 @@
 <?php
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -48,7 +46,7 @@ class DBUtil {
 	}
 
 	/**
-	 * Creates a table.  Will throw a Database_Exception if it cannot.
+	 * Drops a table.  Will throw a Database_Exception if it cannot.
 	 *
 	 * @throws	Fuel\Database_Exception
 	 * @param	string	$table	the table name
