@@ -126,24 +126,26 @@ class ManyMany extends Relation {
 
 		$models = array(
 			$rel_name.'_through' => array(
-				'model'      => null,
-				'table'      => array($this->table_through, $alias_to.'_through'),
-				'join_type'  => 'left',
-				'join_on'    => array(),
-				'columns'    => $this->select_through($alias_to.'_through'),
-				'rel_name'   => $this->model_through,
-				'relation'   => $this
+				'model'        => null,
+				'table'        => array($this->table_through, $alias_to.'_through'),
+				'primary_key'  => null,
+				'join_type'    => 'left',
+				'join_on'      => array(),
+				'columns'      => $this->select_through($alias_to.'_through'),
+				'rel_name'     => $this->model_through,
+				'relation'     => $this
 			),
 			$rel_name => array(
-				'model'      => $this->model_to,
-				'table'      => array(call_user_func(array($this->model_to, 'table')), $alias_to),
-				'join_type'  => 'left',
-				'join_on'    => array(),
-				'columns'    => $this->select($alias_to),
-				'rel_name'   => strpos($rel_name, '.') ? substr($rel_name, strrpos($rel_name, '.') + 1) : $rel_name,
-				'relation'   => $this,
-				'where'      => array_key_exists('where', $conditions)    ? $conditions['where']    : array(),
-				'order_by'   => array_key_exists('order_by', $conditions) ? $conditions['order_by'] : array(),
+				'model'        => $this->model_to,
+				'table'        => array(call_user_func(array($this->model_to, 'table')), $alias_to),
+				'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
+				'join_type'    => 'left',
+				'join_on'      => array(),
+				'columns'      => $this->select($alias_to),
+				'rel_name'     => strpos($rel_name, '.') ? substr($rel_name, strrpos($rel_name, '.') + 1) : $rel_name,
+				'relation'     => $this,
+				'where'        => array_key_exists('where', $conditions)    ? $conditions['where']    : array(),
+				'order_by'     => array_key_exists('order_by', $conditions) ? $conditions['order_by'] : array(),
 			)
 		);
 
@@ -177,6 +179,7 @@ class ManyMany extends Relation {
 				$this->name.' is invalid.');
 		}
 		$original_model_ids === null and $original_model_ids = array();
+		$del_rels = $original_model_ids;
 
 		foreach ($models_to as $key => $model_to)
 		{
@@ -212,11 +215,12 @@ class ManyMany extends Relation {
 				}
 
 				\DB::insert($this->table_through)->set($ids)->execute();
+				$original_model_ids[] = $current_model_id; // prevents inserting it a second time
 			}
 			else
 			{
-				// unset current model from from array
-				unset($original_model_ids[array_search($current_model_id, $original_model_ids)]);
+				// unset current model from from array of new relations
+				unset($del_rels[array_search($current_model_id, $original_model_ids)]);
 			}
 
 			// ensure correct pk assignment
@@ -234,8 +238,8 @@ class ManyMany extends Relation {
 			}
 		}
 
-		// If any original ids are left they are no longer assigned, DELETE the relationships:
-		foreach ($original_model_ids as $original_model_id)
+		// If any ids are left in $del_rels they are no longer assigned, DELETE the relationships:
+		foreach ($del_rels as $original_model_id)
 		{
 			$query = \DB::delete($this->table_through);
 
