@@ -1,8 +1,6 @@
 <?php
 
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -29,7 +27,16 @@ namespace Hybrid;
  */
 class Curl {
 	
-	public static function factory($uri, $dataset)
+	/**
+	 * A shortcode to initiate this class as a new object
+	 * 
+	 * @static
+	 * @access	public
+	 * @param	string	$uri
+	 * @param	array	$dataset
+	 * @return	static 
+	 */
+	public static function factory($uri, $dataset = array())
 	{
 		$uri_segments = explode(' ', $uri);
 		$type = 'GET';
@@ -45,6 +52,15 @@ class Curl {
 		return new static($uri, $dataset, $type);
 	}
 	
+	/**
+	 * A shortcode to initiate this class as a new object using GET
+	 * 
+	 * @static
+	 * @access	public
+	 * @param	string	$uri
+	 * @param	array	$dataset
+	 * @return	static 
+	 */
 	public static function get($uri, $dataset)
 	{
 		$dataset = array_merge(static::_query_string($uri), $dataset);
@@ -52,21 +68,56 @@ class Curl {
 		return new static($uri, $dataset, 'GET');
 	}
 	
+	/**
+	 * A shortcode to initiate this class as a new object using POST
+	 * 
+	 * @static
+	 * @access	public
+	 * @param	string	$uri
+	 * @param	array	$dataset
+	 * @return	static 
+	 */
 	public static function post($uri, $dataset)
 	{
 		return new static($uri, $dataset, 'POST');
 	}
 	
+	/**
+	 * A shortcode to initiate this class as a new object using PUT
+	 * 
+	 * @static
+	 * @access	public
+	 * @param	string	$uri
+	 * @param	array	$dataset
+	 * @return	static 
+	 */
 	public static function put($url, $dataset)
 	{
 		return new static($uri, $dataset, 'PUT');
 	}
 	
+	/**
+	 * A shortcode to initiate this class as a new object using DELETE
+	 * 
+	 * @static
+	 * @access	public
+	 * @param	string	$uri
+	 * @param	array	$dataset
+	 * @return	static 
+	 */
 	public static function delete($url, $dataset)
 	{
 		return new static($uri, $dataset, 'DELETE');
 	}
 	
+	/**
+	 * Generate query string
+	 * 
+	 * @static
+	 * @access	protected
+	 * @param	string	$uri
+	 * @return	array 
+	 */
 	protected static function _query_string($uri)
 	{
 		$query_dataset = array();
@@ -86,7 +137,15 @@ class Curl {
 	protected $_request_data = array();
 	protected $_request_method = '';
 	
-	public function __construct($uri, $dataset = array(), $type = array())
+	/**
+	 * Construct a new object
+	 * 
+	 * @access	public
+	 * @param	string	$uri
+	 * @param	array	$dataset
+	 * @param	string	$type 
+	 */
+	public function __construct($uri, $dataset = array(), $type = 'GET')
 	{
 		$this->_request_uri = $uri;
 		$this->_request_method = $type;
@@ -94,6 +153,14 @@ class Curl {
 		$this->_instance = curl_init();
 	}
 	
+	/**
+	 * Set curl options
+	 * 
+	 * @access	public
+	 * @param	mixed	$option
+	 * @param	string	$value
+	 * @return	Curl 
+	 */
 	public function setopt($option, $value)
 	{
 		if (is_array($option))
@@ -112,6 +179,11 @@ class Curl {
 		return $this;
 	}
 	
+	/**
+	 * Execute the Curl request and return the output
+	 * 
+	 * @return	object
+	 */
 	public function execute()
 	{
 		$response = new \stdClass();
