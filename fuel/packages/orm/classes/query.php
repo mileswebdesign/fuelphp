@@ -676,6 +676,10 @@ class Query {
 	 */
 	public function hydrate(&$row, $models, &$result, $model = null, $select = null, $primary_key = null)
 	{
+		$model = is_null($model) ? $this->model : $model;
+		$select = is_null($select) ? $this->select() : $select;
+		$primary_key = is_null($primary_key) ? $model::primary_key() : $primary_key;
+
 		// First check the PKs, if null it's an empty row
 		$r1c1    = reset($select);
 		$prefix  = substr($r1c1[0], 0, strpos($r1c1[0], '.') + 1);
@@ -696,7 +700,7 @@ class Query {
 		}
 
 		// Check for cached object
-		$pk  = count($primary_key) == 1 ? reset($obj) : '['.implode('][', $obj).']';
+		$pk  = $model::implode_pk($obj);
 		$obj = Model::cached_object($pk, $model);
 
 		// Create the object when it wasn't found
@@ -807,12 +811,9 @@ class Query {
 
 		$rows = $query->execute()->as_array();
 		$result = array();
-		$model = $this->model;
-		$select = $this->select();
-		$primary_key = $model::primary_key();
 		foreach ($rows as $id => $row)
 		{
-			$this->hydrate($row, $models, $result, $model, $select, $primary_key);
+			$this->hydrate($row, $models, $result);
 			unset($rows[$id]);
 		}
 

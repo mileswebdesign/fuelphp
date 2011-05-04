@@ -512,18 +512,21 @@ class Model implements \ArrayAccess, \Iterator {
 			{
 				if (array_key_exists($prop, $data))
 				{
-					$this->_data[$prop] = $data[$prop];
+					$this->{$prop} = $data[$prop];
 				}
 				elseif (array_key_exists('default', $settings))
 				{
-					$this->_data[$prop] = $settings['default'];
+					$this->{$prop} = $settings['default'];
 				}
 			}
 		}
 		else
 		{
 			$this->_update_original($data);
-			$this->_data = array_merge($this->_data, $data);
+			foreach ($data as $key => $val)
+			{
+				$this->{$key} = $val;
+			}
 		}
 
 		if ($new === false)
@@ -546,7 +549,10 @@ class Model implements \ArrayAccess, \Iterator {
 	public function _update_original($original = null)
 	{
 		$original = is_null($original) ? $this->_data : $original;
-		$this->_original = array_merge($this->_original, $original);
+		foreach ($original as $key => $val)
+		{
+			$this->_original[$key] = $val;
+		}
 
 		$this->_update_original_relations();
 	}
@@ -951,17 +957,7 @@ class Model implements \ArrayAccess, \Iterator {
 					$observer = $observer_class;
 				}
 
-				try
-				{
-					call_user_func(array($observer, 'orm_notify'), $this, $event);
-				}
-				catch (\Exception $e)
-				{
-					// Unfreeze before failing
-					$this->unfreeze();
-
-					throw $e;
-				}
+				call_user_func(array($observer, 'orm_notify'), $this, $event);
 			}
 		}
 	}
@@ -1173,7 +1169,7 @@ class Model implements \ArrayAccess, \Iterator {
 			}
 			else
 			{
-				$array[$name] = is_null($rel) ? null : $rel->to_array();
+				$array[$name] = $rel->to_array();
 			}
 		}
 
