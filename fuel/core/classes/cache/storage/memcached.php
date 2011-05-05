@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -389,8 +391,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 				$key = $this->_new_key();
 
 				// create a new index and store the key
-				is_array($index) || $index = array();
-				$this->memcached->set($this->config['cache_id'].$sections, array_merge($index, array($identifier => array($key,$this->created))), 0);
+				$this->memcached->set($this->config['cache_id'].$sections, array($identifier => array($key,$this->created)), 0);
 
 				// get the directory index
 				$index = $this->memcached->get($this->config['cache_id'].'__DIR__');

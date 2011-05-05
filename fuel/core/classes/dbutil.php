@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -46,7 +48,7 @@ class DBUtil {
 	}
 
 	/**
-	 * Drops a table.  Will throw a Database_Exception if it cannot.
+	 * Creates a table.  Will throw a Database_Exception if it cannot.
 	 *
 	 * @throws	Fuel\Database_Exception
 	 * @param	string	$table	the table name
@@ -103,7 +105,7 @@ class DBUtil {
 			$sql .= array_key_exists('TYPE', $attr) ? ' '.$attr['TYPE'] : '';
 			$sql .= array_key_exists('CONSTRAINT', $attr) ? '('.$attr['CONSTRAINT'].')' : '';
 
-			if (array_key_exists('UNSIGNED', $attr) and $attr['UNSIGNED'] === true)
+			if (array_key_exists('UNSIGNED', $attr) && $attr['UNSIGNED'] === true)
 			{
 				$sql .= ' UNSIGNED';
 			}
@@ -111,7 +113,7 @@ class DBUtil {
 			$sql .= array_key_exists('DEFAULT', $attr) ? ' DEFAULT '. (($attr['DEFAULT'] instanceof \Database_Expression) ? $attr['DEFAULT']  : DB::escape($attr['DEFAULT'])) : '';
 			$sql .= array_key_exists('NULL', $attr) ? (($attr['NULL'] === true) ? ' NULL' : ' NOT NULL') : '';
 
-			if (array_key_exists('AUTO_INCREMENT', $attr) and $attr['AUTO_INCREMENT'] === true)
+			if (array_key_exists('AUTO_INCREMENT', $attr) && $attr['AUTO_INCREMENT'] === true)
 			{
 				$sql .= ' AUTO_INCREMENT';
 			}

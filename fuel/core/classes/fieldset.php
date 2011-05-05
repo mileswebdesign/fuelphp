@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -117,13 +119,13 @@ class Fieldset
 		$this->name = (string) $name;
 		$this->config = $config;
 
-		if (isset($config['validation_instance']) and $config['validation_instance'] instanceof Validation)
+		if (isset($config['validation_instance']) && $config['validation_instance'] instanceof Validation)
 		{
 			$this->validation = $config['validation_instance'];
 		}
-		if (isset($config['form_instance']) and $config['form_instance'] instanceof Form)
+		if (isset($config['form_instance']) && $config['form_instance'] instanceof Form)
 		{
-			$this->form = $config['form_instance'];
+			$this->validation = $config['form_instance'];
 		}
 	}
 
@@ -168,7 +170,7 @@ class Fieldset
 	 */
 	public function add($name, $label = '', array $attributes = array(), array $rules = array())
 	{
-		if (empty($name) || (is_array($name) and empty($name['name'])))
+		if (empty($name) || (is_array($name) && empty($name['name'])))
 		{
 			throw new \Fuel_Exception('Cannot create field without name.');
 		}
@@ -228,7 +230,7 @@ class Fieldset
 	 */
 	public function add_model($class, $instance = null, $method = 'set_form_fields')
 	{
-		if ((is_string($class) and is_callable($callback = array('\\'.$class, $method)))
+		if ((is_string($class) && is_callable($callback = array('\\'.$class, $method)))
 			|| is_callable($callback = array($class, $method)))
 		{
 			$instance ? call_user_func($callback, $this, $instance) : call_user_func($callback, $this);
@@ -356,11 +358,11 @@ class Fieldset
 	}
 
 	/**
-	 * Alias for $this->validation()->errors()
+	 * Alias for $this->validation()->error()
 	 */
-	public function errors($field = null)
+	public function error($field = null)
 	{
-		return $this->validation()->errors($field);
+		return $this->validation()->error($field);
 	}
 
 	/**

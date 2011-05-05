@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -65,7 +67,7 @@ class Security {
 	 */
 	public static function clean($var, $filters = null)
 	{
-		is_null($filters) and $filters = \Config::get('security.input_filter', array());
+		is_null($filters) && $filters = \Config::get('security.input_filter', array());
 		$filters = is_array($filters) ? $filters : array($filters);
 
 		foreach ($filters as $filter)

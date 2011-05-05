@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -22,30 +24,12 @@ namespace Fuel\Core;
 class Fuel {
 
 	/**
-	 * @var  string  constant used for when in testing mode
+	 * Environment Constants.
 	 */
 	const TEST = 'test';
-
-	/**
-	 * @var  string  constant used for when in development
-	 */
-	const DEVELOPMENT = 'development';
-
-	/**
-	 * @var         string  constant used for when testing the code in a staging env.
-	 * @deprecated  This will be removed no earlier than v1.1.  Use STAGE instead.
-	 */
+	const DEVELOPMENT = 'dev';
 	const QA = 'qa';
-
-	/**
-	 * @var  string  constant used for when in production
-	 */
 	const PRODUCTION = 'production';
-
-	/**
-	 * @var  string  constant used for when testing the app in a staging env.
-	 */
-	const STAGE = 'stage';
 
 	const L_NONE = 0;
 	const L_ERROR = 1;
@@ -53,7 +37,7 @@ class Fuel {
 	const L_INFO = 3;
 	const L_ALL = 4;
 
-	const VERSION = '1.0-rc2';
+	const VERSION = '1.0-rc2.1';
 
 	public static $initialized = false;
 
@@ -129,6 +113,13 @@ class Fuel {
 
 		static::$_paths = array(APPPATH, COREPATH);
 
+		// Load in the routes
+		\Config::load('routes', true);
+
+		\Router::add(\Config::get('routes'));
+
+		\View::$auto_encode = \Config::get('security.auto_encode_view_data');
+
 		if ( ! static::$is_cli)
 		{
 			if (\Config::get('base_url') === null)
@@ -150,12 +141,6 @@ class Fuel {
 		{
 			static::add_package($package);
 		}
-
-		// Load in the routes
-		\Config::load('routes', true);
-		\Router::add(\Config::get('routes'));
-
-		\View::$auto_encode = \Config::get('security.auto_encode_view_data');
 
 		// Set some server options
 		setlocale(LC_ALL, static::$locale);
@@ -180,7 +165,7 @@ class Fuel {
 	 */
 	public static function finish()
 	{
-		if (static::$caching and static::$paths_changed === true)
+		if (static::$caching && static::$paths_changed === true)
 		{
 			static::cache('Fuel::path_cache', static::$path_cache);
 		}
@@ -230,67 +215,26 @@ class Fuel {
 	public static function find_file($directory, $file, $ext = '.php', $multiple = false, $cache = true)
 	{
 		$cache_id = '';
-		$paths = array();
+		$paths = static::$_paths;
 
-		$found = $multiple ? array() : false;
-
-		// absolute path requested?
-		if (strpos($file, '/') === 0 or strpos($file, ':') === 1)
+		// get extra information of the active request
+		if (class_exists('Request', false) and $active = \Request::active())
 		{
-			$cache_id = $file;
-			$found = file_exists($file);
-		}
-
-		// the file requested namespaced?
-		elseif($pos = strripos(ltrim($file, '\\'), '\\'))
-		{
-			$file = ltrim($file, '\\');
-
-			// get the namespace path
-			if ($path = \Autoloader::namespace_path('\\'.ucfirst(substr($file, 0, $pos))))
-			{
-				$cache_id .= substr($file, 0, $pos);
-
-				// and strip the classes directory as we need the module root
-				$paths = array(substr($path,0, -8));
-
-				// strip the namespace from the filename
-				$file = substr($file, $pos+1);
-			}
-		}
-
-		// use the cascading filesystem to find the file
-		else
-		{
-			$paths = static::$_paths;
-
-			// get extra information of the active request
-			if (class_exists('Request', false) and $active = \Request::active())
-			{
-				$cache_id = $active->uri->uri;
-				$paths = array_merge($active->paths, $paths);
-			}
-
-			// the file requested namespaced?
-			if($pos = strripos(ltrim($file, '\\'), '\\'))
-			{
-			}
-
+			$cache_id = md5($active->uri->uri);
+			$paths = array_merge($active->paths, $paths);
 		}
 
 		$path = $directory.DS.strtolower($file).$ext;
 
-		$cache_id = md5($cache_id);
-
-		if (static::$path_cache !== null and array_key_exists($cache_id.$path, static::$path_cache))
+		if (static::$path_cache !== null && array_key_exists($cache_id.$path, static::$path_cache))
 		{
 			return static::$path_cache[$cache_id.$path];
 		}
 
+		$found = $multiple ? array() : false;
 		foreach ($paths as $dir)
 		{
 			$file_path = $dir.$path;
-
 			if (is_file($file_path))
 			{
 				if ( ! $multiple)

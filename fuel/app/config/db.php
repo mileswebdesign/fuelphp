@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -13,7 +15,7 @@
 return array(
 	'active' => Config::get('environment'),
 
-	Fuel::DEVELOPMENT => array(
+	'dev' => array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
@@ -28,7 +30,7 @@ return array(
 		'profiling'    => false,
 	),
 
-	Fuel::PRODUCTION => array(
+	'production' => array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
@@ -43,7 +45,7 @@ return array(
 		'profiling'    => false,
 	),
 
-	Fuel::TEST => array(
+	'test' => array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
@@ -58,11 +60,11 @@ return array(
 		'profiling'    => false,
 	),
 
-	Fuel::STAGE => array(
+	'qa' => array(
 		'type'			=> 'mysql',
 		'connection'	=> array(
 			'hostname'   => 'localhost',
-			'database'   => 'fuel_stage',
+			'database'   => 'fuel_qa',
 			'username'   => 'root',
 			'password'   => '',
 			'persistent' => false,

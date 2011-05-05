@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -42,7 +44,7 @@ class Cache {
 		$defaults = \Config::get('cache', array());
 
 		// $config can be either an array of config settings or the name of the storage driver
-		if ( ! empty($config) and ! is_array($config) and ! is_null($config))
+		if ( ! empty($config) && ! is_array($config) && ! is_null($config))
 		{
 			$config = array('driver' => $config);
 		}

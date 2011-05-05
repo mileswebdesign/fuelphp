@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -13,9 +15,9 @@
 /**
  * Loads in a core class and optionally an app class override if it exists.
  *
- * @param   string  $path
- * @param   string  $folder
- * @return  void
+ * @param	string	$path
+ * @param	string	$folder
+ * @return	void
  */
 if ( ! function_exists('import'))
 {
@@ -84,6 +86,10 @@ if ( ! function_exists('array_to_attr'))
 				$property = $value;
 			}
 
+			if (in_array($property, array('value', 'alt', 'title')))
+			{
+				$value = htmlentities($value, ENT_QUOTES, \Fuel::$encoding);
+			}
 			$attr_str .= $property.'="'.$value.'" ';
 		}
 
@@ -104,7 +110,7 @@ if ( ! function_exists('html_tag'))
 {
 	function html_tag($tag, $attr = array(), $content = false)
 	{
-		$has_content = (bool) ($content !== false and $content !== null);
+		$has_content = (bool) ($content !== false && $content !== null);
 		$html = '<'.$tag;
 
 		$html .= ( ! empty($attr)) ? ' '.(is_array($attr) ? array_to_attr($attr) : $attr) : '';

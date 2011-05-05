@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -200,13 +202,13 @@ class Format {
 			$data = array($data);
 		}
 
-		$output = implode(',', $headings) . "\n";
+		$output = implode(',', $headings) . "\r\n";
 		foreach ($data as &$row)
 		{
-			$output .= '"' . implode('","', (array) $row) . "\"\n";
+			$output .= '"' . implode('","', (array) $row) . "\"\r\n";
 		}
 
-		return rtrim($output, "\n");
+		return $output;
 	}
 
 	// Encode as JSON
@@ -254,65 +256,25 @@ class Format {
 	}
 
 	// Format HTML for output
+	// This function is DODGY! Not perfect CSV support but works with my REST_Controller
 	protected function _from_csv($string)
 	{
 		$data = array();
 
 		// Splits
 		$rows = explode("\n", trim($string));
-
-		// TODO: This means any headers with , will be split, but this is less likley thay a value containing it
-		$headings = array_map(function($value) {
-		    return trim($value, '"');
-		}, explode(',', array_shift($rows)));
-
-		$join_row = null;
-
+		$headings = explode(',', array_shift($rows));
 		foreach ($rows as $row)
 		{
-			// Check for odd numer of double quotes
-			while (substr_count($row, '"') % 2)
-			{
-				// They have a line start to join onto
-				if ($join_row !== null)
-				{
-					// Lets stick this row onto a new line after the existing row, and see what happens
-					$row = $join_row."\n".$row;
-
-					// Did that fix it?
-					if (substr_count($row, '"') % 2)
-					{
-						// Nope, lets try adding the next line
-						continue 2;
-					}
-
-					else
-					{
-						// Yep, lets kill the join row.
-						$join_row = null;
-					}
-				}
-
-				// Lets start a new "join line"
-				else
-				{
-					$join_row = $row;
-
-					// Lets bust outta this join, and go to the next row (foreach)
-					continue 2;
-				}
-			}
-			
 			// The substr removes " from start and end
-			$data_fields = explode('","', trim($row, '"'));
+			$data_fields = explode('","', trim(substr($row, 1, -1)));
 
 			if (count($data_fields) == count($headings))
 			{
 				$data[] = array_combine($headings, $data_fields);
 			}
-
 		}
-		
+
 		return $data;
 	}
 

@@ -45,7 +45,7 @@ class Profiler {
 		if (static::$profiler)
 		{
 			static::$query = array(
-				'sql' => \Security::htmlentities($sql),
+				'sql' => $sql,
 				'time' => static::$profiler->getMicroTime(),
 			);
 			return true;
