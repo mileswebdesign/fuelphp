@@ -1,7 +1,5 @@
 <?php
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -30,6 +28,11 @@ namespace Fuel\Core;
  */
 class Validation {
 
+	/**
+	 * @var  Validation  keeps a reference to an instance of Validation while it is being run
+	 */
+	protected static $active;
+
 	public static function factory($fieldset = 'default')
 	{
 		if ( ! $fieldset instanceof Fieldset)
@@ -44,6 +47,22 @@ class Validation {
 	{
 		$fieldset = \Fieldset::instance($name);
 		return $fieldset === false ? false : $fieldset->validation();
+	}
+
+	/**
+	 * Fetch the currently active validation instance
+	 */
+	public static function active()
+	{
+		return static::$active;
+	}
+
+	/**
+	 * Set or unset the currently active validation instance
+	 */
+	protected static function set_active($instance = null)
+	{
+		static::$active = $instance;
 	}
 
 	/**
@@ -212,6 +231,8 @@ class Validation {
 			return false;
 		}
 
+		static::set_active($this);
+
 		$this->validated = array();
 		$this->errors = array();
 		$this->input = $input ?: array();
@@ -238,6 +259,8 @@ class Validation {
 				$this->errors[$field->name] = $v;
 			}
 		}
+
+		static::set_active();
 
 		return empty($this->errors);
 	}
