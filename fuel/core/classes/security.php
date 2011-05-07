@@ -177,9 +177,8 @@ class Security {
 			// Throw exception when it wasn't whitelisted and can't be converted to String
 			if ( ! method_exists($value, '__toString'))
 			{
-				throw new \Fuel_Exception('Object class "'.get_class($value).'" could not be converted to string or '.
-					'sanitized as ArrayAcces. Whitelist it in security.whitelisted_classes in app/config/config.php '.
-					'to allow it to be passed unchecked.');
+				throw new \Fuel_Exception('Object class was not whitelisted in security.whitelisted_classes and could '.
+					'not be converted to string.');
 			}
 
 			$value = static::htmlentities((string) $value);
