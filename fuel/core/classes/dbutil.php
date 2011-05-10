@@ -26,10 +26,17 @@ class DBUtil {
 	 *
 	 * @throws	Fuel\Database_Exception
 	 * @param	string	$database	the database name
+	 * @param	string	$database	the character set
 	 * @return	int		the number of affected rows
 	 */
-	public static function create_database($database)
+	public static function create_database($database, $charset = false)
 	{
+		$charset === false and $charset = \Config::get('db.default_charset', '');
+		
+		if( ! empty($charset))
+		{
+			$charset = ' DEFAULT CHARACTER SET '.substr($charset, 0, stripos($charset, '_')).' COLLATE '.$charset;
+		}
 		return DB::query('CREATE DATABASE '.DB::quote_identifier($database), \DB::UPDATE)->execute();
 	}
 
@@ -89,6 +96,64 @@ class DBUtil {
 
 		return DB::query($sql, DB::UPDATE)->execute();
 	}
+		
+	/**
+	 * Adds fields to a table a table.  Will throw a Database_Exception if it cannot.
+	 *
+	 * @throws	Fuel\Database_Exception
+	 * @param	string	$table			the table name
+	 * @param	array	$fields			the new fields
+	 * @return	int		the number of affected
+	 */
+	public static function add_fields($table, $fields)
+	{
+		return static::alter_fields('ADD', $table, $fields);
+	}
+
+	/**
+	 * Modifies fields in a table.  Will throw a Database_Exception if it cannot.
+	 *
+	 * @throws	Fuel\Database_Exception
+	 * @param	string	$table			the table name
+	 * @param	array	$fields			the modified fields
+	 * @return	int		the number of affected
+	 */
+	public static function modify_fields($table, $fields)
+	{
+		return static::alter_fields('CHANGE', $table, $fields);
+	}
+	
+	/**
+	 * Drops fields from a table a table.  Will throw a Database_Exception if it cannot.
+	 *
+	 * @throws	Fuel\Database_Exception
+	 * @param	string			$table			the table name
+	 * @param	string|array	$fields			the fields
+	 * @return	int				the number of affected
+	 */
+	public static function drop_fields($table, $fields)
+	{
+		return static::alter_fields('DROP', $table, $fields);
+	}
+
+	protected static function alter_fields($type, $table, $fields)
+	{
+		$sql = 'ALTER TABLE '.DB::quote_identifier(DB::table_prefix($table)).' '.$type.' ';
+		if ($type === 'DROP')
+		{
+			if( ! is_array($fields))
+			{
+				$fields = array($fields);
+			}
+			$fields = array_map(function($field){
+				return DB::quote_identifier($field);
+			}, $fields);
+			$sql .= implode(', ', $fields);
+		} else {
+			$sql .= static::process_fields($fields);
+		}
+		return DB::query($sql, DB::UPDATE)->execute();
+	}
 
 	protected static function process_fields($fields)
 	{
@@ -103,6 +168,7 @@ class DBUtil {
 			$sql .= array_key_exists('NAME', $attr) ? ' '.DB::quote_identifier($attr['NAME']).' ' : '';
 			$sql .= array_key_exists('TYPE', $attr) ? ' '.$attr['TYPE'] : '';
 			$sql .= array_key_exists('CONSTRAINT', $attr) ? '('.$attr['CONSTRAINT'].')' : '';
+			$sql .= array_key_exists('CHARSET', $attr) ? ' CHARACTER SET '.substr($attr['CHARSET'], 0, stripos($attr['CHARSET'], '_')).' COLLATE '.$attr['CHARSET'] : '';
 
 			if (array_key_exists('UNSIGNED', $attr) and $attr['UNSIGNED'] === true)
 			{
