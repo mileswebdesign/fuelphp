@@ -145,6 +145,8 @@ class Fuel {
 		static::$env = \Config::get('environment');
 		static::$locale = \Config::get('locale');
 
+		\Event::register('shutdown', 'Fuel::finish');
+
 		//Load in the packages
 		foreach (\Config::get('always_load.packages', array()) as $package)
 		{
@@ -154,8 +156,6 @@ class Fuel {
 		// Load in the routes
 		\Config::load('routes', true);
 		\Router::add(\Config::get('routes'));
-
-		\View::$auto_encode = \Config::get('security.auto_encode_view_data');
 
 		// Set some server options
 		setlocale(LC_ALL, static::$locale);
@@ -185,11 +185,11 @@ class Fuel {
 			static::cache('Fuel::path_cache', static::$path_cache);
 		}
 
-		// Grab the output buffer
-		$output = ob_get_clean();
-
 		if (static::$profiling)
 		{
+			// Grab the output buffer and flush it, we will rebuffer later
+			$output = ob_get_clean();
+
 			\Profiler::mark('End of Fuel Execution');
 			if (preg_match("|</body>.*?</html>|is", $output))
 			{
@@ -201,20 +201,10 @@ class Fuel {
 			{
 				$output .= \Profiler::output();
 			}
+			// Restart the output buffer and send the new output
+			ob_start();
+			echo $output;
 		}
-
-		$bm = \Profiler::app_total();
-
-		// TODO: There is probably a better way of doing this, but this works for now.
-		$output = \str_replace(
-				array('{exec_time}', '{mem_usage}'),
-				array(round($bm[0], 4), round($bm[1] / pow(1024, 2), 3)),
-				$output
-		);
-
-
-		// Send the buffer to the browser.
-		echo $output;
 	}
 
 	/**
@@ -268,17 +258,11 @@ class Fuel {
 				$cache_id = $active->uri->uri;
 				$paths = array_merge($active->paths, $paths);
 			}
-
-			// the file requested namespaced?
-			if($pos = strripos(ltrim($file, '\\'), '\\'))
-			{
-			}
-
 		}
 
 		$path = $directory.DS.strtolower($file).$ext;
 
-		$cache_id = md5($cache_id);
+		$cache_id = md5(($multiple ? 'M.' : 'S.').$cache_id);
 
 		if (static::$path_cache !== null and array_key_exists($cache_id.$path, static::$path_cache))
 		{

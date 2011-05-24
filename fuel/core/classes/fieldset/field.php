@@ -81,7 +81,7 @@ class Fieldset_Field
 	 * @param	array
 	 * @param	Fieldset
 	 */
-	public function __construct($name, $label = '', Array $attributes = array(), Array $rules = array(), \Fieldset $fieldset)
+	public function __construct($name, $label = '', Array $attributes = array(), Array $rules = array(), Fieldset $fieldset)
 	{
 		$this->name = (string) $name;
 		$this->fieldset = $fieldset;
@@ -122,6 +122,8 @@ class Fieldset_Field
 	{
 		$this->label = $label;
 		$this->set_attribute('label', $label);
+
+		return $this;
 	}
 
 	/**
@@ -133,17 +135,36 @@ class Fieldset_Field
 	{
 		$this->type = (string) $type;
 		$this->set_attribute('type', $type);
+
+		return $this;
 	}
 
 	/**
 	 * Change the field's current or default value
 	 *
-	 * @param	string
+	 * @param  string
+	 * @param  bool
 	 */
-	public function set_value($value)
+	public function set_value($value, $repopulate = false)
 	{
+		// Repopulation is handled slightly different in some cases
+		if ($repopulate)
+		{
+			if (($this->type == 'radio' or $this->type == 'checkbox') and empty($this->options))
+			{
+				if ($this->value == $value)
+				{
+					$this->set_attribute('checked', 'checked');
+				}
+
+				return $this;
+			}
+		}
+
 		$this->value = $value;
 		$this->set_attribute('value', $value);
+
+		return $this;
 	}
 
 	/**
@@ -154,6 +175,8 @@ class Fieldset_Field
 	public function set_template($template = null)
 	{
 		$this->template = $template;
+
+		return $this;
 	}
 
 	/**
@@ -279,16 +302,6 @@ class Fieldset_Field
 		}
 
 		return $this;
-	}
-
-	/**
-	 * Get the options available for this field
-	 *
-	 * @return	array
-	 */
-	public function options()
-	{
-		return $this->options;
 	}
 
 	/**

@@ -45,7 +45,7 @@ class Fieldset
 			return $exists;
 		}
 
-		static::$_instances[$name] = new Fieldset($name, $config);
+		static::$_instances[$name] = new static($name, $config);
 
 		if ($name == 'default')
 		{
@@ -116,12 +116,12 @@ class Fieldset
 	{
 		if (isset($config['validation_instance']))
 		{
-			$this->validation = $config['validation_instance'];
+			$this->validation($config['validation_instance']);
 			unset($config['validation_instance']);
 		}
 		if (isset($config['form_instance']))
 		{
-			$this->form = $config['form_instance'];
+			$this->form($config['form_instance']);
 			unset($config['form_instance']);
 		}
 
@@ -145,7 +145,7 @@ class Fieldset
 
 		if (empty($this->validation) and $instance === true)
 		{
-			$this->validation = Validation::factory($this);
+			$this->validation = \Validation::factory($this);
 		}
 
 		return $this->validation;
@@ -161,13 +161,13 @@ class Fieldset
 	{
 		if ($instance instanceof Form)
 		{
-			$this->validation = $instance;
+			$this->form = $instance;
 			return $instance;
 		}
 
 		if (empty($this->form) and $instance === true)
 		{
-			$this->form = Form::factory($this);
+			$this->form = \Form::factory($this);
 		}
 
 		return $this->form;
@@ -205,7 +205,7 @@ class Fieldset
 			return $field;
 		}
 
-		$field = new Fieldset_Field($name, $label, $attributes, $rules, $this);
+		$field = new \Fieldset_Field($name, $label, $attributes, $rules, $this);
 		$this->fields[$name] = $field;
 
 		return $field;
@@ -244,14 +244,14 @@ class Fieldset
 	 */
 	public function add_model($class, $instance = null, $method = 'set_form_fields')
 	{
+		// Add model to validation callables for validation rules
+		$this->validation()->add_callable($class);
+
 		if ((is_string($class) and is_callable($callback = array('\\'.$class, $method)))
 			|| is_callable($callback = array($class, $method)))
 		{
 			$instance ? call_user_func($callback, $this, $instance) : call_user_func($callback, $this);
 		}
-
-		// Add model to validation callables for validation rules
-		$this->validation()->add_callable($class);
 
 		return $this;
 	}
@@ -315,21 +315,21 @@ class Fieldset
 			{
 				if (is_array($input) or $input instanceof \ArrayAccess)
 				{
-					if ($value = $input[$f->name])
+					if (isset($input[$f->name]))
 					{
-						$f->set_value($value);
+						$f->set_value($input[$f->name], true);
 					}
 				}
 				elseif (is_object($input) and property_exists($input, $f->name))
 				{
-					$f->set_value($input->{$f->name});
+					$f->set_value($input->{$f->name}, true);
 				}
 			}
 			else
 			{
 				if (($value = $this->input($f->name, null)) !== null)
 				{
-					$f->set_value($value);
+					$f->set_value($value, true);
 				}
 			}
 		}
@@ -368,7 +368,7 @@ class Fieldset
 	 */
 	public function validated($field = null)
 	{
-		return $this->validation->validated($field);
+		return $this->validation()->validated($field);
 	}
 
 	/**
