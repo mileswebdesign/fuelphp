@@ -27,14 +27,13 @@ Autoloader::add_classes(array(
 	'Orm\\Observer_Typing'      => __DIR__.'/classes/observer/typing.php',
 	'Orm\\Observer_UpdatedAt'   => __DIR__.'/classes/observer/updatedat.php',
 	'Orm\\Observer_Validation'  => __DIR__.'/classes/observer/validation.php',
+	'Orm\\Observer_Self'        => __DIR__.'/classes/observer/self.php',
 
 	// Exceptions
-	'Orm\\Exception'          => __DIR__.'/classes/exceptions.php',
-	'Orm\\RecordNotFound'     => __DIR__.'/classes/exceptions.php',
-	'Orm\\UndefinedProperty'  => __DIR__.'/classes/exceptions.php',
-	'Orm\\UndefinedRelation'  => __DIR__.'/classes/exceptions.php',
-	'Orm\\InvalidObserver'    => __DIR__.'/classes/exceptions.php',
-	'Orm\\FrozenObject'       => __DIR__.'/classes/exceptions.php',
+	'Orm\\RecordNotFound'      => __DIR__.'/classes/model.php',
+	'Orm\\FrozenObject'        => __DIR__.'/classes/model.php',
+	'Orm\\InvalidContentType'  => __DIR__.'/classes/observer/typing.php',
+	'Orm\\ValidationFailed'    => __DIR__.'/classes/observer/validation.php',
 ));
 
 

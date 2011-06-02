@@ -34,8 +34,15 @@ class Validation {
 	{
 		if ( ! $fieldset instanceof Fieldset)
 		{
-			$fieldset = (string) $fieldset;
-			($set = \Fieldset::instance($fieldset)) && $fieldset = $set;
+			($set = \Fieldset::instance($fieldset)) and $fieldset = $set;
+		}
+
+		if ($fieldset instanceof Fieldset)
+		{
+			if ($fieldset->validation(false) != null)
+			{
+				throw new \DomainException('Form instance already exists, cannot be recreated. Use instance() instead of factory() to retrieve the existing instance.');
+			}
 		}
 		return new static($fieldset);
 	}
@@ -176,7 +183,7 @@ class Validation {
 	{
 		if ( ! (is_object($class) || class_exists($class)))
 		{
-			throw new \Fuel_Exception('Input for add_callable is not a valid object or class.');
+			throw new \InvalidArgumentException('Input for add_callable is not a valid object or class.');
 		}
 
 		array_unshift($this->callables, $class);

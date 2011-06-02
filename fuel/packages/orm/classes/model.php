@@ -13,6 +13,16 @@
 namespace Orm;
 use \Inflector;
 
+/**
+ * Record Not Found Exception
+ */
+class RecordNotFound extends \OutOfBoundsException {}
+
+/**
+ * Frozen Object Exception
+ */
+class FrozenObject extends \RuntimeException {}
+
 class Model implements \ArrayAccess, \Iterator {
 
 	/* ---------------------------------------------------------------------------
@@ -197,7 +207,7 @@ class Model implements \ArrayAccess, \Iterator {
 			}
 			catch (\Exception $e)
 			{
-				throw new Exception('Listing columns not failed, you have to set the model properties with a '.
+				throw new \Fuel_Exception('Listing columns not failed, you have to set the model properties with a '.
 					'static $_properties setting in the model. Original exception: '.$e->getMessage());
 			}
 		}
@@ -603,7 +613,7 @@ class Model implements \ArrayAccess, \Iterator {
 		}
 		else
 		{
-			throw new Exception('Invalid input for _relate(), should be an array.');
+			throw new \Fuel_Exception('Invalid input for _relate(), should be an array.');
 		}
 	}
 
@@ -635,7 +645,7 @@ class Model implements \ArrayAccess, \Iterator {
 		}
 		else
 		{
-			throw new UndefinedProperty('Property "'.$property.'" not found for '.get_called_class().'.');
+			throw new \OutOfBoundsException('Property "'.$property.'" not found for '.get_called_class().'.');
 		}
 	}
 
@@ -654,7 +664,7 @@ class Model implements \ArrayAccess, \Iterator {
 
 		if (in_array($property, static::primary_key()) and $this->{$property} !== null)
 		{
-			throw new Exception('Primary key cannot be changed.');
+			throw new \Fuel_Exception('Primary key cannot be changed.');
 		}
 		if (array_key_exists($property, static::properties()))
 		{
@@ -666,7 +676,7 @@ class Model implements \ArrayAccess, \Iterator {
 		}
 		else
 		{
-			throw new UndefinedProperty('Property "'.$property.'" not found for '.get_called_class().'.');
+			throw new \OutOfBoundsException('Property "'.$property.'" not found for '.get_called_class().'.');
 		}
 	}
 
@@ -948,7 +958,7 @@ class Model implements \ArrayAccess, \Iterator {
 					$observer_class = 'Observer_'.$observer; // TODO: needs to work with namespaces
 					if ( ! class_exists($observer_class))
 					{
-						throw new InvalidObserver($observer);
+						throw new \UnexpectedValueException($observer);
 					}
 
 					// Add the observer with the full classname for next usage

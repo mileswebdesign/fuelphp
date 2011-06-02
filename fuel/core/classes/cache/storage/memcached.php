@@ -55,7 +55,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 			// do we have the PHP memcached extension available
 			if ( ! class_exists('Memcached') )
 			{
-				throw new \Cache_Exception('Memcached sessions are configured, but your PHP installation doesn\'t have the Memcached extension loaded.');
+				throw new \Fuel_Exception('Memcached cache are configured, but your PHP installation doesn\'t have the Memcached extension loaded.');
 			}
 
 			// instantiate the memcached object
@@ -67,7 +67,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 			// check if we can connect to the server(s)
 			if ($this->memcached->getVersion() === false)
 			{
-				throw new \Cache_Exception('Memcached sessions are configured, but there is no connection possible. Check your configuration.');
+				throw new \Fuel_Exception('Memcached cache are configured, but there is no connection possible. Check your configuration.');
 			}
 		}
 	}
@@ -97,15 +97,15 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	/**
 	 * Remove the prepended cache properties and save them in class properties
 	 *
-	 * @param	string
-	 * @throws	Cache_Exception
+	 * @param   string
+	 * @throws  UnexpectedValueException
 	 */
 	protected function unprep_contents($payload)
 	{
 		$properties_end = strpos($payload, '{{/'.self::PROPS_TAG.'}}');
 		if ($properties_end === FALSE)
 		{
-			throw new \Cache_Exception('Incorrect formatting');
+			throw new \UnexpectedValueException('Cache has bad formatting');
 		}
 
 		$this->contents = substr($payload, $properties_end + strlen('{{/'.self::PROPS_TAG.'}}'));
@@ -113,7 +113,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		$props = json_decode($props, true);
 		if ($props === NULL)
 		{
-			throw new \Cache_Exception('Properties retrieval failed');
+			throw new \UnexpectedValueException('Cache properties retrieval failed');
 		}
 
 		$this->created			= $props['created'];
@@ -192,7 +192,6 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	 *
 	 * @param	limit purge to subsection
 	 * @return	bool
-	 * @throws	Cache_Exception
 	 */
 	public function delete_all($section)
 	{
@@ -205,7 +204,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		if (is_array($index))
 		{
 			// limit the delete if we have a valid section
-			if (!empty($section))
+			if ( ! empty($section))
 			{
 				$dirs = in_array($section, $index) ? array($section) : array();
 			}
@@ -218,7 +217,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 			foreach ($dirs as $dir)
 			{
 				$list = $this->memcached->get($dir);
-				foreach($list as $item)
+				foreach ($list as $item)
 				{
 					$this->memcached->delete($item[0]);
 				}
@@ -248,7 +247,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		// write it to the memcached server
 		if ($this->memcached->set($key, $payload, ! is_null($this->expiration) ? (int) $this->expiration : 0) === false)
 		{
-			throw new \Cache_Exception('Memcached returned error code "'.$this->memcached->getResultCode().'" on write. Check your configuration.');
+			throw new \Fuel_Exception('Memcached returned error code "'.$this->memcached->getResultCode().'" on write. Check your configuration.');
 		}
 	}
 
@@ -271,7 +270,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		{
 			$this->unprep_contents($payload);
 		}
-		catch(Cache_Exception $e)
+		catch (\UnexpectedValueException $e)
 		{
 
 			return false;

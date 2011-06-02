@@ -93,7 +93,7 @@ class Arr {
 		$key = explode('.', $key);
 		if(count($key) > 1)
 		{
-			if ( ! is_array($array) || ! array_key_exists($key[0], $array))
+			if ( ! is_array($array) or ! array_key_exists($key[0], $array))
 			{
 				return $default;
 			}
@@ -106,7 +106,7 @@ class Arr {
 		else
 		{
 			$key = $key[0];
-			if ( ! is_array($array) || ! array_key_exists($key, $array))
+			if ( ! is_array($array) or ! array_key_exists($key, $array))
 			{
 				return $default;
 			}
@@ -118,19 +118,18 @@ class Arr {
 	 * Returns the elements of the given array or a default if it is not set.
 	 * WARNING: original array is edited by reference, only boolean success is returned
 	 *
-	 * @access	public
-	 * @param	array	The array to fetch from
-	 * @param	array	The keys to fetch from the array
-	 * @param	array	The value returned when not an array or invalid key
-	 * @return	mixed
+	 * @param   array  the array to fetch from
+	 * @param   array  the keys to fetch from the array
+	 * @param   mixed  the value returned when not an array or invalid key
+	 * @return  mixed
 	 */
 	public static function elements($array, $keys, $default = false)
 	{
 		$return = array();
 
-		if ( ! is_array($keys))
+		if ( ! is_array($array) or ! is_array($keys))
 		{
-			throw new \Fuel_Exception('Arr::elements() - $keys must be an array.');
+			throw new \InvalidArgumentException('Arr::elements() - $keys and $array must be arrays.');
 		}
 
 		foreach ($keys as $key)
@@ -224,7 +223,7 @@ class Arr {
 	{
 		if( ! is_array($array))
 		{
-			throw new \Fuel_Exception('Arr::sort() - $array must be an array.');
+			throw new \InvalidArgumentException('Arr::sort() - $array must be an array.');
 		}
 
 		foreach($array as $k=>$v)
@@ -243,7 +242,7 @@ class Arr {
 			break;
 
 			default:
-				throw new \Fuel_Exception('Arr::sort() - $order must be asc or desc.');
+				throw new \InvalidArgumentException('Arr::sort() - $order must be asc or desc.');
 			break;
 		}
 
@@ -272,6 +271,38 @@ class Arr {
 
 		return (array_sum($array) / $count);
 	}
+
+	/**
+	 * Replaces key names in an array by names in $replace
+	 *
+	 * @param   array    the array containing the key/value combinations
+	 * @param   array    the array containing the replacement keys
+	 * @return  array    the array with the new keys
+	 */
+	public static function replace_keys($source, $replace)
+	{
+		if ( ! is_array($source) or ! is_array($replace))
+		{
+			throw new \InvalidArgumentException('Arr::replace_keys() - $source and $replace must arrays.');
+		}
+
+		$result = array();
+
+		foreach ($source as $key => $value)
+		{
+			if (array_key_exists($key, $replace))
+			{
+				$result[$replace[$key]] = $value;
+			}
+			else
+			{
+				$result[$key] = $value;
+			}
+		}
+
+		return $result;
+	}
+
 }
 
 /* End of file arr.php */

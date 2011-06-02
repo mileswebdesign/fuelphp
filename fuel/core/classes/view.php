@@ -14,6 +14,7 @@
 
 namespace Fuel\Core;
 
+
 /**
  * View class
  *
@@ -104,7 +105,7 @@ class View {
 	 *
 	 * @param   string  variable name
 	 * @return  mixed
-	 * @throws  Exception
+	 * @throws  OutOfBoundsException
 	 */
 	public function & __get($key)
 	{
@@ -118,8 +119,7 @@ class View {
 		}
 		else
 		{
-//			throw new Exception('View variable is not set: :var',
-//				array(':var' => $key));
+			throw new \OutOfBoundsException('View variable is not set: var'.$key);
 		}
 	}
 
@@ -294,13 +294,13 @@ class View {
 	 *
 	 * @param   string  view filename
 	 * @return  View
-	 * @throws  View_Exception
+	 * @throws  Fuel_Exception
 	 */
 	public function set_filename($file)
 	{
 		if (($path = \Fuel::find_file('views', $file, '.php', false, false)) === false)
 		{
-			throw new \View_Exception('The requested view could not be found: '.\Fuel::clean_path($file));
+			throw new \Fuel_Exception('The requested view could not be found: '.\Fuel::clean_path($file));
 		}
 
 		// Store the file path locally
@@ -376,7 +376,7 @@ class View {
 	 *
 	 * @param    string  view filename
 	 * @return   string
-	 * @throws   Fuel_View_Exception
+	 * @throws   Fuel_Exception
 	 * @uses     static::capture
 	 */
 	public function render($file = null)
@@ -388,7 +388,7 @@ class View {
 
 		if (empty($this->_file))
 		{
-			throw new \View_Exception('You must set the file to use within your view before rendering');
+			throw new \Fuel_Exception('You must set the file to use within your view before rendering');
 		}
 
 		// Combine local and global data and capture the output
