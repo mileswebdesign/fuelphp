@@ -20,6 +20,7 @@ var nav = {
 		},
 		"General": {
 			"Model-View-Controller":	"general/mvc.html",
+			"HMVC Requests":	"general/hmvc.html",
 			"Controllers": {
 				"Base" :		"general/controllers/base.html",
 				"Template":		"general/controllers/template.html",
@@ -34,13 +35,20 @@ var nav = {
 				"Extending Core":	"general/extending_core.html"
 			},
 			"Modules":			"general/modules.html",
+			"Packages":			"general/packages.html",
+			"Security":			"general/security.html",
 			"Tasks":			"general/tasks.html",
 			"Migrations":		"general/migrations.html",
 			"Coding Standards":	"general/coding_standards.html"
 		},
 		"Classes": {
+			"Agent": {
+				"Configuration":	"classes/agent/config.html",
+				"Usage":			"classes/agent/usage.html",
+			},
 			"Arr":			"classes/arr.html",
 			"Asset":		"classes/asset.html",
+			"Autoloader":	"classes/autoloader.html",
 			"Cache": {
 				"Configuration":	"classes/cache/config.html",
 				"Usage":			"classes/cache/usage.html",
@@ -57,7 +65,6 @@ var nav = {
 				"DBUtil class":     "classes/database/dbutil.html"
 			},
 			"Date":			"classes/date.html",
-			// "DButil":		"todo.html",\
 			"Debug":		"classes/debug.html",
 			// "Email":		"todo.html",
 			"Event":		"classes/event.html",
@@ -92,14 +99,15 @@ var nav = {
 				"Usage":			"classes/session/usage.html",
 				"Advanced":			"classes/session/advanced.html"
 			},
+			"Str": 			"classes/str.html",
 			// "Unzip":		"todo.html", // dont do this, needs to be cleaned up. forget it exists.
 			"Upload": {
 				"Configuration":	"classes/upload/config.html",
 				"Usage":			"classes/upload/usage.html"
 			},
 			"Uri":			"classes/uri.html",
-			"Validation":	"classes/validation.html"
-			// "View":			"todo.html"
+			"Validation":	"classes/validation.html",
+			"View":			"classes/view.html"
 		},
 		"Oil": {
 			"Introduction":		"packages/oil/intro.html",

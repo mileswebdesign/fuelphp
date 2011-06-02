@@ -30,11 +30,11 @@ class BelongsTo extends Relation {
 		$this->conditions  = array_key_exists('conditions', $config) ? (array) $config['conditions'] : array();
 
 		$this->cascade_save    = array_key_exists('cascade_save', $config) ? $config['cascade_save'] : $this->cascade_save;
-		$this->cascade_delete  = array_key_exists('cascade_save', $config) ? $config['cascade_save'] : $this->cascade_delete;
+		$this->cascade_delete  = array_key_exists('cascade_delete', $config) ? $config['cascade_delete'] : $this->cascade_delete;
 
 		if ( ! class_exists($this->model_to))
 		{
-			throw new Exception('Related model not found by Belongs_To relation "'.$this->name.'": '.$this->model_to);
+			throw new \Fuel_Exception('Related model not found by Belongs_To relation "'.$this->name.'": '.$this->model_to);
 		}
 	}
 
@@ -88,7 +88,7 @@ class BelongsTo extends Relation {
 
 		if ( ! $model_to instanceof $this->model_to and $model_to !== null)
 		{
-			throw new Exception('Invalid Model instance added to relations in this model.');
+			throw new \Fuel_Exception('Invalid Model instance added to relations in this model.');
 		}
 
 		// Save if it's a yet unsaved object
@@ -143,7 +143,7 @@ class BelongsTo extends Relation {
 					$rel_obj = call_user_func(array($this->model_to, 'find'), $new_rel_id);
 					if (empty($rel_obj))
 					{
-						throw new Exception('New relation set on '.$this->model_from.' object wasn\'t found.');
+						throw new \Fuel_Exception('New relation set on '.$this->model_from.' object wasn\'t found.');
 					}
 				}
 				else

@@ -26,11 +26,11 @@ class HasOne extends Relation {
 		$this->conditions  = array_key_exists('conditions', $config) ? (array) $config['conditions'] : array();
 
 		$this->cascade_save    = array_key_exists('cascade_save', $config) ? $config['cascade_save'] : $this->cascade_save;
-		$this->cascade_delete  = array_key_exists('cascade_save', $config) ? $config['cascade_save'] : $this->cascade_delete;
+		$this->cascade_delete  = array_key_exists('cascade_delete', $config) ? $config['cascade_delete'] : $this->cascade_delete;
 
 		if ( ! class_exists($this->model_to))
 		{
-			throw new Exception('Related model not found by Has_One relation "'.$this->name.'": '.$this->model_to);
+			throw new \Fuel_Exception('Related model not found by Has_One relation "'.$this->name.'": '.$this->model_to);
 		}
 	}
 
@@ -84,7 +84,7 @@ class HasOne extends Relation {
 
 		if ( ! $model_to instanceof $this->model_to and $model_to !== null)
 		{
-			throw new Exception('Invalid Model instance added to relations in this model.');
+			throw new \Fuel_Exception('Invalid Model instance added to relations in this model.');
 		}
 
 		$current_model_id = ($model_to and ! $model_to->is_new()) ? $model_to->implode_pk($model_to) : null;

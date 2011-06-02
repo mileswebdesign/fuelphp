@@ -26,9 +26,11 @@
 	<section id="content">
 		<h2>File Class</h2>
 
-		<p>The file class offers a set of methods to working with files &amp; directories. This can be done through
-		some helper methods or through a more advanced object oriented method where all files and directories are
-		wrapped in objects.</p>
+		<p>
+			The file class offers a set of methods to working with files &amp; directories. This can be done through
+			some helper methods or through a more advanced object oriented method where all files and directories are
+			wrapped in objects.
+		</p>
 
 		<section>
 			<h2>Usage</h2>
@@ -84,7 +86,10 @@
 				</tr>
 				<tr>
 					<th>Throws</th>
-					<td><kbd>File_Exception</kbd> when creation fails</td>
+					<td>
+						<kbd>FileAccessException</kbd> when the file already exists.
+						<kbd>InvalidPathException</kbd> when the basepath in not valid or not writable.
+					</td>
 				</tr>
 				<tr>
 					<th>Example</th>
@@ -144,12 +149,15 @@
 				</tr>
 				<tr>
 					<th>Throws</th>
-					<td><kbd>File_Exception</kbd> when creation fails</td>
+					<td>
+						<kbd>InvalidPathException</kbd> when the basepath does not exists or is not writable.
+						<kbd>FileAccessException</kbd> when the basepath is not writable.
+					</td>
 				</tr>
 				<tr>
 					<th>Example</th>
 					<td>
-						<pre class="php"><code>File::create(DOCROOT, 'test', 0755);</code></pre>
+						<pre class="php"><code>File::create_dir(DOCROOT, 'test', 0755);</code></pre>
 					</td>
 				</tr>
 				</tbody>
@@ -158,7 +166,7 @@
 
 		<article>
 			<h4>read($path, $as_string = false, $area = null)</h4>
-			<p>Reads a file.</p>
+			<p>Reads a file and returns it ($as_string == true) or adds it to the output ($as_string == false).</p>
 			<table class="method">
 				<tbody>
 				<tr>
@@ -182,7 +190,7 @@
 							<tr>
 								<th><kbd>$as_string</kbd></th>
 								<td><kbd>false</kbd></td>
-								<td>Makes it use readfile() on false or file_get_contents() on true</td>
+								<td>Makes it use readfile() on false or file_get_contents() on <kbd>true</kbd></td>
 							</tr>
 							<tr>
 								<th><kbd>$area</kbd></th>
@@ -195,14 +203,21 @@
 				</tr>
 				<tr>
 					<th>Returns</th>
-					<td>int|string - returns the number of bytes when $as_string was set to false or the file's contents
-					as a string when it was set to true.</td>
+					<td>
+						int|string - returns the number of bytes when $as_string was set to false or the file's
+						contents as a string when it was set to true.
+					</td>
 				</tr>
+				<tr>
+					<th>Throws</th>
+					<td><kbd>InvalidPathException</kbd> when the file does not exists.</td>
+				</tr>
+				
 				<tr>
 					<th>Example</th>
 					<td>
 						<pre class="php"><code>// Returns 'Contents for file.' if you created the file in the example for File::create()
-File::read(DOCROOT.'test.txt', true);</code></pre>
+$file_content = File::read(DOCROOT.'test.txt', true);</code></pre>
 					</td>
 				</tr>
 				</tbody>
@@ -260,9 +275,16 @@ File::read(DOCROOT.'test.txt', true);</code></pre>
 					with filename as value.</td>
 				</tr>
 				<tr>
+					<th>Throws</th>
+					<td>
+						<kbd>InvalidPathException</kbd> when the path not a directory.
+						<kbd>FileAccessException</kbd> when the path is not readable.
+					</td>
+				</tr>
+				<tr>
 					<th>Example</th>
 					<td>
-						<pre class="php"><code>File::read(DOCROOT);</code></pre>
+						<pre class="php"><code>File::read_dir(DOCROOT);</code></pre>
 					</td>
 				</tr>
 				</tbody>
@@ -317,7 +339,10 @@ File::read(DOCROOT.'test.txt', true);</code></pre>
 				</tr>
 				<tr>
 					<th>Throws</th>
-					<td><kbd>File_Exception</kbd> when creation fails</td>
+					<td>
+						<kbd>InvalidPathException</kbd> when the basepath not a directory or is not writable.
+						<kbd>FileAccessException</kbd> when there is no write access.
+					</td>
 				</tr>
 				<tr>
 					<th>Example</th>
@@ -377,7 +402,10 @@ File::read(DOCROOT.'test.txt', true);</code></pre>
 				</tr>
 				<tr>
 					<th>Throws</th>
-					<td><kbd>File_Exception</kbd> when the file does not exist</td>
+					<td>
+						<kbd>InvalidPathException</kbd> when the basepath not a directory or is not writable.
+						<kbd>FileAccessException</kbd> when the file does not exist.
+					</td>
 				</tr>
 				<tr>
 					<th>Example</th>
