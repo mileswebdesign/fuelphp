@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -61,7 +63,7 @@ class Input {
 	 */
 	public static function protocol()
 	{
-		return (static::server('HTTPS') !== null and static::server('HTTPS') != 'off') ? 'https' : 'http';
+		return (static::server('HTTPS') !== null && static::server('HTTPS') != 'off') ? 'https' : 'http';
 	}
 
 	/**
@@ -72,7 +74,7 @@ class Input {
 	 */
 	public static function is_ajax()
 	{
-		return (static::server('HTTP_X_REQUESTED_WITH') !== null) and strtolower(static::server('HTTP_X_REQUESTED_WITH')) === 'xmlhttprequest';
+		return (static::server('HTTP_X_REQUESTED_WITH') !== null) && strtolower(static::server('HTTP_X_REQUESTED_WITH')) === 'xmlhttprequest';
 	}
 
 	/**

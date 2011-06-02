@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -45,7 +47,7 @@ class Fieldset
 			return $exists;
 		}
 
-		static::$_instances[$name] = new static($name, $config);
+		static::$_instances[$name] = new Fieldset($name, $config);
 
 		if ($name == 'default')
 		{
@@ -109,43 +111,34 @@ class Fieldset
 	/**
 	 * Class constructor
 	 *
-	 * @param  string
-	 * @param  array
+	 * @param	string
+	 * @param	array
 	 */
 	protected function __construct($name, Array $config = array())
 	{
-		if (isset($config['validation_instance']))
-		{
-			$this->validation($config['validation_instance']);
-			unset($config['validation_instance']);
-		}
-		if (isset($config['form_instance']))
-		{
-			$this->form($config['form_instance']);
-			unset($config['form_instance']);
-		}
-
 		$this->name = (string) $name;
 		$this->config = $config;
+
+		if (isset($config['validation_instance']) && $config['validation_instance'] instanceof Validation)
+		{
+			$this->validation = $config['validation_instance'];
+		}
+		if (isset($config['form_instance']) && $config['form_instance'] instanceof Form)
+		{
+			$this->validation = $config['form_instance'];
+		}
 	}
 
 	/**
 	 * Get related Validation instance or create it
 	 *
-	 * @param   bool|Validation
-	 * @return  Validation
+	 * @return	Validation
 	 */
-	public function validation($instance = true)
+	public function validation()
 	{
-		if ($instance instanceof Validation)
+		if (empty($this->validation))
 		{
-			$this->validation = $instance;
-			return $instance;
-		}
-
-		if (empty($this->validation) and $instance === true)
-		{
-			$this->validation = \Validation::factory($this);
+			$this->validation = Validation::factory($this);
 		}
 
 		return $this->validation;
@@ -154,20 +147,13 @@ class Fieldset
 	/**
 	 * Get related Form instance or create it
 	 *
-	 * @param   bool|Form
-	 * @return  Form
+	 * @return	Form
 	 */
-	public function form($instance = true)
+	public function form()
 	{
-		if ($instance instanceof Form)
+		if (empty($this->form))
 		{
-			$this->form = $instance;
-			return $instance;
-		}
-
-		if (empty($this->form) and $instance === true)
-		{
-			$this->form = \Form::factory($this);
+			$this->form = Form::factory($this);
 		}
 
 		return $this->form;
@@ -184,7 +170,7 @@ class Fieldset
 	 */
 	public function add($name, $label = '', array $attributes = array(), array $rules = array())
 	{
-		if (empty($name) || (is_array($name) and empty($name['name'])))
+		if (empty($name) || (is_array($name) && empty($name['name'])))
 		{
 			throw new \Fuel_Exception('Cannot create field without name.');
 		}
@@ -205,7 +191,7 @@ class Fieldset
 			return $field;
 		}
 
-		$field = new \Fieldset_Field($name, $label, $attributes, $rules, $this);
+		$field = new Fieldset_Field($name, $label, $attributes, $rules, $this);
 		$this->fields[$name] = $field;
 
 		return $field;
@@ -244,14 +230,14 @@ class Fieldset
 	 */
 	public function add_model($class, $instance = null, $method = 'set_form_fields')
 	{
-		// Add model to validation callables for validation rules
-		$this->validation()->add_callable($class);
-
-		if ((is_string($class) and is_callable($callback = array('\\'.$class, $method)))
+		if ((is_string($class) && is_callable($callback = array('\\'.$class, $method)))
 			|| is_callable($callback = array($class, $method)))
 		{
 			$instance ? call_user_func($callback, $this, $instance) : call_user_func($callback, $this);
 		}
+
+		// Add model to validation callables for validation rules
+		$this->validation()->add_callable($class);
 
 		return $this;
 	}
@@ -315,21 +301,21 @@ class Fieldset
 			{
 				if (is_array($input) or $input instanceof \ArrayAccess)
 				{
-					if (isset($input[$f->name]))
+					if ($value = $input[$f->name])
 					{
-						$f->set_value($input[$f->name], true);
+						$f->set_value($value);
 					}
 				}
 				elseif (is_object($input) and property_exists($input, $f->name))
 				{
-					$f->set_value($input->{$f->name}, true);
+					$f->set_value($input->{$f->name});
 				}
 			}
 			else
 			{
 				if (($value = $this->input($f->name, null)) !== null)
 				{
-					$f->set_value($value, true);
+					$f->set_value($value);
 				}
 			}
 		}
@@ -368,15 +354,15 @@ class Fieldset
 	 */
 	public function validated($field = null)
 	{
-		return $this->validation()->validated($field);
+		return $this->validation->validated($field);
 	}
 
 	/**
-	 * Alias for $this->validation()->errors()
+	 * Alias for $this->validation()->error()
 	 */
-	public function errors($field = null)
+	public function error($field = null)
 	{
-		return $this->validation()->errors($field);
+		return $this->validation()->error($field);
 	}
 
 	/**

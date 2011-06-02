@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -28,26 +30,13 @@ namespace Fuel\Core;
  */
 class Validation {
 
-	/**
-	 * @var  Validation  keeps a reference to an instance of Validation while it is being run
-	 */
-	protected static $active;
-
 	public static function factory($fieldset = 'default')
 	{
-		if (is_string($fieldset))
+		if ( ! $fieldset instanceof Fieldset)
 		{
-			($set = \Fieldset::instance($fieldset)) and $fieldset = $set;
+			$fieldset = (string) $fieldset;
+			($set = \Fieldset::instance($fieldset)) && $fieldset = $set;
 		}
-
-		if ($fieldset instanceof Fieldset)
-		{
-			if ($fieldset->validation(false) != null)
-			{
-				throw new Fuel_Exception('Form instance already exists, cannot be recreated. Use instance() instead of factory() to retrieve the existing instance.');
-			}
-		}
-
 		return new static($fieldset);
 	}
 
@@ -55,22 +44,6 @@ class Validation {
 	{
 		$fieldset = \Fieldset::instance($name);
 		return $fieldset === false ? false : $fieldset->validation();
-	}
-
-	/**
-	 * Fetch the currently active validation instance
-	 */
-	public static function active()
-	{
-		return static::$active;
-	}
-
-	/**
-	 * Set or unset the currently active validation instance
-	 */
-	protected static function set_active($instance = null)
-	{
-		static::$active = $instance;
 	}
 
 	/**
@@ -105,16 +78,12 @@ class Validation {
 
 	protected function __construct($fieldset)
 	{
-		if ($fieldset instanceof Fieldset)
+		if ( ! $fieldset instanceof Fieldset)
 		{
-			$fieldset->validation($this);
-			$this->fieldset = $fieldset;
-		}
-		else
-		{
-			$this->fieldset = \Fieldset::factory($fieldset, array('validation_instance' => $this));
+			$fieldset = Fieldset::factory($fieldset, array('validation_instance' => $this));
 		}
 
+		$this->fieldset = $fieldset;
 		$this->callables = array($this);
 	}
 
@@ -136,7 +105,7 @@ class Validation {
 	 * @param	string		Rules as a piped string
 	 * @return	Validation	$this to allow chaining
 	 */
-	public function add_field($name, $label, $rules)
+	public function add_field($name, $label, $rules = array())
 	{
 		$field = $this->add($name, $label);
 
@@ -243,8 +212,6 @@ class Validation {
 			return false;
 		}
 
-		static::set_active($this);
-
 		$this->validated = array();
 		$this->errors = array();
 		$this->input = $input ?: array();
@@ -271,8 +238,6 @@ class Validation {
 				$this->errors[$field->name] = $v;
 			}
 		}
-
-		static::set_active();
 
 		return empty($this->errors);
 	}
@@ -411,7 +376,7 @@ class Validation {
 	 */
 	public function add_model($class, $instance = null, $method = 'set_form_fields')
 	{
-		$this->fieldset->add_model($class, $instance, $method);
+		$this->fieldset->add_model($class);
 
 		return $this;
 	}
@@ -440,18 +405,7 @@ class Validation {
 	 */
 	public function _validation_required($val)
 	{
-		return ! $this->_empty($val);
-	}
-
-	/**
-	 * Special empty method because 0 and '0' are non-empty values
-	 *
-	 * @param   mixed
-	 * @return  bool
-	 */
-	public function _empty($val)
-	{
-		return ($val === false or $val === null or $val === '' or $val === array());
+		return ($val !== false && $val !== null && $val !== '');
 	}
 
 	/**
@@ -465,7 +419,7 @@ class Validation {
 	public function _validation_match_value($val, $compare, $strict = false)
 	{
 		// first try direct match
-		if ($this->_empty($val) || $val === $compare || ( ! $strict && $val == $compare))
+		if (empty($val) || $val === $compare || ( ! $strict && $val == $compare))
 		{
 			return true;
 		}
@@ -495,7 +449,7 @@ class Validation {
 	 */
 	public function _validation_match_pattern($val, $pattern)
 	{
-		return $this->_empty($val) || preg_match($pattern, $val) > 0;
+		return empty($val) || preg_match($pattern, $val) > 0;
 	}
 
 	/**
@@ -508,7 +462,7 @@ class Validation {
 	 */
 	public function _validation_match_field($val, $field)
 	{
-		return $this->_empty($val) || $this->input($field) === $val;
+		return empty($val) || $this->input($field) === $val;
 	}
 
 	/**
@@ -520,7 +474,7 @@ class Validation {
 	 */
 	public function _validation_min_length($val, $length)
 	{
-		return $this->_empty($val) || (MBSTRING ? mb_strlen($val) : strlen($val)) >= $length;
+		return empty($val) || (MBSTRING ? mb_strlen($val) : strlen($val)) >= $length;
 	}
 
 	/**
@@ -532,7 +486,7 @@ class Validation {
 	 */
 	public function _validation_max_length($val, $length)
 	{
-		return $this->_empty($val) || (MBSTRING ? mb_strlen($val) : strlen($val)) <= $length;
+		return empty($val) || (MBSTRING ? mb_strlen($val) : strlen($val)) <= $length;
 	}
 
 	/**
@@ -544,7 +498,7 @@ class Validation {
 	 */
 	public function _validation_exact_length($val, $length)
 	{
-		return $this->_empty($val) || (MBSTRING ? mb_strlen($val) : strlen($val)) == $length;
+		return empty($val) || (MBSTRING ? mb_strlen($val) : strlen($val)) == $length;
 	}
 
 	/**
@@ -555,7 +509,7 @@ class Validation {
 	 */
 	public function _validation_valid_email($val)
 	{
-		return $this->_empty($val) || filter_var($val, FILTER_VALIDATE_EMAIL);
+		return empty($val) || filter_var($val, FILTER_VALIDATE_EMAIL);
 	}
 
 	/**
@@ -566,7 +520,7 @@ class Validation {
 	 */
 	public function _validation_valid_emails($val)
 	{
-		if ($this->_empty($val))
+		if (empty($val))
 		{
 			return true;
 		}
@@ -591,7 +545,7 @@ class Validation {
 	 */
 	public function _validation_valid_url($val)
 	{
-		return $this->_empty($val) || filter_var($val, FILTER_VALIDATE_URL);
+		return empty($val) || filter_var($val, FILTER_VALIDATE_URL);
 	}
 
 	/**
@@ -602,7 +556,7 @@ class Validation {
 	 */
 	public function _validation_valid_ip($val)
 	{
-		return $this->_empty($val) || filter_var($val, FILTER_VALIDATE_IP);
+		return empty($val) || filter_var($val, FILTER_VALIDATE_IP);
 	}
 
 	/**
@@ -614,7 +568,7 @@ class Validation {
 	 */
 	public function _validation_valid_string($val, $flags = array('alpha', 'utf8'))
 	{
-		if ($this->_empty($val))
+		if (empty($val))
 		{
 			return true;
 		}
@@ -675,7 +629,7 @@ class Validation {
 	 */
 	public function _validation_numeric_min($val, $min_val)
 	{
-		return $this->_empty($val) || floatval($val) >= floatval($min_val);
+		return empty($val) || floatval($val) >= floatval($min_val);
 	}
 
 	/**
@@ -687,7 +641,7 @@ class Validation {
 	 */
 	public function _validation_numeric_max($val, $max_val)
 	{
-		return $this->_empty($val) || floatval($val) <= floatval($max_val);
+		return empty($val) || floatval($val) <= floatval($max_val);
 	}
 }
 

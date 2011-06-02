@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -12,23 +14,26 @@
 
 namespace Fuel\Core;
 
-abstract class Controller {
+
+
+class Controller {
 
 	/**
-	 * @var  Request  The current Request object
+	 * @var	object	The current Request object
 	 */
 	public $request;
 
 	/**
-	 * @var  Response  The current Response object
+	 * @var	object	The current Response object
 	 */
 	public $response;
 
 	/**
 	 * Sets the controller request object.
 	 *
-	 * @param   Request   The current request object
-	 * @param   Response  The current response object
+	 * @access	public
+	 * @param	object	The current request object
+	 * @return	void
 	 */
 	public function __construct(\Request $request, \Response $response)
 	{
@@ -38,11 +43,17 @@ abstract class Controller {
 
 	/**
 	 * This method gets called before the action is called
+	 *
+	 * @access	public
+	 * @return	void
 	 */
 	public function before() { }
 
 	/**
 	 * This method gets called after the action is called
+	 *
+	 * @access	public
+	 * @return	void
 	 */
 	public function after() { }
 
@@ -50,8 +61,9 @@ abstract class Controller {
 	 * This method returns the named parameter requested, or all of them
 	 * if no parameter is given.
 	 *
-	 * @param   string  The name of the parameter
-	 * @return  string
+	 * @access	public
+	 * @param	string	The name of the parameter
+	 * @return	void
 	 */
 	public function param($param)
 	{
@@ -66,20 +78,14 @@ abstract class Controller {
 	/**
 	 * This method returns all of the named parameters.
 	 *
-	 * @return  array
+	 * @access	public
+	 * @return	void
 	 */
 	public function params()
 	{
 		return $this->request->named_params;
 	}
 
-	/**
-	 * Render a view and add it to the body
-	 *
-	 * @param   string     path to the view
-	 * @param   array      variables for the view
-	 * @param   bool|null  whether to use output encoding
-	 */
 	public function render($view, $data = array(), $auto_encode = null)
 	{
 		$this->response->body .= \View::factory($view, $data, $auto_encode);

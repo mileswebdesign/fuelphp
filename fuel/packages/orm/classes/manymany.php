@@ -127,7 +127,6 @@ class ManyMany extends Relation {
 		$models = array(
 			$rel_name.'_through' => array(
 				'model'        => null,
-				'connection'   => call_user_func(array($this->model_to, 'connection')),
 				'table'        => array($this->table_through, $alias_to.'_through'),
 				'primary_key'  => null,
 				'join_type'    => 'left',
@@ -138,7 +137,6 @@ class ManyMany extends Relation {
 			),
 			$rel_name => array(
 				'model'        => $this->model_to,
-				'connection'   => call_user_func(array($this->model_to, 'connection')),
 				'table'        => array(call_user_func(array($this->model_to, 'table')), $alias_to),
 				'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
 				'join_type'    => 'left',

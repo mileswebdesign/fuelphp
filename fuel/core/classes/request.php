@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -13,39 +15,21 @@
 namespace Fuel\Core;
 
 
-/**
- * The Request class is used to create and manage new and existing requests.  There
- * is a main request which comes in from the browser or command line, then new
- * requests can be created for HMVC requests.
- *
- * Example Usage:
- *
- *     $request = Request::factory('foo/bar')->execute();
- *     echo $request->response();
- *
- * @package     Fuel
- * @subpackage  Core
- */
+
 class Request {
 
 	/**
-	 * Holds the main request instance
-	 *
-	 * @var  Request
+	 * @var	object	Holds the main request instance
 	 */
 	protected static $main = false;
 
 	/**
-	 * Holds the global active request instance
-	 *
-	 * @var  Request
+	 * @var	object	Holds the global request instance
 	 */
 	protected static $active = false;
 
 	/**
-	 * Holds the previous request
-	 *
-	 * @var  Request
+	 * @var	object	Holds the previous request;
 	 */
 	protected static $previous = false;
 
@@ -56,11 +40,12 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     Request::factory('hello/world');
+	 * <code>Request::factory('hello/world');</code>
 	 *
-	 * @param   string   The URI of the request
-	 * @param   bool     Whether to use the routes to determine the Controller and Action
-	 * @return  Request  The new request object
+	 * @access	public
+	 * @param	string	The URI of the request
+	 * @param	bool	if true use routes to process the URI
+	 * @return	object	The new request
 	 */
 	public static function factory($uri = null, $route = true)
 	{
@@ -83,13 +68,14 @@ class Request {
 	}
 
 	/**
-	 * Returns the main request instance (the one from the browser or CLI).
+	 * Returns the main request instance.
 	 *
 	 * Usage:
 	 *
-	 *     Request::main();
+	 * <code>Request::main();</code>
 	 *
-	 * @return  Request
+	 * @access	public
+	 * @return	object
 	 */
 	public static function main()
 	{
@@ -103,13 +89,14 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     Request::active();
+	 * <code>Request::active();</code>
 	 *
-	 * @return  Request
+	 * @access	public
+	 * @return	object
 	 */
 	public static function active()
 	{
-		class_exists('Log', false) and logger(Fuel::L_INFO, 'Called', __METHOD__);
+		class_exists('Log', false) && logger(Fuel::L_INFO, 'Called', __METHOD__);
 
 		return static::$active;
 	}
@@ -120,32 +107,21 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     Request::show_404();
+	 * <code>Request::show_404();</code>
 	 *
-	 * @param   bool         Whether to return the 404 output or just output and exit
-	 * @return  void|string  Void if $return is false, the output if $return is true
+	 * @access	public
+	 * @return	void
 	 */
 	public static function show_404($return = false)
 	{
 		logger(Fuel::L_INFO, 'Called', __METHOD__);
 
-		// This ensures that show_404 doesn't recurse indefinately
+		// This ensures that show_404 is only called once.
 		static $call_count = 0;
 		$call_count++;
 
-		if ($call_count == 1)
+		if ($call_count > 1)
 		{
-			// first call, route the 404 route
-			$route_request = true;
-		}
-		elseif ($call_count == 2)
-		{
-			// second call, try the 404 route without routing
-			$route_request = false;
-		}
-		else
-		{
-			// third call, there's something seriously wrong now
 			throw new \Fuel_Exception('It appears your _404_ route is incorrect.  Multiple Recursion has happened.');
 		}
 
@@ -163,7 +139,7 @@ class Request {
 		}
 		else
 		{
-			$request = \Request::factory(\Config::get('routes._404_'), $route_request)->execute();
+			$request = \Request::factory(\Config::get('routes._404_'))->execute();
 
 			if ($return)
 			{
@@ -175,16 +151,6 @@ class Request {
 		}
 	}
 
-	/**
-	 * Reset's the active request with the previous one.  This is needed after
-	 * the active request is finished.
-	 *
-	 * Usage:
-	 *
-	 *    Request::reset_request();
-	 *
-	 * @return  void
-	 */
 	public static function reset_request()
 	{
 		// Let's make the previous Request active since we are don't executing this one.
@@ -196,79 +162,57 @@ class Request {
 
 
 	/**
-	 * Holds the response object of the request.
-	 *
-	 * @var  Response
+	 * @var	string	Holds the response of the request.
 	 */
 	public $response = null;
 
 	/**
-	 * The Request's URI object.
-	 *
-	 * @var  Uri
+	 * @var	object	The request's URI object
 	 */
-	public $uri = null;
+	public $uri = '';
 
 	/**
-	 * The request's route object
-	 *
-	 * @var  Route
+	 * @var	object	The request's route object
 	 */
 	public $route = null;
 
 	/**
-	 * The current module
-	 *
-	 * @var  string
+	 * @var	string	Controller module
 	 */
 	public $module = '';
 
 	/**
-	 * The current controller directory
-	 *
-	 * @var  string
+	 * @var	string	Controller directory
 	 */
 	public $directory = '';
 
 	/**
-	 * The request's controller
-	 *
-	 * @var  string
+	 * @var	string	The request's controller
 	 */
 	public $controller = '';
 
 	/**
-	 * The request's controller action
-	 *
-	 * @var  string
+	 * @var	string	The request's action
 	 */
 	public $action = '';
 
 	/**
-	 * The request's method params
-	 *
-	 * @var  array
+	 * @var	string	The request's method params
 	 */
 	public $method_params = array();
 
 	/**
-	 * The request's named params
-	 *
-	 * @var  array
+	 * @var	string	The request's named params
 	 */
 	public $named_params = array();
 
 	/**
-	 * Controller instance once instantiated
-	 *
-	 * @var  Controller
+	 * @var	Controller	Controller instance once instantiated
 	 */
 	public $controller_instance;
 
 	/**
-	 * Search paths for the current active request
-	 *
-	 * @var  array
+	 * @var	array	search paths for the current active request
 	 */
 	public $paths = array();
 
@@ -276,20 +220,17 @@ class Request {
 	 * Creates the new Request object by getting a new URI object, then parsing
 	 * the uri with the Route class.
 	 *
-	 * Usage:
-	 *
-	 *     $request = new Request('foo/bar');
-	 *
-	 * @param   string  the uri string
-	 * @param   bool    whether or not to route the URI
-	 * @return  void
+	 * @access	public
+	 * @param	string	the uri string
+	 * @param	bool	whether or not to route the URI
+	 * @return	void
 	 */
 	public function __construct($uri, $route = true)
 	{
 		$this->uri = new \Uri($uri);
 
 		// check if a module was requested
-		if (count($this->uri->segments) and $modpath = \Fuel::module_exists($this->uri->segments[0]))
+		if (count($this->uri->segments) && $modpath = \Fuel::module_exists($this->uri->segments[0]))
 		{
 			// check if the module has custom routes
 			if (file_exists($modpath .= 'config/routes.php'))
@@ -326,9 +267,10 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $request = Request::factory('hello/world')->execute();
+	 * <code>$request = Request::factory('hello/world')->execute();</code>
 	 *
-	 * @return  Request  This request object
+	 * @access	public
+	 * @return	void
 	 */
 	public function execute()
 	{
@@ -399,15 +341,6 @@ class Request {
 		return $this;
 	}
 
-	/**
-	 * Gets this Request's Response object;
-	 *
-	 * Usage:
-	 *
-	 *     $response = Request::factory('foo/bar')->execute()->response();
-	 *
-	 * @return  Response  This Request's Response object
-	 */
 	public function response()
 	{
 		return $this->response;
@@ -416,9 +349,8 @@ class Request {
 	/**
 	 * Add to paths which are used by Fuel::find_file()
 	 *
-	 * @param   string  the new path
-	 * @param   bool    whether to add to the front or the back of the array
-	 * @return  void
+	 * @param  string  the new path
+	 * @param  bool    whether to add to the front or the back of the array
 	 */
 	public function add_path($path, $prefix = false)
 	{
@@ -449,10 +381,13 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $request = Request::factory('hello/world')->execute();
-	 *     echo $request;
+	 * <code>
+	 * $request = Request::factory('hello/world')->execute();
+	 * echo $request;
+	 * </code>
 	 *
-	 * @return  string  the response
+	 * @access	public
+	 * @return	string
 	 */
 	public function __toString()
 	{

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -81,7 +83,7 @@ return array(
 	// specific configuration settings for database based sessions
 	'db'			=> array(
 		'cookie_name'		=> 'fueldid',				// name of the session cookie for database based sessions
-		'database'			=> null,					// name of the database name (as configured in config/db.php)
+		'database'			=> 'dev',					// name of the database name (as configured in config/db.php)
 		'table'				=> 'sessions',				// name of the sessions table
 		'gc_probability'	=> 5						// probability % (between 0 and 100) for garbage collection
 						),

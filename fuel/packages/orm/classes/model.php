@@ -11,6 +11,7 @@
  */
 
 namespace Orm;
+use \Inflector;
 
 class Model implements \ArrayAccess, \Iterator {
 
@@ -19,24 +20,9 @@ class Model implements \ArrayAccess, \Iterator {
 	 * --------------------------------------------------------------------------- */
 
 	/**
-	 * @var  string  connection to use
-	 */
-	// protected static $_connection = null;
-
-	/**
 	 * @var  string  table name to overwrite assumption
 	 */
 	// protected static $_table_name;
-
-	/**
-	 * @var  array  array of object properties
-	 */
-	// protected static $_properties;
-
-	/**
-	 * @var  array  array of observer classes to use
-	 */
-	// protected static $_observers;
 
 	/**
 	 * @var  array  relationship properties
@@ -92,18 +78,6 @@ class Model implements \ArrayAccess, \Iterator {
 	}
 
 	/**
-	 * Fetch the database connection name to use
-	 *
-	 * @return  null|string
-	 */
-	public static function connection()
-	{
-		$class = get_called_class();
-
-		return property_exists($class, '_connection') ? static::$_connection : null;
-	}
-
-	/**
 	 * Get the table name for this class
 	 *
 	 * @return  string
@@ -112,18 +86,16 @@ class Model implements \ArrayAccess, \Iterator {
 	{
 		$class = get_called_class();
 
+		// Table name set in Model
+		if (property_exists($class, '_table_name'))
+		{
+			return static::$_table_name;
+		}
+
 		// Table name unknown
 		if ( ! array_key_exists($class, static::$_table_names_cached))
 		{
-			// Table name set in Model
-			if (property_exists($class, '_table_name'))
-			{
-				static::$_table_names_cached[$class] = static::$_table_name;
-			}
-			else
-			{
-				static::$_table_names_cached[$class] = \Inflector::tableize($class);
-			}
+			static::$_table_names_cached[$class] = \Inflector::tableize($class);
 		}
 
 		return static::$_table_names_cached[$class];
@@ -221,7 +193,7 @@ class Model implements \ArrayAccess, \Iterator {
 		{
 			try
 			{
-				$properties = \DB::list_columns(static::table(), null, static::connection());
+				$properties = \DB::list_columns(static::table());
 			}
 			catch (\Exception $e)
 			{
@@ -375,7 +347,7 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public static function query($options = array())
 	{
-		return Query::factory(get_called_class(), static::connection(), $options);
+		return Query::factory(get_called_class(), $options);
 	}
 
 	/**
@@ -386,7 +358,7 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public static function count(array $options = array())
 	{
-		return Query::factory(get_called_class(), static::connection(), $options)->count();
+		return Query::factory(get_called_class(), $options)->count();
 	}
 
 	/**
@@ -398,7 +370,7 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public static function max($key = null)
 	{
-		return Query::factory(get_called_class(), static::connection())->max($key ?: static::primary_key());
+		return Query::factory(get_called_class())->max($key ?: static::primary_key());
 	}
 
 	/**
@@ -410,7 +382,7 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public static function min($key = null)
 	{
-		return Query::factory(get_called_class(), static::connection())->min($key ?: static::primary_key());
+		return Query::factory(get_called_class())->min($key ?: static::primary_key());
 	}
 
 	public static function __callStatic($method, $args)
@@ -540,18 +512,21 @@ class Model implements \ArrayAccess, \Iterator {
 			{
 				if (array_key_exists($prop, $data))
 				{
-					$this->_data[$prop] = $data[$prop];
+					$this->{$prop} = $data[$prop];
 				}
 				elseif (array_key_exists('default', $settings))
 				{
-					$this->_data[$prop] = $settings['default'];
+					$this->{$prop} = $settings['default'];
 				}
 			}
 		}
 		else
 		{
 			$this->_update_original($data);
-			$this->_data = array_merge($this->_data, $data);
+			foreach ($data as $key => $val)
+			{
+				$this->{$key} = $val;
+			}
 		}
 
 		if ($new === false)
@@ -574,7 +549,10 @@ class Model implements \ArrayAccess, \Iterator {
 	public function _update_original($original = null)
 	{
 		$original = is_null($original) ? $this->_data : $original;
-		$this->_original = array_merge($this->_original, $original);
+		foreach ($original as $key => $val)
+		{
+			$this->_original[$key] = $val;
+		}
 
 		$this->_update_original_relations();
 	}
@@ -796,7 +774,7 @@ class Model implements \ArrayAccess, \Iterator {
 		$this->observe('before_insert');
 
 		// Set all current values
-		$query = Query::factory(get_called_class(), static::connection());
+		$query = Query::factory(get_called_class());
 		$primary_key = static::primary_key();
 		$properties  = array_keys(static::properties());
 		foreach ($properties as $p)
@@ -814,10 +792,7 @@ class Model implements \ArrayAccess, \Iterator {
 		if (count($primary_key) == 1 and $id !== false)
 		{
 			$pk = reset($primary_key);
-			if ($this->{$pk} === null)
-			{
-				$this->{$pk} = $id;
-			}
+			$this->{$pk} = $id;
 		}
 
 		// update the original properties on creation and cache object for future retrieval in this request
@@ -849,7 +824,7 @@ class Model implements \ArrayAccess, \Iterator {
 		$this->observe('before_update');
 
 		// Create the query and limit to primary key(s)
-		$query       = Query::factory(get_called_class(), static::connection())->limit(1);
+		$query       = Query::factory(get_called_class())->limit(1);
 		$primary_key = static::primary_key();
 		$properties  = array_keys(static::properties());
 		foreach ($primary_key as $pk)
@@ -873,6 +848,7 @@ class Model implements \ArrayAccess, \Iterator {
 		}
 
 		// update the original property on success
+
 		$this->observe('after_update');
 
 		return true;
@@ -905,7 +881,7 @@ class Model implements \ArrayAccess, \Iterator {
 		$this->unfreeze();
 
 		// Create the query and limit to primary key(s)
-		$query = Query::factory(get_called_class(), static::connection())->limit(1);
+		$query = Query::factory(get_called_class())->limit(1);
 		$primary_key = static::primary_key();
 		foreach ($primary_key as $pk)
 		{
@@ -952,7 +928,7 @@ class Model implements \ArrayAccess, \Iterator {
 	{
 		foreach ($this->_original as $p => $val)
 		{
-			$this->_data[$p] = $val;
+			$this->{$p} = $val;
 		}
 	}
 
@@ -969,7 +945,7 @@ class Model implements \ArrayAccess, \Iterator {
 			{
 				if ( ! class_exists($observer))
 				{
-					$observer_class = \Inflector::get_namespace($observer).'Observer_'.\Inflector::denamespace($observer);
+					$observer_class = 'Observer_'.$observer; // TODO: needs to work with namespaces
 					if ( ! class_exists($observer_class))
 					{
 						throw new InvalidObserver($observer);
@@ -981,17 +957,7 @@ class Model implements \ArrayAccess, \Iterator {
 					$observer = $observer_class;
 				}
 
-				try
-				{
-					call_user_func(array($observer, 'orm_notify'), $this, $event);
-				}
-				catch (\Exception $e)
-				{
-					// Unfreeze before failing
-					$this->unfreeze();
-
-					throw $e;
-				}
+				call_user_func(array($observer, 'orm_notify'), $this, $event);
 			}
 		}
 	}
@@ -1060,7 +1026,7 @@ class Model implements \ArrayAccess, \Iterator {
 		// Reset primary keys
 		foreach (static::$_primary_key as $pk)
 		{
-			$this->_data[$pk] = null;
+			$this->{$pk} = null;
 		}
 
 		// This is a new object
@@ -1112,7 +1078,7 @@ class Model implements \ArrayAccess, \Iterator {
 
 	public function offsetExists($offset)
 	{
-		return $this->__isset($offset);
+		$this->__isset($offset);
 	}
 
 	public function offsetUnset($offset)
@@ -1124,7 +1090,7 @@ class Model implements \ArrayAccess, \Iterator {
 	{
 		try
 		{
-			return $this->__get($offset);
+			$this->__get($offset);
 		}
 		catch (\Exception $e)
 		{
@@ -1203,7 +1169,7 @@ class Model implements \ArrayAccess, \Iterator {
 			}
 			else
 			{
-				$array[$name] = is_null($rel) ? null : $rel->to_array();
+				$array[$name] = $rel->to_array();
 			}
 		}
 

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -74,6 +76,8 @@ class Config {
 		$content = <<<CONF
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package		Fuel
@@ -87,41 +91,15 @@ class Config {
 
 CONF;
 		$content .= 'return '.str_replace('  ', "\t", var_export($config, true)).';';
-
-		if ( ! $path = \Fuel::find_file('config', $file, '.php'))
-		{
-			if ($pos = strripos($file, '::'))
-			{
-				// get the namespace path
-				if ($path = \Autoloader::namespace_path('\\'.ucfirst(substr($file, 0, $pos))))
-				{
-					// strip the namespace from the filename
-					$file = substr($file, $pos+2);
-
-					// strip the classes directory as we need the module root
-					// and construct the filename
-					$path = substr($path,0, -8).'config'.DS.$file.'.php';
-
-				}
-				else
-				{
-					// invalid namespace requested
-					return false;
-				}
-			}
-
-		}
-
 		$content .= <<<CONF
 
 
 /* End of file $file.php */
 CONF;
 
-		// make sure we have a fallback
-		$path or $path = APPPATH.'config'.DS.$file.'.php';
+		($path = \Fuel::find_file('config', $file, '.php')) or $path[0] = APPPATH.'config'.DS.$file.'.php';
 
-		$path = pathinfo($path);
+		$path = pathinfo($path[0]);
 
 		return File::update($path['dirname'], $path['basename'], $content);
 	}

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -34,7 +36,6 @@ class Cli {
 		'black'			=> '0;30',
 		'dark_gray'		=> '1;30',
 		'blue'			=> '0;34',
-		'dark_blue'		=> '1;34',
 		'light_blue'	=> '1;34',
 		'green'			=> '0;32',
 		'light_green'	=> '1;32',
@@ -44,7 +45,7 @@ class Cli {
 		'light_red'		=> '1;31',
 		'purple'		=> '0;35',
 		'light_purple'	=> '1;35',
-		'light_yellow'	=> '0;33',
+		'brown'			=> '0;33',
 		'yellow'		=> '1;33',
 		'light_gray'	=> '0;37',
 		'white'			=> '1;37',
@@ -346,7 +347,7 @@ class Cli {
 	 * @param	integer	Number of lines to output
 	 * @return	void
 	 */
-	public static function new_line($num = 1)
+	function new_line($num = 1)
 	{
         // Do it once or more, write with empty string gives us a new line
         for($i = 0; $i < $num; $i++)
@@ -360,7 +361,7 @@ class Cli {
 	 *
 	 * @return	void
 	 */
-    public static function clear_screen()
+    function clear_screen()
     {
 		static::is_windows()
 
@@ -407,30 +408,6 @@ class Cli {
 		$string .= $text."\033[0m";
 
 		return $string;
-	}
-	
-	/**
-	* Spawn Background Process
-	*
-	* Launches a background process (note, provides no security itself, $call must be sanitised prior to use)
-	* @param string $call the system call to make
-	* @return void
-	* @author raccettura
-	* @link http://robert.accettura.com/blog/2006/09/14/asynchronous-processing-with-php/
-	*/
-	public static function spawn($call, $output = '/dev/null')
-	{
-		// Windows
-		if(static::is_windows())
-		{
-			pclose(popen('start /b '.$call, 'r'));
-	    }
-	
-		// Some sort of UNIX
-		else 
-		{
-			pclose(popen($call.' > '.$output.' &', 'r'));
-	    }
 	}
 
 }

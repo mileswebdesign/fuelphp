@@ -51,7 +51,6 @@ class HasMany extends Relation {
 		$alias_to = 't'.$alias_to_nr;
 		$model = array(
 			'model'        => $this->model_to,
-			'connection'   => call_user_func(array($this->model_to, 'connection')),
 			'table'        => array(call_user_func(array($this->model_to, 'table')), $alias_to),
 			'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
 			'join_type'    => 'left',
@@ -94,10 +93,16 @@ class HasMany extends Relation {
 				throw new Exception('Invalid Model instance added to relations in this model.');
 			}
 
-			$current_model_id = ($model_to and ! $model_to->is_new()) ? $model_to->implode_pk($model_to) : null;
+			// Save if it's a yet unsaved object
+			if ($model_to->is_new())
+			{
+				$model_to->save(false);
+			}
+
+			$current_model_id = $model_to ? $model_to->implode_pk($model_to) : null;
 
 			// Check if the model was already assigned
-			if (($model_to and $model_to->is_new()) or ! in_array($current_model_id, $original_model_ids))
+			if ( ! in_array($current_model_id, $original_model_ids))
 			{
 				// assign this object to the new objects foreign keys
 				reset($this->key_to);
@@ -108,7 +113,6 @@ class HasMany extends Relation {
 					$model_to->{current($this->key_to)} = $model_from->{$pk};
 					next($this->key_to);
 				}
-				$model_to->is_new() and $model_to->save(false);
 				$frozen and $model_to->freeze();
 			}
 			// check if the model_to's foreign_keys match the model_from's primary keys

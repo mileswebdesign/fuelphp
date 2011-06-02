@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -15,13 +17,13 @@ namespace Fuel\Core;
 /**
  * Cookie class
  *
- * @package    Fuel
+ * @package    Kohana
  * @category   Helpers
  * @author     Kohana Team
  * @modified   Phil Sturgeon - Fuel Development Team
  * @copyright  (c) 2008-2010 Kohana Team
  * @license    http://kohanaframework.org/license
- * @link       http://fuelphp.com/docs/classes/cookie.html
+ * @link		http://fuelphp.com/docs/classes/cookie.html
  */
 class Cookie {
 

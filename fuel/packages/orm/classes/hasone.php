@@ -53,7 +53,6 @@ class HasOne extends Relation {
 		$alias_to = 't'.$alias_to_nr;
 		$model = array(
 			'model'        => $this->model_to,
-			'connection'   => call_user_func(array($this->model_to, 'connection')),
 			'table'        => array(call_user_func(array($this->model_to, 'table')), $alias_to),
 			'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
 			'join_type'    => 'left',
@@ -87,9 +86,15 @@ class HasOne extends Relation {
 			throw new Exception('Invalid Model instance added to relations in this model.');
 		}
 
-		$current_model_id = ($model_to and ! $model_to->is_new()) ? $model_to->implode_pk($model_to) : null;
+		// Save if it's a yet unsaved object
+		if ($model_to and $model_to->is_new())
+		{
+			$model_to->save(false);
+		}
+
+		$current_model_id = $model_to ? $model_to->implode_pk($model_to) : null;
 		// Check if there was another model assigned (this supersedes any change to the foreign key(s))
-		if (($model_to and $model_to->is_new()) or $current_model_id != $original_model_id)
+		if ($current_model_id != $original_model_id)
 		{
 			// assign this object to the new objects foreign keys
 			if ( ! empty($model_to))

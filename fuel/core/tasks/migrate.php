@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -41,7 +43,7 @@ class Migrate {
 		}
 
 		// Not a lot of point in this
-		else if ($version == $current_version)
+		if ($version === $current_version)
 		{
 			throw new \Oil\Exception('Migration: ' . $version .' already in use.');
 			return;
@@ -50,7 +52,7 @@ class Migrate {
 		$run = false;
 
 		// Specific version
-		if (is_numeric($version) and $version >= 0)
+		if ($version > 0)
 		{
 			if (\Migrate::version($version) === false)
 			{

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -13,19 +15,6 @@
 return array(
 
 	/**
-	 * base_url - The base URL of the application.
-	 * MUST contain a trailing slash (/)
-	 *
-	 * You can set this to a full or relative URL:
-	 *
-	 *     'base_url' => '/foo',
-	 *     'base_url' => 'http://foo.com/'
-	 *
-	 * Set this to null to have it automatically detected.
-	 */
-	'base_url'		=> null,
-
-	/**
 	 * index_file - The name of the main bootstrap file.
 	 *
 	 * Set this to false or remove if you using mod_rewrite.
@@ -37,10 +26,10 @@ return array(
 	 *
 	 * Fuel::DEVELOPMENT
 	 * Fuel::TEST
-	 * Fuel::STAGE
+	 * Fuel::QA
 	 * Fuel::PRODUCTION
 	 */
-	'environment'	=> (isset($_SERVER['FUEL_ENV']) ? $_SERVER['FUEL_ENV'] : Fuel::DEVELOPMENT),
+	'environment'	=> Fuel::DEVELOPMENT,
 
 	'profiling'		=> false,
 
@@ -110,7 +99,7 @@ return array(
 		 * With output encoding switched on all objects passed will be converted to strings or
 		 * throw exceptions unless they are instances of the classes in this array.
 		 */
-		'whitelisted_classes' => array('stdClass', 'Fuel\\Core\\View', 'Fuel\\Core\\ViewModel', 'Closure')
+		'whitelisted_classes' => array('Fuel\\Core\\View', 'Fuel\\Core\\ViewModel', 'Closure')
 	),
 
 	/**

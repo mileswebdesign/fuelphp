@@ -8,7 +8,7 @@
  *     // SELECT CONCAT(first_name, last_name) AS full_name
  *     $query = DB::select(array(DB::expr('CONCAT(first_name, last_name)'), 'full_name')));
  *
- * @package    Fuel/Database
+ * @package    Kohana/Database
  * @category   Base
  * @author     Kohana Team
  * @copyright  (c) 2009 Kohana Team

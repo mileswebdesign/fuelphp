@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * Image manipulation class.
@@ -19,24 +21,17 @@ class Image {
 	protected static $_instance = null;
 
 	/**
-	 * Holds the config until an instance is initiated.
-	 *
-	 * @var  array   Config options to be passed when the instance is created.
-	 */
-	protected static $_config = array();
-
-	/**
 	 * Creates a new instance for static use of the class.
 	 *
 	 * @return  Image_Driver
 	 */
 	protected static function instance()
 	{
-		if (static::$_instance == null)
+		if (Image::$_instance == null)
 		{
-			static::$_instance = static::factory(static::$_config);
+			Image::$_instance = Image::factory();
 		}
-		return static::$_instance;
+		return Image::$_instance;
 	}
 
 	/**
@@ -47,7 +42,6 @@ class Image {
 	 */
 	public static function factory($config = array(), $filename = null)
 	{
-		!is_array($config) and $config = array();
 		$protocol = ucfirst( ! empty($config['driver']) ? $config['driver'] : 'gd');
 		$class = 'Image_'.$protocol;
 		if ($protocol == 'Driver' || ! class_exists($class))
@@ -65,27 +59,12 @@ class Image {
 	/**
 	 * Used to set configuration options.
 	 *
-	 * Sending the config options through the static reference initalizes the
-	 * instance. If you need to send a driver config through the static reference,
-	 * make sure its the first one sent! If errors arise, create a new instance using
-	 * factory().
-	 *
 	 * @param  array   $config   An array of configuration settings.
 	 * @return Image_Driver
 	 */
-	public static function config($index = array(), $value = null)
+	public static function config($config = array())
 	{
-		if (static::$_instance === null)
-		{
-			if ($value !== null)
-				$index = array($index => $value);
-			if (is_array($index))
-				static::$_config = array_merge(static::$_config, $index);
-			static::instance();
-			return static::instance();
-		} else {
-			return static::instance()->config($index, $value);
-		}
+		return Image::instance()->config($config);
 	}
 
 	/**
@@ -96,7 +75,7 @@ class Image {
 	 */
 	public static function load($filename)
 	{
-		return static::instance()->load($filename);
+		return Image::instance()->load($filename);
 	}
 
 	/**
@@ -112,7 +91,7 @@ class Image {
 	 */
 	public static function crop($x1, $y1, $x2, $y2)
 	{
-		return static::instance()->crop($x1, $y1, $x2, $y2);
+		return Image::instance()->crop($x1, $y1, $x2, $y2);
 	}
 
 	/**
@@ -126,7 +105,7 @@ class Image {
 	 */
 	public static function resize($width, $height, $keepar = true, $pad = false)
 	{
-		return static::instance()->resize($width, $height, $keepar, $pad);
+		return Image::instance()->resize($width, $height, $keepar, $pad);
 	}
 
 	/**
@@ -138,7 +117,7 @@ class Image {
 	 */
 	public static function crop_resize($width, $height)
 	{
-		return static::instance()->crop_resize($width, $height);
+		return Image::instance()->crop_resize($width, $height);
 	}
 
 	/**
@@ -149,7 +128,7 @@ class Image {
 	 */
 	public static function rotate($degrees)
 	{
-		return static::instance()->rotate($degrees);
+		return Image::instance()->rotate($degrees);
 	}
 
 	/**
@@ -162,7 +141,7 @@ class Image {
 	 */
 	public static function watermark($filename, $position, $padding = 5)
 	{
-		return static::instance()->watermark($filename, $position, $padding);
+		return Image::instance()->watermark($filename, $position, $padding);
 	}
 
 	/**
@@ -174,7 +153,7 @@ class Image {
 	 */
 	public static function border($size, $color = null)
 	{
-		return static::instance()->border($size, $color);
+		return Image::instance()->border($size, $color);
 	}
 
 	/**
@@ -185,7 +164,7 @@ class Image {
 	 */
 	public static function mask($maskimage)
 	{
-		return static::instance()->mask($maskimage);
+		return Image::instance()->mask($maskimage);
 	}
 
 	/**
@@ -198,7 +177,7 @@ class Image {
 	 */
 	public static function rounded($radius, $sides = null, $antialias = null)
 	{
-		return static::instance()->rounded($radius, $sides, $antialias);
+		return Image::instance()->rounded($radius, $sides, $antialias);
 	}
 
 	/**
@@ -206,11 +185,11 @@ class Image {
 	 *
 	 * @param  string  $filename     The location where to save the image.
 	 * @param  string  $permissions  Allows unix style permissions
-	 * @return Image_Driver
+	 * @return string  The location of the file
 	 */
 	public static function save($filename, $permissions = null)
 	{
-		return static::instance()->save($filename, $permissions);
+		return Image::instance()->save($filename, $permissions);
 	}
 
 	/**
@@ -219,38 +198,21 @@ class Image {
 	 * @param  string  $prepend      The text to add to the beginning of the filename.
 	 * @param  string  $append       The text to add to the end of the filename.
 	 * @param  string  $permissions  Allows unix style permissions
-	 * @return Image_Driver
+	 * @return string  The location of the file
 	 */
 	public static function save_pa($prepend, $append = null, $permissions = null)
 	{
-		return static::instance()->save_pa($prepend, $append, $permissions);
+		return Image::instance()->save_pa($prepend, $append, $permissions);
 	}
 
 	/**
 	 * Outputs the file directly to the user.
 	 *
 	 * @param  string  $filetype  The extension type to use. Ex: png, jpg, bmp, gif
-	 * @return Image_Driver
 	 */
 	public static function output($filetype = null)
 	{
-		return static::instance()->output($filetype);
-	}
-
-	/**
-	 * Returns sizes for the currently loaded image, or the image given in the $filename.
-	 *
-	 * @param	string	$filename	The location of the file to get sizes for.
-	 * @return	object	An object containing width and height variables.
-	 */
-	public static function sizes($filename = null)
-	{
-		return static::instance()->sizes($filename);
-	}
-
-	public static function reload()
-	{
-		return static::instance()->reload();
+		Image::instance()->output($filetype);
 	}
 
 }

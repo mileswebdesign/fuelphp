@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -81,7 +83,7 @@ class Fieldset_Field
 	 * @param	array
 	 * @param	Fieldset
 	 */
-	public function __construct($name, $label = '', Array $attributes = array(), Array $rules = array(), Fieldset $fieldset)
+	public function __construct($name, $label = '', Array $attributes = array(), Array $rules = array(), \Fieldset $fieldset)
 	{
 		$this->name = (string) $name;
 		$this->fieldset = $fieldset;
@@ -89,9 +91,6 @@ class Fieldset_Field
 
 		// Don't allow name in attributes
 		unset($attributes['name']);
-
-		// Take rules out of attributes
-		unset($attributes['rules']);
 
 		// Set certain types through specific setter
 		foreach (array('label', 'type', 'value', 'options') as $prop)
@@ -122,8 +121,6 @@ class Fieldset_Field
 	{
 		$this->label = $label;
 		$this->set_attribute('label', $label);
-
-		return $this;
 	}
 
 	/**
@@ -135,36 +132,17 @@ class Fieldset_Field
 	{
 		$this->type = (string) $type;
 		$this->set_attribute('type', $type);
-
-		return $this;
 	}
 
 	/**
 	 * Change the field's current or default value
 	 *
-	 * @param  string
-	 * @param  bool
+	 * @param	string
 	 */
-	public function set_value($value, $repopulate = false)
+	public function set_value($value)
 	{
-		// Repopulation is handled slightly different in some cases
-		if ($repopulate)
-		{
-			if (($this->type == 'radio' or $this->type == 'checkbox') and empty($this->options))
-			{
-				if ($this->value == $value)
-				{
-					$this->set_attribute('checked', 'checked');
-				}
-
-				return $this;
-			}
-		}
-
 		$this->value = $value;
 		$this->set_attribute('value', $value);
-
-		return $this;
 	}
 
 	/**
@@ -175,8 +153,6 @@ class Fieldset_Field
 	public function set_template($template = null)
 	{
 		$this->template = $template;
-
-		return $this;
 	}
 
 	/**
@@ -302,6 +278,16 @@ class Fieldset_Field
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Get the options available for this field
+	 *
+	 * @return	array
+	 */
+	public function options()
+	{
+		return $this->options;
 	}
 
 	/**

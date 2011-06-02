@@ -1,5 +1,7 @@
 <?php
 /**
+ * Fuel
+ *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -27,14 +29,12 @@ class Tests_Uri extends TestCase {
 	 */
 	public function test_create()
 	{
-		$prefix = (Config::get('index_file')) ? Config::get('index_file').'/' : '';
-
 		$output = Uri::create('controller/method');
-		$expected = $prefix."controller/method";
+		$expected = "index.php/controller/method";
 		$this->assertEquals($expected, $output);
 
 		$output = Uri::create('controller/:some', array('some' => 'thing', 'and' => 'more'), array('what' => ':and'));
-		$expected = $prefix."controller/thing?what=more";
+		$expected = "index.php/controller/thing?what=more";
 		$this->assertEquals($expected, $output);
 	}
 
