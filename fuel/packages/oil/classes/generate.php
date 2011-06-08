@@ -553,6 +553,11 @@ HELP;
 		return $result;
 	}
 
+	public static function class_name($name)
+	{
+		return str_replace(array(' ', '-'), '_', ucwords(str_replace('_', ' ', $name)));
+	}
+
 	// Helper methods
 
 	private static function _find_migration_number()
