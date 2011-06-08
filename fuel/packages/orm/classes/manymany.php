@@ -127,6 +127,7 @@ class ManyMany extends Relation {
 		$models = array(
 			$rel_name.'_through' => array(
 				'model'        => null,
+				'connection'   => call_user_func(array($this->model_to, 'connection')),
 				'table'        => array($this->table_through, $alias_to.'_through'),
 				'primary_key'  => null,
 				'join_type'    => 'left',
@@ -137,6 +138,7 @@ class ManyMany extends Relation {
 			),
 			$rel_name => array(
 				'model'        => $this->model_to,
+				'connection'   => call_user_func(array($this->model_to, 'connection')),
 				'table'        => array(call_user_func(array($this->model_to, 'table')), $alias_to),
 				'primary_key'  => call_user_func(array($this->model_to, 'primary_key')),
 				'join_type'    => 'left',
@@ -214,7 +216,7 @@ class ManyMany extends Relation {
 					next($this->key_to);
 				}
 
-				\DB::insert($this->table_through)->set($ids)->execute();
+				\DB::insert($this->table_through)->set($ids)->execute(call_user_func(array($model_from, 'connection')));
 				$original_model_ids[] = $current_model_id; // prevents inserting it a second time
 			}
 			else
@@ -258,7 +260,7 @@ class ManyMany extends Relation {
 				next($to_keys);
 			}
 
-			$query->execute();
+			$query->execute(call_user_func(array($model_from, 'connection')));
 		}
 
 		$cascade = is_null($cascade) ? $this->cascade_save : (bool) $cascade;
@@ -293,7 +295,7 @@ class ManyMany extends Relation {
 			$query->where($key, '=', $model_from->{current($this->key_from)});
 			next($this->key_from);
 		}
-		$query->execute();
+		$query->execute(call_user_func(array($model_from, 'connection')));
 
 		$cascade = is_null($cascade) ? $this->cascade_delete : (bool) $cascade;
 		if ($cascade and ! empty($model_to))

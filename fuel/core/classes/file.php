@@ -1,7 +1,5 @@
 <?php
 /**
- * Fuel
- *
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
@@ -43,11 +41,12 @@ class File {
 
 	public static function _init()
 	{
+		\Config::load('file', true);
+	
 		static::$base_area = \File_Area::factory(\Config::get('file.base_config', array()));
-
 		foreach (\Config::get('file.areas', array()) as $name => $config)
 		{
-			static::$areas[$name] = \File_Area::factory($config);
+			static::$areas[$name] = \File_Area::factory($config) + static::$base_area;
 		}
 	}
 
@@ -173,7 +172,7 @@ class File {
 			throw new \InvalidPathException('Cannot read file, file does not exists.');
 		}
 
-		$file = static::open_file($path, LOCK_SH, $area);
+		$file = static::open_file(@fopen($path, 'r'), LOCK_SH, $area);
 		$return = $as_string ? file_get_contents($path) : readfile($path);
 		static::close_file($file, $area);
 
@@ -430,7 +429,7 @@ class File {
 	 */
 	public static function rename_dir($path, $new_path, $area = null)
 	{
-		return rename($path, $new_path, $area);
+		return static::rename($path, $new_path, $area);
 	}
 
 	/**

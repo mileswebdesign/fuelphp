@@ -114,7 +114,8 @@ Array
 			<h4>Results</h4>
 			<p>
 				Executing a select query will generate a result object containing the requested database records.
-				By default the result is fetched as objects. Here is an exaple how to influence this behaviour.
+				By default the result is fetched as associative arrays. Here is an exaple how to influence this
+				behaviour.
 			</p>
 			<pre class="php"><code>// Will fetch the result as an associative array.
 $result = DB::select('id','name')->from('users')->as_assoc()->execute();
@@ -123,7 +124,7 @@ $result = DB::select('id','name')->from('users')->as_assoc()->execute();
 $result = DB::select('id','name')->from('users')->as_object()->execute();
 
 // Will fetch the result as an Model_Users object.
-$result = DB::select('id','name')->from('users')->as_object('Model_Users')->execute();
+$result = DB::select()->from('users')->as_object('Model_Users')->execute();
 			</code></pre>	
 			<p>Want to know how many records you have fetched? It's dead simple!</p>
 			<pre class="php"><code>
@@ -167,7 +168,7 @@ foreach($key_value as $id => $email)
 		<article>
 			
 			<h2 id="filtering">Filtering</h2>
-			<h4>Where statements</h4>
+			<h4 id="where_statements">Where statements</h4>
 			<p>
 				In order to set the conditions on our queries we can set WHERE conditions.
 				These examples also apply to updating and deleting.
@@ -195,7 +196,7 @@ $who = "john%";
 $result = DB::select()->from('users')->where('id', 'like', $who)->execute();
 </code></pre>
 
-			<p>Grouped where statements are also supported:</p>
+			<p id="grouped_where">Grouped where statements are also supported:</p>
 			
 			<pre class="php"><code>// SELECT * FROM `users` WHERE (`name` = 'John' AND `email` = 'john@example.com')
 // OR (`name` = 'mike' OR `name` = 'dirk')
@@ -209,7 +210,7 @@ $result = DB::select()->from('users')->where_open()
 ->or_where_close()->execute();
 </code></pre>
 
-			<p>The <em>BETWEEN</em> and <em>IN</em> also go through the <em>where</em> method:</p>
+			<p id="where_between_in">The <em>BETWEEN</em> and <em>IN</em> also go through the <em>where</em> method:</p>
 			<pre class="php"><code>// SELECT * FROM `users` WHERE `id` BETWEEN 1 AND 10
 $users = DB::select()->from('users')->where('id', 'between', array(1, 10))->execute();
 
@@ -217,7 +218,7 @@ $users = DB::select()->from('users')->where('id', 'between', array(1, 10))->exec
 $users = DB::select()->from('users')->where('name', 'in', array('john', 'simon', 'dirk'))->execute();
 </code></pre>
 
-			<h4>Order by statement</h4>
+			<h4 id="order_by">Order by statement</h4>
 			
 			<p>For sorting data we use the order_by function.</p>
 			<pre class="php"><code>//SELECT * FROM `users` ORDER BY `name` ASC
@@ -231,7 +232,7 @@ DB::select()->from('users')->order_by('name','asc')->order_by('surname', 'desc')
 DB::select()->from('users')->order_by('name');
 </code></pre>
 
-			<h4>Limit and offset</h4>
+			<h4 id="limit_offset">Limit and offset</h4>
 			<p>For limiting the number of rows fetched we use the limit and offset function. Note that the offset function is only available when selecting data.</p>
 			<pre class="php"><code></code>// SELECT * FROM `users` LIMIT 1
 DB::select()->from('users')->limit(1);
@@ -350,7 +351,15 @@ DB::update('users')->where('id', '=', 1)->set(array(
 ))->execute();
 
 // SELECT COUNT(*) FROM `users`
-$result = DB::select(DB:expr('COUNT(*)'))->from('users')->execute();
+$result = DB::select(DB::expr('COUNT(*) as count'))->from('users')->execute();
+
+// Get the current/first result
+$result_arr = $result->current();
+
+// Get the number of rows
+$count = $result_arr['count'];
+
+
 </code></pre>
 		
 		</article>
