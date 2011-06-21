@@ -179,9 +179,6 @@ class Acl_User {
 			break;
 
 			case 'twitter_oauth' :
-				/**
-				 * @todo: Twitter OAuth integration
-				 */
 				/* $result = \DB::select('users.*', 'users_auths.password', array('twitters.id', 'twitter_id'))->from('users')
 				  ->join('users_auths')
 				  ->on('users_auths.id', '=', 'users.id')
@@ -189,6 +186,30 @@ class Acl_User {
 				  ->on('users.id', '=', 'twitters.user_id')
 				  ->where('twitters.id', '=', $twitter_oauth->id)
 				  ->execute(); */
+				
+				$twitter_oauth = \Hybrid\Acl_Twitter::get();
+				
+				$results = \DB::select('users.*', array('users_twitters.id', 'twitter_id'))
+					->from('users')
+					->join('users_twitters')
+					->on('users.id', '=', 'users_twitters.user_id')
+					->where('users_twitters.id', '=', $twitter_oauth->id)->limit(1);
+				
+				if (static::$_use_auth === true)
+				{
+					$results->select('users_auths.password')
+						->join('users_auths')
+						->on('users_auths.user_id', '=', 'users.id');
+				}
+				
+				if (static::$_use_meta === true)
+				{
+					$results->select('users_meta.*')
+						->join('users_meta')
+						->on('users_meta.user_id', '=', 'users.id');	
+				}
+				
+				$result = $results->as_object()->execute();
 			break;
 		}
 
