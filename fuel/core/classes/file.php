@@ -478,7 +478,7 @@ class File {
 		{
 			if (is_array($file))
 			{
-				$check = static::create_dir($new_path.path.DS, $file, fileperms($path.$file.DS) ?: 0777, $area);
+				$check = static::create_dir($new_path.$path.DS, $file, fileperms($path.$file.DS) ?: 0777, $area);
 				$check and static::copy_dir($path.$file.DS, $new_path.$file.DS, $area);
 			}
 			else
@@ -492,6 +492,36 @@ class File {
 				throw new \FileAccessException('Directory copy aborted prematurely, part of the operation failed.');
 			}
 		}
+	}
+
+	/**
+	 * Create a new symlink
+	 *
+	 * @param	string				target of symlink
+	 * @param	string				destination of symlink
+	 * @param	bool				true for file, false for directory
+	 * @param	string|File_Area|null		file area name, object or null for base area
+	 * @return	bool
+	 */
+	public static function symlink($path, $link_path, $is_file = true, $area = null)
+	{
+		$path	   = rtrim(static::instance($area)->get_path($path), '\\/').DS;
+		$link_path = rtrim(static::instance($area)->get_path($link_path), '\\/').DS;
+
+		if ($is_file and ! is_file($path))
+		{
+			throw new \InvalidPathException('Cannot symlink: given file does not exist.');
+		}
+		if ( ! $is_file and ! is_dir($path))
+		{
+			throw new \InvalidPathException('Cannot symlink: given directory does not exist.');
+		}
+		elseif (file_exists($link_path))
+		{
+			throw new \FileAccessException('Cannot symlink: link path already exists.');
+		}
+
+		return symlink($path, $link_path);
 	}
 
 	/**

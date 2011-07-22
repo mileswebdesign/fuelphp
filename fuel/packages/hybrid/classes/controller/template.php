@@ -33,7 +33,7 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
 	 * @access	public
 	 * @var		string
 	 */
-	public $template = null;
+	public $template = 'default';
 	
 	/**
 	 * Auto render template
@@ -67,14 +67,14 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
 	 * 
 	 * @access	public
 	 */
-	public function before() 
+	public function before($data = null) 
 	{
 		$this->language = \Hybrid\Factory::get_language();
 		$this->user = \Hybrid\Acl_User::get();
 
 		\Event::trigger('controller_before');
 		
-		$this->_prepare_template();
+		$this->_prepare_template($data);
 
 		return parent::before();
 	}
@@ -103,13 +103,7 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
 	{
 		$this->response->status = $http_code;
 
-		if (is_array($data) and count($data) > 0)
-		{
-			foreach ($data as $key => $value)
-			{
-				$this->template->set($key, $value);
-			}
-		}
+		$this->template->set($data);
 	}
 	
 	/**
@@ -117,26 +111,14 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
 	 * 
 	 * @access	protected
 	 */
-	protected function _prepare_template()
+	protected function _prepare_template($data = null)
 	{
-		if (!is_null($this->template))
-		{
-			$file = 'themes/default';
-		}
-		else
-		{
-			$file = \Config::get('app.template');
-		}
-
-		if (is_file(APPPATH . 'views/themes/' . $file . '.php')) 
-		{
-			$this->template = 'themes/' . $file;
-		}
-		
 		if ($this->auto_render === true)
 		{
-			// Load the template
-			$this->template = \View::factory($this->template);
+			$this->template = \Hybrid\Template::factory($this->template);
+			
+			// Set the data to the template if provided
+			$data and $this->template->view->set_global($data);
 		}
 	}
 	
@@ -148,7 +130,7 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
 	protected function _render_template()
 	{
 		//we dont want to accidentally change our site_name
-		$this->template->site_name = \Config::get('app.site_name');
+		$this->template->set(array('site_name' => \Config::get('app.site_name')));
 		
 		if ($this->auto_render === true)
 		{

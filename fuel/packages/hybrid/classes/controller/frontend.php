@@ -34,7 +34,7 @@ abstract class Controller_Frontend extends \Hybrid\Controller {
 	 * @access	public
 	 * @var		string
 	 */
-	public $template = null;
+	public $template = 'frontend';
 	
 	/**
 	 * Auto render template
@@ -49,30 +49,24 @@ abstract class Controller_Frontend extends \Hybrid\Controller {
 	 * 
 	 * @access	public
 	 */
-	public function before() 
+	public function before($data = null) 
 	{
-		$this->_prepare_template();
+		$this->_prepare_template($data);
 
 		return parent::before();
 	}
-	
+
 	/**
 	 * Takes pure data and optionally a status code, then creates the response
 	 * 
-	 * @param	array	$data
-	 * @param	int		$http_code
+	 * @param	array		$data
+	 * @param	int			$http_code
 	 */
 	protected function response($data = array(), $http_code = 200) 
 	{
 		$this->response->status = $http_code;
 
-		if (is_array($data) and count($data) > 0)
-		{
-			foreach ($data as $key => $value)
-			{
-				$this->template->set($key, $value);
-			}
-		}
+		$this->template->set($data);
 	}
 
 	/**
@@ -83,7 +77,7 @@ abstract class Controller_Frontend extends \Hybrid\Controller {
 	public function after() 
 	{
 		$this->_render_template();
-		
+
 		return parent::after();
 	}
 	
@@ -92,25 +86,14 @@ abstract class Controller_Frontend extends \Hybrid\Controller {
 	 * 
 	 * @access	protected
 	 */
-	protected function _prepare_template()
+	protected function _prepare_template($data = null)
 	{
-		$theme_path = \Config::get('app.frontend.template');
-
-		if (null === $theme_path) 
+		if ($this->auto_render === true)
 		{
-			$theme_path = DOCROOT . 'themes/default/';
-			\Config::set('app.frontend.template', $theme_path);
-		}
+			$this->template = \Hybrid\Template::factory($this->template);
 
-		\Hybrid\View::set_path($theme_path);
-
-		\Asset::add_path($theme_path . 'assets/');
-
-		if (true === $this->auto_render) 
-		{
-			$this->template = \Hybrid\View::factory();
-			$this->template->auto_encode(false);
-			$this->template->set_filename('index');
+			// Set the data to the template if provided
+			$data and $this->template->view->set_global($data);
 		}
 	}
 	
@@ -122,9 +105,9 @@ abstract class Controller_Frontend extends \Hybrid\Controller {
 	protected function _render_template()
 	{
 		//we dont want to accidentally change our site_name
-		$this->template->site_name = \Config::get('app.site_name');
+		$this->template->set(array('site_name' => \Config::get('app.site_name')));
 		
-		if ($this->auto_render === true) 
+		if ($this->auto_render === true)
 		{
 			$this->response->body($this->template->render());
 		}

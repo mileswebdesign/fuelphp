@@ -60,10 +60,18 @@ var nav = {
 			"Cookie":		"classes/cookie.html",
 			"Crypt":		"classes/crypt.html",
 			"Database": {
-				"Introduction":     "classes/database/introduction.html",
-				"Usage":            "classes/database/usage.html",
-				"DB class":         "classes/database/db.html",
-				"DBUtil class":     "classes/database/dbutil.html"
+				"Introduction":   	  "classes/database/introduction.html",
+				"Usage":          	  "classes/database/usage.html",
+				"DB class":       	  "classes/database/db.html",
+				"DBUtil class":   	  "classes/database/dbutil.html",
+				"Query Building":	{
+					"Introduction":			"classes/database/qb.html",
+					"Insert builder":	"todo.html", //"classes/database/qb_insert.html",
+					"Select builder":	"classes/database/qb_select.html",
+					"Update builder":	"classes/database/qb_update.html",
+					"Delete builder":	"classes/database/qb_delete.html",
+					"Where builder":	"classes/database/qb_where.html"
+				}
 			},
 			"Date":			"classes/date.html",
 			"Debug":		"classes/debug.html",
