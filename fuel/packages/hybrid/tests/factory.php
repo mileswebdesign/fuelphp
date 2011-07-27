@@ -18,8 +18,8 @@ namespace Hybrid;
 /**
  * Factory class tests
  * 
- * @group Core
- * @group Arr
+ * @group Hybrid
+ * @group Factory
  */
 class Test_Factory extends \Fuel\Core\TestCase {
 	
