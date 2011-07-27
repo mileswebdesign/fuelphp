@@ -159,17 +159,18 @@ class Fuel {
 		\Event::register('shutdown', 'Fuel::finish');
 
 		//Load in the packages
-		foreach (\Config::get('always_load.packages', array()) as $package)
+		foreach (\Config::get('always_load.packages', array()) as $package => $path)
 		{
-			static::add_package($package);
+			is_string($package) and $path = array($package => $path);
+			static::add_package($path);
 		}
 
 		// Load in the routes
 		\Config::load('routes', true);
 		\Router::add(\Config::get('routes'));
 
-		// Set some server options
-		setlocale(LC_ALL, static::$locale);
+		// Set  locale
+		static::$locale and setlocale(LC_ALL, static::$locale);
 
 		// Always load classes, config & language set in always_load.php config
 		static::always_load();
@@ -485,6 +486,12 @@ class Fuel {
 			$path = substr($path,0, -8);
 		}
 
+		// Load in the routes if they exist
+		if (is_file($path.'config'.DS.'routes.php'))
+		{
+			\Router::add(include($path.'config'.DS.'routes.php'));
+		}
+		
 		return $path;
 	}
 
