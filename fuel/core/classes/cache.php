@@ -78,6 +78,8 @@ class Cache {
 	 */
 	public static function set($identifier, $contents = null, $expiration = false, $dependencies = array())
 	{
+		$contents = ($contents instanceof \Closure) ? $contents() : $contents;
+		
 		$cache = static::factory($identifier);
 		return $cache->set($contents, $expiration, $dependencies);
 	}
@@ -139,4 +141,3 @@ class Cache {
 	}
 }
 
-/* End of file cache.php */

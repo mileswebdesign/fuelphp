@@ -51,9 +51,9 @@ class Arr {
 	/**
 	 * Converts the given 1 dimensional non-associative array to an associative
 	 * array.
-	 * 
+	 *
 	 * The array given must have an even number of elements or null will be returned.
-	 * 
+	 *
 	 *     Arr::to_assoc(array('foo','bar'));
 	 *
 	 * @param   string      $arr  the array to change
@@ -82,9 +82,10 @@ class Arr {
 	 * @param   array   the array to flatten
 	 * @param   string  what to glue the keys together with
 	 * @param   bool    whether to reset and start over on a new array
+	 * @param   bool    whether to flatten only associative array's, or also indexed ones
 	 * @return  array
 	 */
-	public static function flatten_assoc($array, $glue = ':', $reset = true)
+	public static function flatten($array, $glue = ':', $reset = true, $indexed = true)
 	{
 		static $return = array();
 		static $curr_key = array();
@@ -98,7 +99,7 @@ class Arr {
 		foreach ($array as $key => $val)
 		{
 			$curr_key[] = $key;
-			if (is_array($val) and array_values($val) !== $val)
+			if (is_array($val) and ($indexed or array_values($val) !== $val))
 			{
 				static::flatten_assoc($val, $glue, false);
 			}
@@ -109,6 +110,20 @@ class Arr {
 			array_pop($curr_key);
 		}
 		return $return;
+	}
+
+	/**
+	 * Flattens a multi-dimensional associative array down into a 1 dimensional
+	 * associative array.
+	 *
+	 * @param   array   the array to flatten
+	 * @param   string  what to glue the keys together with
+	 * @param   bool    whether to reset and start over on a new array
+	 * @return  array
+	 */
+	public static function flatten_assoc($array, $glue = ':', $reset = true)
+	{
+		return static::flatten($array, $glue, $reset, false);
 	}
 
 	/**
@@ -176,7 +191,7 @@ class Arr {
 		{
 			if ( ! is_array($array) or ! array_key_exists($key[0], $array))
 			{
-				return $default;
+				return ($default instanceof \Closure) ? $default() : $default;
 			}
 			$array = $array[$key[0]];
 			unset($key[0]);
@@ -189,7 +204,7 @@ class Arr {
 			$key = $key[0];
 			if ( ! is_array($array) or ! array_key_exists($key, $array))
 			{
-				return $default;
+				return ($default instanceof \Closure) ? $default() : $default;
 			}
 			return $array[$key];
 		}
@@ -236,7 +251,7 @@ class Arr {
 	 * @param   int          the numeric position at which to insert, negative to count from the end backwards
 	 * @return  bool         false when array shorter then $pos, otherwise true
 	 */
-	public static function insert(Array &$original, $value, $pos)
+	public static function insert(array &$original, $value, $pos)
 	{
 		if (count($original) < abs($pos))
 		{
@@ -257,7 +272,7 @@ class Arr {
 	 * @param   string|int   the key after which to insert
 	 * @return  bool         false when key isn't found in the array, otherwise true
 	 */
-	public static function insert_after_key(Array &$original, $value, $key)
+	public static function insert_after_key(array &$original, $value, $key)
 	{
 		$pos = array_search($key, array_keys($original));
 		if ($pos === false)
@@ -277,7 +292,7 @@ class Arr {
 	 * @param   string|int   the value after which to insert
 	 * @return  bool         false when value isn't found in the array, otherwise true
 	 */
-	public static function insert_after_value(Array &$original, $value, $search)
+	public static function insert_after_value(array &$original, $value, $search)
 	{
 		$key = array_search($search, $original);
 		if ($key === false)
@@ -433,4 +448,4 @@ class Arr {
 
 }
 
-/* End of file arr.php */
+

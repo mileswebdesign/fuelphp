@@ -16,7 +16,20 @@ namespace Fuel\Core;
 /**
  * When this is thrown and not caught, the Errors class will call \Request::show_404()
  */
-class Request404Exception extends \Fuel_Exception {}
+class Request404Exception extends \Fuel_Exception {
+
+	/**
+	 * When this type of exception isn't caught this method is called by
+	 * Error::exception_handler() to deal with the problem.
+	 */
+	public function handle()
+	{
+		$response = new \Response(\View::factory('404'), 404);
+		\Event::shutdown();
+		$response->send(true);
+		return;
+	}
+}
 
 
 /**
@@ -120,57 +133,14 @@ class Request {
 	 *
 	 *     Request::show_404();
 	 *
+	 * @deprecated  Remove in v1.2
 	 * @param   bool         Whether to return the 404 output or just output and exit
 	 * @return  void|string  Void if $return is false, the output if $return is true
 	 */
 	public static function show_404($return = false)
 	{
-		logger(Fuel::L_INFO, 'Called', __METHOD__);
-
-		// This ensures that show_404 doesn't recurse indefinately
-		static $call_count = 0;
-		$call_count++;
-
-		if ($call_count == 1)
-		{
-			// first call, route the 404 route
-			$route_request = true;
-		}
-		elseif ($call_count == 2)
-		{
-			// second call, try the 404 route without routing
-			$route_request = false;
-		}
-		else
-		{
-			// third call, there's something seriously wrong now
-			exit('It appears your _404_ route is incorrect.  Multiple Recursion has happened.');
-		}
-
-		if (\Config::get('routes._404_') === null)
-		{
-			$response = new \Response(\View::factory('404'), 404);
-
-			if ($return)
-			{
-				return $response;
-			}
-
-			$response->send(true);
-			exit;
-		}
-		else
-		{
-			$request = \Request::factory(\Config::get('routes._404_'), $route_request)->execute();
-
-			if ($return)
-			{
-				return $request->response;
-			}
-
-			$request->response->send(true);
-			exit;
-		}
+		\Log::warning('This method is deprecated.  Please use a Request404Exception instead.', __METHOD__);
+		throw new \Request404Exception();
 	}
 
 	/**
@@ -366,9 +336,10 @@ class Request {
 	 *
 	 *     $request = Request::factory('hello/world')->execute();
 	 *
+	 * @param  array|null  $method_params  An array of parameters to pass to the method being executed
 	 * @return  Request  This request object
 	 */
-	public function execute()
+	public function execute($method_params = null)
 	{
 		logger(Fuel::L_INFO, 'Called', __METHOD__);
 
@@ -396,6 +367,11 @@ class Request {
 		$this->action = $this->action ?: (property_exists($controller, 'default_action') ? $controller->default_action : 'index');
 		$method = $method_prefix.$this->action;
 
+		// Allow override of method params from execute
+		if (is_array($method_params))
+		{
+			$this->method_params = array_merge($this->method_params, $method_params);
+		}
 
 		// Allow to do in controller routing if method router(action, params) exists
 		if (method_exists($controller, 'router'))
@@ -516,4 +492,4 @@ class Request {
 	}
 }
 
-/* End of file request.php */
+

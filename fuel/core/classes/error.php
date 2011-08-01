@@ -74,9 +74,9 @@ class Error {
 	 */
 	public static function exception_handler(\Exception $e)
 	{
-		if ($e instanceof Request404Exception)
+		if (method_exists($e, 'handle'))
 		{
-			\Request::show_404();
+			return $e->handle();
 		}
 
 		$severity = ( ! isset(static::$levels[$e->getCode()])) ? $e->getCode() : static::$levels[$e->getCode()];
@@ -234,4 +234,4 @@ class Error {
 
 }
 
-/* End of file error.php */
+

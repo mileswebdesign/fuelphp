@@ -279,7 +279,7 @@ class Input {
 					}
 					else
 					{
-						return $default;
+						return ($default instanceof \Closure) ? $default() : $default;
 					}
 				}
 
@@ -288,7 +288,7 @@ class Input {
 			}
 			elseif ( ! isset($array[$index]))
 			{
-				return $default;
+				return ($default instanceof \Closure) ? $default() : $default;
 			}
 
 		}
@@ -298,4 +298,4 @@ class Input {
 
 }
 
-/* End of file input.php */
+

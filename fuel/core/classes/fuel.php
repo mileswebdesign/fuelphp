@@ -49,11 +49,12 @@ class Fuel {
 
 	const L_NONE = 0;
 	const L_ERROR = 1;
-	const L_DEBUG = 2;
-	const L_INFO = 3;
-	const L_ALL = 4;
+	const L_WARNING = 2;
+	const L_DEBUG = 3;
+	const L_INFO = 4;
+	const L_ALL = 5;
 
-	const VERSION = '1.0-rc3';
+	const VERSION = '1.0';
 
 	public static $initialized = false;
 
@@ -485,12 +486,6 @@ class Fuel {
 			// strip the classes directory, we need the module root
 			$path = substr($path,0, -8);
 		}
-
-		// Load in the routes if they exist
-		if (is_file($path.'config'.DS.'routes.php'))
-		{
-			\Router::add(include($path.'config'.DS.'routes.php'));
-		}
 		
 		return $path;
 	}
@@ -667,4 +662,4 @@ class Fuel {
 	}
 }
 
-/* End of file fuel.php */
+
