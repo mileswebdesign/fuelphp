@@ -543,6 +543,20 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public function __construct(array $data = array(), $new = true)
 	{
+		if( ! empty($this->_data))
+		{
+			$this->_original = $this->_data;
+			$new = false;
+			$pks = static::primary_key();
+			foreach($pks as $pk)
+			{
+				if( ! array_key_exists($pk, $this->_original))
+				{
+					$new = true;
+				}
+			}
+		}
+
 		if ($new)
 		{
 			$properties = $this->properties();
@@ -984,6 +998,27 @@ class Model implements \ArrayAccess, \Iterator {
 	}
 
 	/**
+	 * clears the model object, and reset it to an is_new state
+	 */
+	public function clear()
+	{
+		// This is a new object
+		$this->_is_new = true;
+		$this->_original = array();
+		$this->_original_relations = array();
+
+		// Cleanup relations
+		foreach ($this->relations() as $name => $rel)
+		{
+			// singular relations (hasone, belongsto) can't be copied, neither can HasMany
+			if ($rel->singular or $rel instanceof HasMany)
+			{
+				unset($this->_data_relations[$name]);
+			}
+		}
+	}
+
+	/**
 	 * Calls all observers for the current event
 	 *
 	 * @param  string
@@ -1034,7 +1069,7 @@ class Model implements \ArrayAccess, \Iterator {
 		$property = (array) $property ?: array_keys(static::properties());
 		foreach ($property as $p)
 		{
-			if ($this->{$p} !== $this->_original[$p])
+			if ( ! isset($this->_original[$p]) or $this->{$p} !== $this->_original[$p])
 			{
 				return true;
 			}
@@ -1189,6 +1224,22 @@ class Model implements \ArrayAccess, \Iterator {
 	public function valid()
 	{
 		return $this->current() !== false;
+	}
+
+	/**
+	 * Allow populating this object from an array
+	 *
+	 * @return  array
+	 */
+	public function from_array(array $values)
+	{
+		foreach($values as $property => $value)
+		{
+			if (array_key_exists($property, static::properties()) and ! in_array($property, static::primary_key()))
+			{
+				$this->__set($property, $value);
+			}
+		}
 	}
 
 	/**

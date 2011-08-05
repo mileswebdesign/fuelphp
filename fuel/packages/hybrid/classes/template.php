@@ -28,35 +28,56 @@ namespace Hybrid;
 
 class Template {
 
-	protected static $instances = array();
+    const DEFAULT_TEMPLATE = 'normal';
 
-	public static function factory($type = null)
-	{
-		$theme = null;
-		$type = explode('.', strval($type));
+    protected static $instances = array();
 
-		if (count($type) > 1) 
-		{
-			$theme = $type[1];
-		}
-		
-		$type = $type[0];
+    public static function _init()
+    {
+        \Config::load('app', true);
+    }
 
-		$driver = '\\Hybrid\\Template_'.ucfirst($type);
+    public static function factory($name = null)
+    {
+        if (is_null($name))
+        {
+            $name = \Config::get('app.template.default', self::DEFAULT_TEMPLATE);   
+        }
 
-		if (isset(static::$instances[$type]))
-		{
-			return static::$instances[$type];
-		}
-		elseif (class_exists($driver)) 
-		{
-			static::$instances[$type] = new $driver($theme);
-			return static::$instances[$type];
-		}
-		else 
-		{
-			throw new \Fuel_Exception("Requested {$driver} does not exist");
-		}
-	}
+        $folder = null;
+        $filename = null;
+        $type = explode('.', strval($name));
+
+        if (count($type) > 1) 
+        {
+            // set filename if available
+            if (isset($type[2]))
+            {
+                $filename = $type[2];
+            }
+
+            // folder should be available if type count > 1
+            $folder = $type[1];
+        }
+        
+        $type = $type[0];
+        $name = $type . '.' . $folder;
+
+        $driver = '\\Hybrid\\Template_'.ucfirst($type);
+
+        if (isset(static::$instances[$name]))
+        {
+            return static::$instances[$name];
+        }
+        elseif (class_exists($driver)) 
+        {
+            static::$instances[$name] = new $driver($folder, $filename);
+            return static::$instances[$name];
+        }
+        else 
+        {
+            throw new \Fuel_Exception("Requested {$driver} does not exist");
+        }
+    }
 
 }
