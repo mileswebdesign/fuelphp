@@ -74,9 +74,9 @@ class Error {
 	 */
 	public static function exception_handler(\Exception $e)
 	{
-		if (method_exists($e, 'handle'))
+		if (method_exists($e, '_handle_exception'))
 		{
-			return $e->handle();
+			return $e->_handle_exception();
 		}
 
 		$severity = ( ! isset(static::$levels[$e->getCode()])) ? $e->getCode() : static::$levels[$e->getCode()];
@@ -139,7 +139,10 @@ class Error {
 		if ($fatal)
 		{
 			$data['contents'] = ob_get_contents();
-			ob_end_clean();
+			while (ob_get_level() > 0)
+			{
+				ob_end_clean();
+			}
 		}
 		else
 		{
@@ -155,10 +158,25 @@ class Error {
 		if ($fatal)
 		{
 			$data['non_fatal'] = static::$non_fatal_cache;
-			exit(\View::factory('errors'.DS.'php_fatal_error', $data, false));
+
+			try
+			{
+				exit(\View::factory('errors'.DS.'php_fatal_error', $data, false));
+			}
+			catch (\Fuel_Exception $view_exception)
+			{
+				exit($data['severity'].' - '.$data['message'].' in '.\Fuel::clean_path($data['filepath']).' on line '.$data['error_line']);
+			}
 		}
 
-		echo \View::factory('errors'.DS.'php_error', $data, false);
+		try
+		{
+			echo \View::factory('errors'.DS.'php_error', $data, false);
+		}
+		catch (\Fuel_Exception $e)
+		{
+			echo $e->getMessage().Html::br();
+		}
 	}
 
 	/**

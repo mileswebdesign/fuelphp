@@ -119,7 +119,7 @@ CONF;
 		
 		$plural = \Inflector::pluralize($singular);
 		
-		$filename = trim(str_replace(array('_', '-'), DS, $singular), DS);
+		$filename = trim(str_replace(array('_', '-'), DS, $plural), DS);
 
 		$filepath = APPPATH . 'classes/controller/'.$filename.'.php';
 
@@ -127,7 +127,7 @@ CONF;
 		$class_name = \Inflector::classify($plural, false);
 
 		// Stick "blogs" to the start of the array
-		array_unshift($args, $singular);
+		array_unshift($args, $plural);
 
 		// Create views folder and each view file
 		static::views($args, false);
@@ -141,7 +141,7 @@ CONF;
 	public function action_'.$action.'()
 	{
 		$this->template->title = \'' . \Inflector::humanize($singular) .' &raquo; ' . \Inflector::humanize($action) . '\';
-		$this->template->content = View::factory(\''.$singular .'/' . $action .'\');
+		$this->template->content = View::factory(\''.$filename.'/' . $action .'\');
 	}'.PHP_EOL;
 		}
 
