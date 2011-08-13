@@ -32,381 +32,393 @@ use \FacebookApiException;
  */
 
 class Acl_Facebook extends Acl_Abstract {
-	
-	protected static $_instance = null;
-	protected static $items = array(
-		'id' => 0,
-		'user_id' => 0,
-		'token' => '',
-		'info' => null,
-		'access' => 0,
-	);
-	protected static $_config = null;
-	protected static $_user = null;
+    
+    protected static $config    = null;
+    protected static $adapter  = null;
+    protected static $items     = array(
+        'id'        => 0,
+        'user_id'   => 0,
+        'token'     => '',
+        'info'      => null,
+        'access'    => 0,
+    );
+    protected static $user      = null;
 
-	/**
-	 * Initiate a connection to Facebook SDK Class with config
-	 *
-	 * @access public
-	 * @return boolean
-	 */
-	public static function _init() 
-	{
-		\Config::load('app', true);
-		\Config::load('crypt', true);
-		
-		if (is_null(static::$_instance)) 
-		{
-			static::$_config = \Config::get('app.api.facebook');
-			static::$_instance = new \Facebook(array(
-				'appId' => static::$_config['app_id'],
-				'secret' => static::$_config['secret'],
-			));
-		}
-		
-		static::_factory();
-	}
+    /**
+     * Initiate a connection to Facebook SDK Class with config
+     *
+     * @static
+     * @access  public
+     * @return  void
+     */
+    public static function _init() 
+    {
+        parent::_init();
 
-	/**
-	 * Get cookie contain
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _factory()
-	{
-		$oauth = \Cookie::get('_facebook_oauth');
+        if (\is_null(static::$adapter)) 
+        {
+            static::$config = \Config::get('app.api.facebook');
+            
+            $config         = array(
+                'appId'     => static::$config['app_id'],
+                'secret'    => static::$config['secret'],
+            );
 
-		if (!is_null($oauth))
-		{
-			$oauth = unserialize(\Crypt::decode($oauth));
-			static::$items = (array) $oauth;
-		}
-	}
+            static::$adapter = new \Facebook($config);
+        }
+        
+        static::factory();
+    }
 
-	/**
-	 * return Facebook Object
-	 *
-	 * @static
-	 * @access 	public
-	 * @return 	boolean
-	 */
-	public static function get_adapter() 
-	{
-		return static::$_instance;
-	}
+    /**
+     * Get cookie contain
+     *
+     * @static
+     * @access  protected
+     * @return  void
+     */
+    protected static function factory()
+    {
+        $oauth              = \Cookie::get('_facebook_oauth');
 
-	/**
-	 * Authenticate user with Facebook Account
-	 * There are three process/stage of authenticating an account:
-	 * 2. authenticate the user with Facebook account
-	 * 3. verifying the user account
-	 *
-	 * @access public
-	 * @return boolean
-	 */
-	public static function execute()
-	{
-		$status = false;
+        if (!\is_null($oauth))
+        {
+            $oauth          = \unserialize(\Crypt::decode($oauth));
+            static::$items  = (array) $oauth;
+        }
+    }
 
-		switch (intval(static::$items['access']))
-		{
-			case 0 :
-				$status = static::_access_token();
-			break;
+    /**
+     * return Facebook Object
+     *
+     * @static
+     * @access  public
+     * @return  boolean
+     */
+    public static function get_adapter() 
+    {
+        return static::$adapter;
+    }
 
-			case 1 :
-				/* fetch data from database to insert or update */
-				$status = static::_verify_token();
-			break;
+    /**
+     * Authenticate user with Facebook Account
+     * There are three process/stage of authenticating an account:
+     * 2. authenticate the user with Facebook account
+     * 3. verifying the user account
+     *
+     * @access public
+     * @return boolean
+     */
+    public static function execute()
+    {
+        $status = false;
 
-			case 2 :
-			default :
-				/* Do nothing for now */
-				$status = true;
-			break;
-		}
+        switch (\intval(static::$items['access']))
+        {
+            case 0 :
+                $status = static::access_token();
+            break;
 
-		return $status;
-	}
+            case 1 :
+                /* fetch data from database to insert or update */
+                $status = static::verify_token();
+            break;
 
-	public static function get_url($option = array())
-	{
-		$redirect_uri = \Config::get('app.api.facebook.redirect_uri');
-		$scope = \Config::get('app.api.facebook.scope', '');
+            case 2 :
+            default :
+                /* Do nothing for now */
+                $status = true;
+            break;
+        }
 
-		$config = array('scope' => $scope);
+        return $status;
+    }
 
-		if (!is_null($redirect_uri))
-		{
-			$config['redirect_uri'] = \Uri::create($redirect_uri);
-		}
+    public static function get_url($option = array())
+    {
+        // we already have static::$config but we need to check if properties doesn't exist
+        $redirect_uri   = \Config::get('app.api.facebook.redirect_uri');
+        $scope          = \Config::get('app.api.facebook.scope', '');
 
-		$config = array_merge($config, $option);
+        $config         = array('scope' => $scope);
 
-		switch (static::$items['access'])
-		{
-			case 1 :
-			case 2 :
-				unset($config['scope']);
-				return static::$_instance->getLogoutUrl($config);
-			break;
+        if (!\is_null($redirect_uri))
+        {
+            $config['redirect_uri'] = \Uri::create($redirect_uri);
+        }
 
-			case 0 :
-			default :
-				return static::$_instance->getLoginUrl($config);
-			break;
-		}
-	}
+        $config         = \array_merge($config, $option);
 
-	/**
-	 * Stage 2: verifying the user account
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _verify_token() 
-	{
-		static::$items['access'] = 2;
+        switch (static::$items['access'])
+        {
+            case 1 :
+            case 2 :
+                \unset($config['scope']);
+                return static::$adapter->getLogoutUrl($config);
+            break;
 
-		$result = \DB::select('users_facebooks.*', array('users.user_name', 'username'))
-						->from('users_facebooks')
-						->join('users', 'LEFT')
-						->on('users_facebooks.user_id', '=', 'users.id')
-						->where('users_facebooks.facebook_id', '=', static::$items['id'])->execute();
+            case 0 :
+            default :
+                return static::$adapter->getLoginUrl($config);
+            break;
+        }
+    }
 
-		if ($result->count() < 1) 
-		{
-			static::_add_handler();
-			static::_register();
+    /**
+     * Stage 2: verifying the user account
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function verify_token() 
+    {
+        static::$items['access'] = 2;
 
-			if (intval(static::$items['user_id']) < 1) 
-			{
-				\Response::redirect(\Config::get('app.api._redirect.registration', '/'));
-			}
-			else 
-			{
-				\Response::redirect(\Config::get('app.api._redirect.after_login', '/'));
-			}
-			
-			return true;
-		} 
-		else 
-		{
-			$row = $result->current();
+        $result = \DB::select('users_facebooks.*', array('users.user_name', 'username'))
+                    ->from('users_facebooks')
+                    ->join('users', 'LEFT')
+                    ->on('users_facebooks.user_id', '=', 'users.id')
+                    ->where('users_facebooks.facebook_id', '=', static::$items['id'])
+                    ->execute();
 
-			static::$items['user_id'] = $row['user_id'];
-			static::_update_handler();
-			static::_register();
+        if ($result->count() < 1) 
+        {
+            static::add_handler();
+            static::register();
 
-			if (is_null($row['user_id']) or intval(static::$items['user_id']) < 1) 
-			{
-				\Response::redirect(\Config::get('app.api._redirect.registration', '/'));
-				return true;
-			}
+            if (\intval(static::$items['user_id']) < 1) 
+            {
+                static::redirect('registration');
+            }
+            else 
+            {
+                static::redirect('after_login');
+            }
+            
+            return true;
+        } 
+        else 
+        {
+            $row = $result->current();
 
-			\Hybrid\Acl_User::login($row['username'], static::$items['token'], 'facebook_oauth');
-			\Response::redirect(\Config::get('app.api._redirect.after_login', '/'));
-			return true;
-		}
+            static::$items['user_id'] = $row['user_id'];
+            static::update_handler();
+            static::register();
 
-		return false;
-	}
+            if (\is_null($row['user_id']) or \intval(static::$items['user_id']) < 1) 
+            {
+                static::redirect('registration');
 
-	/**
-	 * Stage 1: authenticate the user with twitter account
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _access_token() 
-	{
+                return true;
+            }
 
-		static::$_user = static::$_instance->getUser();
+            \Hybrid\Acl_User::login($row['username'], static::$items['token'], 'facebook_oauth');
+            static::redirect('after_login');
 
-		if (static::$_user <> 0 and !is_null(static::$_user))
-		{
+            return true;
+        }
 
-			try
-			{
-				static::$items['access'] = (static::$items['access'] == 0 ? 1 : static::$items['access']);
-				$profile_data = static::$_instance->api('/me');
-				
-			} 
-			catch (\FacebookApiException $e)
-			{
-				logger('error', '\\Hybrid\\Acl_Facebook::_factory request fail: ' . $e);
-				static::$_user = null;
-				static::$items['access'] = 0;
-			}
-		}
+        return false;
+    }
 
-		if (static::$_user <> 0 and !is_null(static::$_user))
-		{
-			$profile_data = (object) $profile_data;
-			static::$items['id'] = $profile_data->id;
-			static::$items['info'] = new \stdClass();
-			static::$items['info']->username = $profile_data->username;
-			static::$items['info']->first_name = $profile_data->first_name;
-			static::$items['info']->last_name = $profile_data->last_name;
-			static::$items['info']->link = $profile_data->link;
-			static::$items['token'] = static::$_instance->getAccessToken();
+    /**
+     * Stage 1: authenticate the user with twitter account
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function access_token() 
+    {
+        static::$user = static::$adapter->getUser();
 
-			if (static::$items['access'] == 0)
-			{
-				static::$items['access'] = 1;
-			}
+        if (static::$user <> 0 and !\is_null(static::$user))
+        {
+            return false;
+        }
+            
+        try
+        {
+            static::$items['access']        = (static::$items['access'] == 0 ? 1 : static::$items['access']);
+            $profile_data                   = static::$adapter->api('/me');    
+        } 
+        catch (\FacebookApiException $e)
+        {
+            \Log::error('\\Hybrid\\Acl_Facebook::access_token request fail: ' . $e->getMessage());
+            static::$user                   = null;
+            static::$items['access']        = 0;
+        }
 
-			return static::_verify_token();
-		}
+        static::$items['info']              = new \stdClass();
+        $profile_data                       = (object) $profile_data;
+        
+        static::$items['id']                = $profile_data->id;
+        static::$items['info']->username    = $profile_data->username;
+        static::$items['info']->first_name  = $profile_data->first_name;
+        static::$items['info']->last_name   = $profile_data->last_name;
+        static::$items['info']->link        = $profile_data->link;
+        static::$items['token']             = static::$adapter->getAccessToken();
 
-		return false;
-	}
+        if (static::$items['access'] == 0)
+        {
+            static::$items['access']        = 1;
+        }
 
-	/**
-	 * Add Facebook Handler to database
-	 *
-	 * @static
-	 * @access	private
-	 * @param	int		$id
-	 * @param	object	$meta
-	 * @return	bool
-	 */
-	private static function _add_handler() 
-	{
-		$id = static::$items['id'];
+        return static::verify_token();
+    }
 
-		if (!is_numeric($id)) 
-		{
-			return false;
-		}
+    /**
+     * Add Facebook Handler to database
+     *
+     * @static
+     * @access  private
+     * @param   int     $id
+     * @param   object  $meta
+     * @return  bool
+     */
+    private static function add_handler() 
+    {
+        $id = static::$items['id'];
 
-		if (empty(static::$items['info'])) 
-		{
-			return false;
-		}
+        if (!\is_numeric($id)) 
+        {
+            return false;
+        }
 
-		$bind = array(
-			'facebook_id' => $id,
-			'token' => static::$items['token']
-		);
+        if (\empty(static::$items['info'])) 
+        {
+            return false;
+        }
 
-		if (\Hybrid\Acl_User::is_logged())
-		{
-			$bind['user_id'] = \Hybrid\Acl_User::get('id');
-			static::$items['user_id'] = $bind['user_id'];
-		}
+        $bind = array(
+            'facebook_id'   => $id,
+            'token'         => static::$items['token']
+        );
 
-		\DB::insert('users_facebooks')->set($bind)->execute();
+        if (\Hybrid\Acl_User::is_logged())
+        {
+            $bind['user_id'] = \Hybrid\Acl_User::get('id');
+            static::$items['user_id'] = $bind['user_id'];
+        }
 
-		\DB::insert('facebooks')->set(array(
-			'id' => $id,
-			'facebook_name' => static::$items['info']->username,
-			'first_name' => static::$items['info']->first_name,
-			'last_name' => static::$items['info']->last_name,
-			'facebook_url' => static::$items['info']->link
-		))->execute();
+        \DB::insert('users_facebooks')
+            ->set($bind)
+            ->execute();
 
-		return true;
-	}
+        \DB::insert('facebooks')
+            ->set(array(
+                'id'            => $id,
+                'facebook_name' => static::$items['info']->username,
+                'first_name'    => static::$items['info']->first_name,
+                'last_name'     => static::$items['info']->last_name,
+                'facebook_url'  => static::$items['info']->link
+            ))
+            ->execute();
 
-	/**
-	 * Update Facebook Handler to database
-	 *
-	 * @static
-	 * @access	private
-	 * @param	int		$id
-	 * @param	object	$meta
-	 * @return	bool
-	 */
-	private static function _update_handler() 
-	{
-		$id = static::$items['id'];
+        return true;
+    }
 
-		if (!is_numeric($id)) 
-		{
-			return false;
-		}
+    /**
+     * Update Facebook Handler to database
+     *
+     * @static
+     * @access  private
+     * @param   int     $id
+     * @param   object  $meta
+     * @return  bool
+     */
+    private static function update_handler() 
+    {
+        $id = static::$items['id'];
 
-		if (empty(static::$items['info'])) 
-		{
-			return false;
-		}
+        if (!\is_numeric($id)) 
+        {
+            return false;
+        }
 
-		$bind = array(
-			'token' => static::$items['token']
-		);
+        if (\empty(static::$items['info'])) 
+        {
+            return false;
+        }
 
-		if (\Hybrid\Acl_User::is_logged() and static::$items['user_id'] == 0)
-		{
-			$bind['user_id'] = \Hybrid\Acl_User::get('id');
-			static::$items['user_id'] = $bind['user_id'];
-		}
+        $bind = array(
+            'token' => static::$items['token']
+        );
 
-		\DB::update('users_facebooks')->set($bind)->where('facebook_id', '=', $id)->execute();
+        if (\Hybrid\Acl_User::is_logged() and 0 === \intval(static::$items['user_id']))
+        {
+            $bind['user_id'] = \Hybrid\Acl_User::get('id');
+            static::$items['user_id'] = $bind['user_id'];
+        }
 
-		\DB::update('facebooks')->set(array(
-			'facebook_name' => static::$items['info']->username,
-			'first_name' => static::$items['info']->first_name,
-			'last_name' => static::$items['info']->last_name,
-			'facebook_url' => static::$items['info']->link
-		))->where('id', '=', $id)->execute();
+        \DB::update('users_facebooks')
+            ->set($bind)
+            ->where('facebook_id', '=', $id)
+            ->execute();
 
-		return true;
-	}
+        \DB::update('facebooks')
+            ->set(array(
+                'facebook_name' => static::$items['info']->username,
+                'first_name'    => static::$items['info']->first_name,
+                'last_name'     => static::$items['info']->last_name,
+                'facebook_url'  => static::$items['info']->link
+            ))
+            ->where('id', '=', $id)
+            ->execute();
 
-	/**
-	 * Register information to Session
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _register() 
-	{
-		\Cookie::set('_facebook_oauth', \Crypt::encode(serialize((object) static::$items)));
+        return true;
+    }
 
-		return true;
-	}
+    /**
+     * Register information to Session
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function register() 
+    {
+        \Cookie::set('_facebook_oauth', \Crypt::encode(\serialize((object) static::$items)));
 
-	/**
-	 * Unregister information from Session
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _unregister() 
-	{
-		\Cookie::delete('_facebook_oauth');
+        return true;
+    }
 
-		return true;
-	}
+    /**
+     * Unregister information from Session
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function unregister() 
+    {
+        \Cookie::delete('_facebook_oauth');
 
-	/**
-	 * Initiate user login out from Facebook
-	 *
-	 * Usage:
-	 * 
-	 * <code>\Hybrid\Acl_Facebook::logout(false);</code>
-	 * 
-	 * @static
-	 * @access	public
-	 * @param	bool	$redirect
-	 * @return	bool
-	 */
-	public static function logout($redirect = true)
-	{
-		$url = static::get_url(array('redirect_uri' => \Uri::create('/')));
-		static::_unregister();
+        return true;
+    }
 
-		if ($redirect == true)
-		{
-			\Response::redirect($url, 'refresh');
-		}
-		
-	}
+    /**
+     * Initiate user login out from Facebook
+     *
+     * Usage:
+     * 
+     * <code>\Hybrid\Acl_Facebook::logout(false);</code>
+     * 
+     * @static
+     * @access  public
+     * @param   bool    $redirect
+     * @return  bool
+     */
+    public static function logout($redirect = true)
+    {
+        $url = static::get_url(array('redirect_uri' => \Uri::create('/')));
+        static::unregister();
+
+        if (true === $redirect)
+        {
+            \Response::redirect($url, 'refresh');
+        }
+        
+    }
 }

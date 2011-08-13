@@ -31,417 +31,434 @@ use \tmhOAuth;
  */
 
 class Acl_Twitter extends Acl_Abstract {
-	
-	protected static $_instance = null;
-	protected static $items = array(
-		'token' => null,
-		'secret' => null,
-		'access' => 0,
-		'id' => 0,
-		'user_id' => 0,
-		'info' => null
-	);
+    
+    protected static $adapter   = null;
+    protected static $items     = array(
+        'token'     => null,
+        'secret'    => null,
+        'access'    => 0,
+        'id'        => 0,
+        'user_id'   => 0,
+        'info'      => null,
+    );
 
-	/**
-	 * Initiate a connection to tmhOAuth Class with config
-	 *
-	 * @access public
-	 * @return boolean
-	 */
-	public static function _init() 
-	{
-		\Config::load('app', true);
-		\Config::load('crypt', true);
-		
-		if (is_null(static::$_instance)) 
-		{
-			$config = \Config::get('app.api.twitter');
-			static::$_instance = new \tmhOAuth($config);
-		}
-		
-		static::_factory();
-	}
-	
-	/**
-	 * Get cookie contain
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _factory()
-	{
-		$oauth = \Cookie::get('_twitter_oauth');
+    /**
+     * Initiate a connection to tmhOAuth Class with config
+     *
+     * @static
+     * @access  public
+     * @return  void
+     */
+    public static function _init() 
+    {
+        parent::_init();
+        
+        if (is_null(static::$adapter)) 
+        {
+            $config             = \Config::get('app.api.twitter');
+            static::$adapter    = new \tmhOAuth($config);
+        }
+        
+        static::factory();
+    }
+    
+    /**
+     * Get cookie contain
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function factory()
+    {
+        $oauth = \Cookie::get('_twitter_oauth');
 
-		if (!is_null($oauth)) 
-		{
-			$oauth = unserialize(\Crypt::decode($oauth));
-			static::$items = (array) $oauth;
-			static::$_instance->config["user_token"] = $oauth->token;
-			static::$_instance->config["user_secret"] = $oauth->secret;
-		}
+        if (!\is_null($oauth)) 
+        {
+            $oauth  = \unserialize(\Crypt::decode($oauth));
 
-		return true;
-	}
+            static::$items                          = (array) $oauth;
+            static::$adapter->config["user_token"]  = $oauth->token;
+            static::$adapter->config["user_secret"] = $oauth->secret;
+        }
 
-	/**
-	 * Return tmhOAuth Object
-	 *
-	 * @static
-	 * @access public
-	 * @return object
-	 */
-	public static function get_adapter() 
-	{
-		return static::$_instance;
-	}
+        return true;
+    }
 
-	/**
-	 * Authenticate user with Twitter Account
-	 * There are three process/stage of authenticating an account:
-	 * 1. getting a twitter token
-	 * 2. authenticate the user with twitter account
-	 * 3. verifying the user account
-	 *
-	 * @access public
-	 * @return boolean
-	 */
-	public static function execute() 
-	{
-		switch (static::$items['access']) 
-		{
-			case 3 :
-				return static::_authenticate();
-			break;
+    /**
+     * Return tmhOAuth Object
+     *
+     * @static
+     * @access  public
+     * @return  object
+     */
+    public static function get_adapter() 
+    {
+        return static::$adapter;
+    }
 
-			case 2 :
-				# initiate stage 3
-				return static::_verify_token();
-			break;
+    /**
+     * Authenticate user with Twitter Account
+     * There are three process/stage of authenticating an account:
+     * 1. getting a twitter token
+     * 2. authenticate the user with twitter account
+     * 3. verifying the user account
+     *
+     * @static
+     * @access  public
+     * @return  bool
+     */
+    public static function execute() 
+    {
+        switch (static::$items['access']) 
+        {
+            case 3 :
+                return static::authenticate();
+            break;
 
-			case 1 :
-				# initiate stage 2
-				static::_access_token();
-			break;
+            case 2 :
+                # initiate stage 3
+                return static::verify_token();
+            break;
 
-			case 0 :
-				# initiate stage 1
-				return static::_request_token();
-			break;
-		}
+            case 1 :
+                # initiate stage 2
+                static::access_token();
+            break;
 
-		return false;
-	}
+            case 0 :
+                # initiate stage 1
+                return static::request_token();
+            break;
+        }
 
-	/**
-	 * Stage 4: authenticate
-	 * 
-	 * @static
-	 * @access 	protected
-	 * @return 	bool
-	 */
-	protected static function _authenticate()
-	{
-		$result = \DB::select('users_twitters.*', array('users.user_name', 'username'))
-				->from('users_twitters')
-				->join('users', 'LEFT')
-				->on('users_twitters.user_id', '=', 'users.id')
-				->where('users_twitters.twitter_id', '=', static::$items['id'])->execute();
+        return false;
+    }
 
-		if ($result->count() < 1) 
-		{
-			return false;
-		} 
-		else 
-		{
-			$row = $result->current();
-			static::$items['user_id'] = $row['user_id'];
-			static::_update_handler($row['twitter_id']);
+    /**
+     * Stage 4: authenticate
+     * 
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function authenticate()
+    {
+        $result = \DB::select('users_twitters.*', array('users.user_name', 'username'))
+                ->from('users_twitters')
+                ->join('users', 'LEFT')
+                ->on('users_twitters.user_id', '=', 'users.id')
+                ->where('users_twitters.twitter_id', '=', static::$items['id'])
+                ->execute();
 
-			if (is_null($row['user_id']) or intval(static::$items['user_id']) < 1) {
-				\Response::redirect(\Config::get('app.api._redirect.registration', '/'));
-				return true;
-			}
+        if ($result->count() < 1) 
+        {
+            return false;
+        } 
+        else 
+        {
+            $row = $result->current();
+            static::$items['user_id'] = $row['user_id'];
+            static::update_handler($row['twitter_id']);
 
-			\Hybrid\Acl_User::login($row['username'], static::$items['token'], 'twitter_oauth');
-			\Response::redirect(\Config::get('app.api._redirect.after_login', '/'));
-			return true;
-		}	
-	}
+            if (\is_null($row['user_id']) or \intval(static::$items['user_id']) < 1) 
+            {
+                static::redirect('registration');
 
-	/**
-	 * Stage 3: verifying the user account
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _verify_token() 
-	{
-		static::$_instance->request('GET', static::$_instance->url('1/account/verify_credentials'));
+                return true;
+            }
 
-		$response = json_decode(static::$_instance->response['response']);
+            \Hybrid\Acl_User::login($row['username'], static::$items['token'], 'twitter_oauth');
+            static::redirect('after_login');
 
-		if (isset($response->id)) 
-		{
-			static::$items['id'] = $response->id;
-			static::$items['info'] = (object) array(
-				'screen_name' => $response->screen_name,
-				'name' => $response->name,
-				'id' => $response->id
-			);
+            return true;
+        }   
+    }
 
-			static::$items['access'] = 3;
+    /**
+     * Stage 3: verifying the user account
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function verify_token() 
+    {
+        static::$adapter->request('GET', static::$adapter->url('1/account/verify_credentials'));
 
-			$result = \DB::select('users_twitters.*', array('users.user_name', 'username'))
-							->from('users_twitters')
-							->join('users', 'LEFT')
-							->on('users_twitters.user_id', '=', 'users.id')
-							->where('users_twitters.twitter_id', '=', $response->id)->execute();
+        $response = \json_decode(static::$adapter->response['response']);
 
-			if ($result->count() < 1) 
-			{
-				static::_add_handler($response->id, $response);
-				static::_register();
+        if (\isset($response->id)) 
+        {
+            static::$items['id']    = $response->id;
+            static::$items['info']  = (object) array(
+                'screen_name'       => $response->screen_name,
+                'name'              => $response->name,
+                'id'                => $response->id,
+            );
 
-				if (intval(static::$items['user_id']) < 1) 
-				{
-					\Response::redirect(\Config::get('app.api._redirect.registration', '/'));
-				}
-				else 
-				{
-					\Response::redirect(\Config::get('app.api._redirect.after_login', '/'));
-				}
-				
-				return true;
-			} 
-			else 
-			{
-				$row = $result->current();
+            static::$items['access'] = 3;
 
-				static::$items['user_id'] = $row['user_id'];
-				static::_update_handler($response->id, $response);
-				static::_register();
+            $result = \DB::select('users_twitters.*', array('users.user_name', 'username'))
+                        ->from('users_twitters')
+                        ->join('users', 'LEFT')
+                        ->on('users_twitters.user_id', '=', 'users.id')
+                        ->where('users_twitters.twitter_id', '=', $response->id)
+                        ->execute();
 
-				if (is_null($row['user_id']) or intval(static::$items['user_id']) < 1) {
-					\Response::redirect(\Config::get('app.api._redirect.registration', '/'));
-					return true;
-				}
+            if ($result->count() < 1) 
+            {
+                static::add_handler($response->id, $response);
+                static::register();
 
-				\Hybrid\Acl_User::login($row['username'], static::$items['token'], 'twitter_oauth');
-				\Response::redirect(\Config::get('app.api._redirect.after_login', '/'));
-				return true;
-			}
-		}
+                if (\intval(static::$items['user_id']) < 1) 
+                {
+                    static::redirect('registration');
+                }
+                else 
+                {
+                    static::redirect('after_login');
+                }
+                
+                return true;
+            } 
+            else 
+            {
+                $row = $result->current();
 
-		return false;
-	}
+                static::$items['user_id'] = $row['user_id'];
+                static::update_handler($response->id, $response);
+                static::register();
 
-	/**
-	 * Stage 2: authenticate the user with twitter account
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _access_token() 
-	{
-		static::$_instance->request("POST", static::$_instance->url("oauth/access_token", ""), array(
-			//pass the oauth_verifier received from Twitter
-			'oauth_verifier' => \Hybrid\Input::get('oauth_verifier', '')
-		));
+                if (\is_null($row['user_id']) or \intval(static::$items['user_id']) < 1) 
+                {
+                    static::redirect('registration');
 
-		if (200 == static::$_instance->response['code']) 
-		{
-			$response = static::$_instance->extract_params(static::$_instance->response["response"]);
+                    return true;
+                }
 
-			static::$items['token'] = $response['oauth_token'];
-			static::$items['secret'] = $response['oauth_token_secret'];
-			static::$items['access'] = 2;
+                \Hybrid\Acl_User::login($row['username'], static::$items['token'], 'twitter_oauth');
+                static::redirect('after_login');
 
-			static::$_instance->config["user_token"] = $response['oauth_token'];
-			static::$_instance->config["user_secret"] = $response['oauth_token_secret'];
+                return true;
+            }
+        }
 
-			static::_register();
-			static::execute();
-			return true;
-		} 
-		else 
-		{
-			logger('error', '\\Hybrid\\Acl_Twitter::access_token request fail: ' . static::$_instance->response['code']);
-			logger('debug', 'Response: ' . json_encode(static::$_instance->response));
-			return false;
-		}
+        return false;
+    }
 
-		return true;
-	}
+    /**
+     * Stage 2: authenticate the user with twitter account
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function access_token() 
+    {
+        static::$adapter->request("POST", static::$adapter->url("oauth/access_token", ""), array(
+            //pass the oauth_verifier received from Twitter
+            'oauth_verifier' => \Hybrid\Input::get('oauth_verifier', '')
+        ));
 
-	/**
-	 * Stage 1: getting a twitter token
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _request_token() 
-	{
+        if (200 === \intval(static::$adapter->response['code'])) 
+        {
+            $response = static::$adapter->extract_params(static::$adapter->response["response"]);
 
-		static::$_instance->request('POST', static::$_instance->url("oauth/request_token", ""));
+            static::$items['token']     = $response['oauth_token'];
+            static::$items['secret']    = $response['oauth_token_secret'];
+            static::$items['access']    = 2;
 
-		if (200 == static::$_instance->response['code']) 
-		{
-			$response = static::$_instance->extract_params(static::$_instance->response['response']);
+            static::$adapter->config["user_token"]  = $response['oauth_token'];
+            static::$adapter->config["user_secret"] = $response['oauth_token_secret'];
 
-			static::$items['token'] = $response['oauth_token'];
-			static::$items['secret'] = $response['oauth_token_secret'];
-			static::$items['access'] = 1;
+            static::register();
+            static::execute();
+            return true;
+        } 
+        else 
+        {
+            \Log::error('\\Hybrid\\Acl_Twitter::access_token request fail: ' . static::$adapter->response['code']);
+            \Log::debug('Response: ' . \json_encode(static::$adapter->response));
+            return false;
+        }
 
-			static::_register();
+        return true;
+    }
 
-			$url = static::$_instance->url("oauth/authorize", '');
-			$url .= "?oauth_token={$response['oauth_token']}";
+    /**
+     * Stage 1: getting a twitter token
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function request_token() 
+    {
+        static::$adapter->request('POST', static::$adapter->url("oauth/request_token", ""));
 
-			\Response::redirect($url, 'refresh');
-			exit();
-			return true;
-		} 
-		else 
-		{
-			logger('error', '\\Hybrid\\Acl_Twitter::request_token request fail: ' . static::$_instance->response['code']);
-			return false;
-		}
+        if (200 == static::$adapter->response['code']) 
+        {
+            $response = static::$adapter->extract_params(static::$adapter->response['response']);
 
-		return false;
-	}
+            static::$items['token']     = $response['oauth_token'];
+            static::$items['secret']    = $response['oauth_token_secret'];
+            static::$items['access']    = 1;
 
-	/**
-	 * Add Twitter Handler to database
-	 *
-	 * @static
-	 * @access	private
-	 * @param	int		$id
-	 * @param	object	$meta
-	 * @return	bool
-	 */
-	private static function _add_handler($id, $meta = null) 
-	{
-		if (!is_numeric($id)) 
-		{
-			return false;
-		}
+            static::register();
 
-		$bind = array(
-			'twitter_id' => $id,
-			'token' => static::$items['token'],
-			'secret' => static::$items['secret'],
-		);
+            $url    = static::$adapter->url("oauth/authorize", '');
+            $url    .= "?oauth_token={$response['oauth_token']}";
 
-		if (\Hybrid\Acl_User::is_logged()) 
-		{
-			$bind['user_id'] = \Hybrid\Acl_User::get('id');
-			static::$items['user_id'] = $bind['user_id'];
-		}
+            \Response::redirect($url, 'refresh');
+            exit();
+            return true;
+        } 
+        else 
+        {
+            \Log::error('\\Hybrid\\Acl_Twitter::request_token request fail: ' . static::$adapter->response['code']);
+            return false;
+        }
 
-		\DB::insert('users_twitters')->set($bind)->execute();
+        return false;
+    }
 
-		if (!empty($meta)) 
-		{
-			\DB::insert('twitters')->set(array(
-				'id' => $id,
-				'twitter_name' => $meta->screen_name,
-				'full_name' => $meta->name,
-				'profile_image' => $meta->profile_image_url
-			))->execute();
-		}
+    /**
+     * Add Twitter Handler to database
+     *
+     * @static
+     * @access  private
+     * @param   int     $id
+     * @param   object  $meta
+     * @return  bool
+     */
+    private static function add_handler($id, $meta = null) 
+    {
+        if (!\is_numeric($id)) 
+        {
+            return false;
+        }
 
-		return true;
-	}
+        $bind = array(
+            'twitter_id'    => $id,
+            'token'         => static::$items['token'],
+            'secret'        => static::$items['secret'],
+        );
 
-	/**
-	 * Update Twitter Handler to database
-	 *
-	 * @static
-	 * @access	private
-	 * @param	int		$id
-	 * @param	object	$meta
-	 * @return	bool
-	 */
-	private static function _update_handler($id, $meta = null) 
-	{
-		if (!is_numeric($id)) 
-		{
-			return false;
-		}
+        if (\Hybrid\Acl_User::is_logged()) 
+        {
+            $bind['user_id']            = \Hybrid\Acl_User::get('id');
+            static::$items['user_id']   = $bind['user_id'];
+        }
 
-		$bind = array(
-			'token' => static::$items['token'],
-			'secret' => static::$items['secret'],
-		);
+        \DB::insert('users_twitters')
+            ->set($bind)
+            ->execute();
 
-		if (\Hybrid\Acl_User::is_logged() and static::$items['user_id'] == 0) 
-		{
-			$bind['user_id'] = \Hybrid\Acl_User::get('id');
-			static::$items['user_id'] = $bind['user_id'];
-		}
+        if (!\empty($meta)) 
+        {
+            \DB::insert('twitters')->set(array(
+                'id'            => $id,
+                'twitter_name'  => $meta->screen_name,
+                'full_name'     => $meta->name,
+                'profile_image' => $meta->profile_image_url
+            ))->execute();
+        }
 
-		\DB::update('users_twitters')->set($bind)->where('twitter_id', '=', $id)->execute();
+        return true;
+    }
 
-		if (!empty($meta)) 
-		{
-			\DB::update('twitters')->set(array(
-				'full_name' => $meta->name,
-				'twitter_name' => $meta->screen_name,
-				'profile_image' => $meta->profile_image_url
-			))->where('id', '=', $id)->execute();
-		}
+    /**
+     * Update Twitter Handler to database
+     *
+     * @static
+     * @access  private
+     * @param   int     $id
+     * @param   object  $meta
+     * @return  bool
+     */
+    private static function update_handler($id, $meta = null) 
+    {
+        if (!\is_numeric($id)) 
+        {
+            return false;
+        }
 
-		return true;
-	}
+        $bind = array(
+            'token'     => static::$items['token'],
+            'secret'    => static::$items['secret'],
+        );
 
-	/**
-	 * Register information to Session
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _register() 
-	{
-		\Cookie::set('_twitter_oauth', \Crypt::encode(serialize((object) static::$items)));
+        if (\Hybrid\Acl_User::is_logged() and 0 === \intval(static::$items['user_id'])) 
+        {
+            $bind['user_id']            = \Hybrid\Acl_User::get('id');
+            static::$items['user_id']   = $bind['user_id'];
+        }
 
-		return true;
-	}
+        \DB::update('users_twitters')
+            ->set($bind)
+            ->where('twitter_id', '=', $id)
+            ->execute();
 
-	/**
-	 * Unregister information from Session
-	 *
-	 * @static
-	 * @access	protected
-	 * @return	bool
-	 */
-	protected static function _unregister() 
-	{
-		\Cookie::delete('_twitter_oauth');
+        if (!\empty($meta)) 
+        {
+            \DB::update('twitters')
+                ->set(array(
+                    'full_name'     => $meta->name,
+                    'twitter_name'  => $meta->screen_name,
+                    'profile_image' => $meta->profile_image_url
+                ))
+                ->where('id', '=', $id)
+                ->execute();
+        }
 
-		return true;
-	}
+        return true;
+    }
+
+    /**
+     * Register information to Session
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function register() 
+    {
+        \Cookie::set('_twitter_oauth', \Crypt::encode(\serialize((object) static::$items)));
+
+        return true;
+    }
+
+    /**
+     * Unregister information from Session
+     *
+     * @static
+     * @access  protected
+     * @return  bool
+     */
+    protected static function unregister() 
+    {
+        \Cookie::delete('_twitter_oauth');
+
+        return true;
+    }
 
 
-	/**
-	 * Initiate user login out from Twitter
-	 *
-	 * Usage:
-	 * 
-	 * <code>\Hybrid\Acl_Twitter::logout(false);</code>
-	 * 
-	 * @static
-	 * @access	public
-	 * @param	bool	$redirect
-	 * @return	bool
-	 */
-	public static function logout()
-	{
-		return static::_unregister();
-	}
+    /**
+     * Initiate user login out from Twitter
+     *
+     * Usage:
+     * 
+     * <code>\Hybrid\Acl_Twitter::logout(false);</code>
+     * 
+     * @static
+     * @access  public
+     * @param   bool    $redirect
+     * @return  bool
+     */
+    public static function logout()
+    {
+        return static::unregister();
+    }
 }
 
