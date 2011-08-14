@@ -43,6 +43,12 @@ class Acl_Controller_Facebook extends \Hybrid\Controller {
     public function action_index()
     {
         $facebook = \Hybrid\Acl_Facebook::execute();
+        $login = \Hybrid\Acl_Facebook::get_url();
+
+        if (null === \Hybrid\Input::get('code', null))
+        {
+            \Response::redirect($login, 'refresh');
+        }
     }
 
     /**
@@ -57,7 +63,7 @@ class Acl_Controller_Facebook extends \Hybrid\Controller {
 
         if (false === \Hybrid\Acl_Facebook::is_logged() and null === \Hybrid\Input::get('code', null))
         {
-            \Request::redirect($login, 'refresh');
+            \Response::redirect($login, 'refresh');
         }
         else
         {

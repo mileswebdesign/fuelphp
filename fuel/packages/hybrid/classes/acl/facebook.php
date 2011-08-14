@@ -233,9 +233,9 @@ class Acl_Facebook extends Acl_Abstract {
     {
         static::$user = static::$adapter->getUser();
 
-        if (static::$user <> 0 and !\is_null(static::$user))
+        if (static::$user <> 0 and !\is_null(static::$user) and 0 < intval(static::$items['id']))
         {
-            return false;
+            return static::verify_access();
         }
             
         try
@@ -249,6 +249,8 @@ class Acl_Facebook extends Acl_Abstract {
             static::$user                   = null;
             static::$items['access']        = 0;
         }
+        
+        $scopes                             = explode(',', \Config::get('app.api.facebook.scope', ''));
 
         static::$items['info']              = new \stdClass();
         $profile_data                       = (object) $profile_data;
@@ -258,6 +260,17 @@ class Acl_Facebook extends Acl_Abstract {
         static::$items['info']->first_name  = $profile_data->first_name;
         static::$items['info']->last_name   = $profile_data->last_name;
         static::$items['info']->link        = $profile_data->link;
+
+        foreach ($scopes as $scope)
+        {
+            $scope = trim($scope);
+
+            if (!empty($scope))
+            {
+                static::$items['info']->{$scope} = $profile_data->{$scope};
+            }
+        }
+
         static::$items['token']             = static::$adapter->getAccessToken();
 
         if (static::$items['access'] == 0)
