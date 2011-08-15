@@ -249,12 +249,12 @@ class File {
 				// Use recursion when depth not depleted or not limited...
 				if ($depth < 1 or $new_depth > 0)
 				{
-					$dirs[$file] = static::read_dir($path.$file.DS, $new_depth, $filter, $area);
+					$dirs[$file.DS] = static::read_dir($path.$file.DS, $new_depth, $filter, $area);
 				}
 				// ... or set dir to false when not read
 				else
 				{
-					$dirs[$file] = false;
+					$dirs[$file.DS] = false;
 				}
 			}
 			else
@@ -475,8 +475,8 @@ class File {
 		{
 			if (is_array($file))
 			{
-				$check = static::create_dir($new_path.DS, $dir, fileperms($path.$dir.DS) ?: 0777, $area);
-				$check and static::copy_dir($path.$dir.DS, $new_path.$dir.DS, $area);
+				$check = static::create_dir($new_path.DS, substr($dir, 0, -1), fileperms($path.$dir) ?: 0777, $area);
+				$check and static::copy_dir($path.$dir.DS, $new_path.$dir, $area);
 			}
 			else
 			{
