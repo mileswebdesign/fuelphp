@@ -50,7 +50,7 @@ class Auth_Connection  {
     {
         if (\is_null($name))
         {
-            $name = 'user';
+            $name = 'normal';
         }
 
         $name = \Str::lower($name);
@@ -283,7 +283,6 @@ class Auth_Connection  {
 
             $this->items['id']        = $user->user_id;
             $this->items['user_name'] = $user->user_name;
-            $this->items['roles']     = $items->roles;
             $this->items['password']  = $user->password_token;
             
             foreach ($this->optional_fields as $property)

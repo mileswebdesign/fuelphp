@@ -27,19 +27,6 @@ Namespace Hybrid;
  */
 
 class Auth_Twitter_Connection extends Auth_Connection {
-    
-    /**
-     * Get self instance from cache instead of initiating a new object if time 
-     * we need to use this object
-     *
-     * @static
-     * @access  public
-     * @return  self
-     */
-    public static function instance()
-    {
-        return static::instance('twitter');
-    }
 
     /**
      * Execute to fetch user information using Facebook Auth
@@ -50,6 +37,8 @@ class Auth_Twitter_Connection extends Auth_Connection {
      */
     public function execute($items)
     {
+        $this->items['_hash'] = $items['_hash'];
+
         if (true !== $this->use_twitter) 
         {
             $this->unregister(true);
@@ -83,6 +72,8 @@ class Auth_Twitter_Connection extends Auth_Connection {
 
         $this->fetch_user($result);
         $this->fetch_role();
+
+        $this->register();
 
         return $this;
     }
@@ -132,6 +123,8 @@ class Auth_Twitter_Connection extends Auth_Connection {
             throw new \Fuel_Exception("Invalid Twitter token, please sign-in with Twitter again");
         }
 
+        $this->register();
+
         return $this;
     }
 
@@ -143,7 +136,7 @@ class Auth_Twitter_Connection extends Auth_Connection {
      */
     public function logout()
     {
-        $this->unregister();
+        $this->unregister(true);
 
         return $this;
     }
