@@ -25,10 +25,26 @@ namespace Hybrid;
  * @category    Text
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
+ 
 class Text {
     
+    /**
+     * Cache text instance so we can reuse it on multiple request eventhough 
+     * it's almost impossible to happen
+     * 
+     * @static
+     * @access  protected
+     * @var     array
+     */
     protected static $instances = array();
 
+    /**
+     * Initiate a new Text instance
+     * 
+     * @static
+     * @access  public
+     * @return  object
+     */
     public static function factory($name = null)
     {
         if (\is_null($name))
@@ -36,10 +52,12 @@ class Text {
             $name = '';
         }
 
-        $driver = '\\Hybrid\\Text_' . \Str::ucfirst($name);
+        $name = \Str::lower($name)
 
         if (!isset(static::$instances[$name]))
         {
+            $driver = '\\Hybrid\\Text_' . \Str::ucfirst($name);
+        
             // instance has yet to be initiated
             if (\class_exists($driver))
             {

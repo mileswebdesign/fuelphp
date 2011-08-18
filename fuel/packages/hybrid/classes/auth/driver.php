@@ -11,7 +11,7 @@
  * @link       http://fuelphp.com
  */
 
-Namespace Hybrid;
+namespace Hybrid;
 
 /**
  * Hybrid 
@@ -22,199 +22,126 @@ Namespace Hybrid;
  * 
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Auth_Connection
+ * @category    Auth_Driver
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Auth_Connection  {
+abstract class Auth_Driver {
 
     /**
-     * User data
+     * Redirect user based on type
      *
+     * @static
+     * @access  protected
+     * @param   string  $type
+     * @param   string  $default_route
+     * @return  void
+     * @throws  \Fuel_Exception
+     */
+    protected static function redirect($type, $default_route = '/')
+    {
+        switch ($type)
+        {
+            case 'registration' :
+                \Response::redirect(\Config::get('app._route_.registration', $default_route));
+            break;
+
+            case 'after_login' :
+                \Response::redirect(\Config::get('app._route_.after_login', $default_route));
+            break;
+
+            case 'after_logout' :
+                \Response::redirect(\Config::get('app._route_.after_logout', $default_route));
+            break;
+
+            default :
+                throw new \Fuel_Exception("Unable to redirect type: {$type}");
+                return;
+        }
+
+        return true;
+    }
+
+    /**
+     * Adapter object
+     *
+     * @access  protected
+     * @var     object
+     */
+    protected $adapter   = null;
+
+    /**
+     * Auth data
+     *
+     * @static
      * @access  protected
      * @var     object|array
      */
-    protected $items     = null;
+    protected $auth     = null;
 
     /**
-     * Default value for user data
-     * 
-     * @access  protected
-     * @return  bool
-     */
-    public function reset() 
-    {
-        return $this->items = array(
-            'id'        => 0,
-            'user_name' => 'guest',
-            'full_name' => '',
-            'email'     => '',
-            'roles'     => array('guest'),
-            '_hash'     => null,
-            'password'  => '',
-            'method'    => 'normal',
-            'gender'    => '',
-            'status'    => 1,
-        );
-    }
-
-    /**
-     * List of user fields to be used
+     * Load configurations
      *
-     * @access  protected
-     * @var     array
-     */
-    protected $optional_fields   = array('email', 'status', 'full_name', 'gender', 'birthdate');
-
-    /**
-     * Allow status to login based on `users`.`status`
-     *
-     * @access  protected
-     * @var     array
-     */
-    protected $allowed_status    = array('verified');
-    
-    /**
-     * Use `users_meta` table
-     *
-     * @access  protected
-     * @var     bool
-     */
-     protected $use_meta          = true;
-
-    /**
-     * Use `users_auth` table
-     *
-     * @access  protected
-     * @var     bool
-     */
-    protected $use_auth          = true;
-
-    /**
-     * Use Twitter OAuth
-     *
-     * @access  protected
-     * @var     bool
-     */
-    protected $use_twitter       = false;
-
-    /**
-     * Use Facebook Connect
-     *
-     * @access  protected
-     * @var     bool
-     */
-    protected $use_facebook      = false;
-
-    /**
-     * Load and bind instance configuration
-     *
+     * @static 
      * @access  public
      * @return  void
      */
-    public function __construct()
+    protected function _initiate()
     {
-        // load ACL configuration
-        $config             = \Config::get('app.auth', \Config::get('app.user_table', array()));
-
-        $reserved_property  = array('optional_fields');
-        
-        foreach ($config as $key => $value)
-        {
-            if (!\property_exists('\\Hybrid\\Auth_Query', "{$key}") or \in_array($key, $reserved_property))
-            {
-                continue;
-            }
-
-            $this->{$key} = $value;
-            \Config::set("app.auth.{$key}", $value);
-        }
-
-        if (!isset($config['optional_fields']) or !\is_array($config['optional_fields']))
-        {
-            $config['optional_fields'] = array();
-        }
-        
-        $this->optional_fields = \array_merge($config['optional_fields'], $this->optional_fields);
-
-        foreach ($this->optional_fields as $field)
-        {
-            if (\is_string($field) and !isset($this->items[$field]))
-            {
-                $this->items[$field] = '';
-            }
-        }
-
-        return true;
-    }
-
-    protected function fetch_user($result)
-    {
-        if (\is_null($result) or $result->count() < 1) 
-        {
-            $this->reset();
-        } 
-        else 
-        {
-            $user = $result->current();
-
-            if (!\in_array($user->status, $this->allowed_status)) 
-            {
-                // only verified user can login to this application
-                $this->reset();
-            }
-
-            // we validate the hash to add security to this application
-            $hash = $user->user_name . $user->password_token;
-
-            if (!is_null($this->items['_hash']) and $this->items['_hash'] !== \Hybrid\Auth::add_salt($hash)) 
-            {
-                $this->reset();
-            }
-
-            $this->items['id']        = $user->user_id;
-            $this->items['user_name'] = $user->user_name;
-            $this->items['roles']     = $items->roles;
-            $this->items['password']  = $user->password_token;
-            
-            foreach ($this->optional_fields as $property)
-            {
-                if (!\property_exists($user, $property))
-                {
-                    continue;
-                }
-                    
-                $this->items[$property]   = $user->{$property};
-            }
-        }
+        \Config::load('app', 'app');
+        \Config::load('crypt', true);
     }
 
     /**
-     * Get user's roles
-     * 
-     * @access  protected
-     * @return  bool
+     * Return Adapter Object
+     *
+     * @access  public
+     * @return  object
      */
-    protected static function fetch_role() 
+    public function get_adapter() 
     {
-        $data = array();
-
-        $roles = \DB::select('roles.id', 'roles.name')
-                ->from('roles')
-                ->join('users_roles')
-                ->on('users_roles.role_id', '=', 'roles.id')
-                ->where('users_roles.user_id', '=', $this->items['id'])
-                ->as_object()
-                ->execute();
-
-        foreach ($roles as $role) 
-        {
-            $data['' . $role->id]   = \Inflector::friendly_title($role->name, '-', true);
-        }
-
-        $this->items['roles']     = $data;
-
-        return true;
+        return $this->adapter;
     }
 
+    /**
+     * Return TRUE/FALSE whether visitor is logged in to the system
+     * 
+     * Usage:
+     * 
+     * <code>false === \Hybrid\Auth::instance()->is_logged()</code>
+     *
+     * @access  public
+     * @return  bool
+     */
+    public function is_logged() 
+    {
+        return ($this->auth['id'] > 0 ? true : false);
+    }
+
+    /**
+     * Get current user authentication
+     * 
+     * Usage:
+     * 
+     * <code>$user = \Hybrid\Auth::instance()->get();</code>
+     *
+     * @access  public
+     * @param   string  $name optional key value, return all if $name is null
+     * @return  object
+     */
+    public function get($name = null) 
+    {
+        if (\is_null($name)) 
+        {
+            return (object) $this->auth;
+        }
+
+        if (\array_key_exists($name, $this->auth)) 
+        {
+            return $this->auth[$name];
+        }
+
+        return null;
+    }
+    
 }
