@@ -36,13 +36,19 @@ class Template_Frontend extends Template_Driver {
      *
      * @static
      * @access  public
-     * @param   string  $theme
-     * @param   string  $filename
+     * @param   string  $name
      * @return  void
      */
-    public static function factory($folder = null, $filename = null)
+    public static function factory($name = null)
     {
-        return new static($folder, $filename);
+        $driver = 'frontend';
+        
+        if (!is_null($name) and !empty($name))
+        {
+            $driver .= ".{$name}";
+        }
+
+        return \Hybrid\Template::factory($driver);
     }
 
     /**
@@ -101,18 +107,6 @@ class Template_Frontend extends Template_Driver {
         }
 
         return $this;
-    }
-
-    /**
-     * Set folder location
-     *
-     * @access  protected
-     * @return  self
-     * @throws  \Fuel_Exception
-     */
-    public function set_folder($path = null)
-    {
-        return parent::set_folder($path);
     }
 
     /**

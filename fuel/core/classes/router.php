@@ -100,8 +100,13 @@ class Router {
 		if ( ! $match)
 		{
 			// Since we didn't find a match, we will create a new route.
-			$match = new Route(preg_quote($request->uri->get(), '#'));
+			$match = new Route(preg_quote($request->uri->get(), '#'), $request->uri->get());
 			$match->parse($request);
+		}
+
+		if ($match->callable !== null)
+		{
+			return $match;
 		}
 
 		return static::find_controller($match);

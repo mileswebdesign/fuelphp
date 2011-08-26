@@ -22,6 +22,86 @@ namespace Fuel\Core;
 class Arr {
 
 	/**
+	 * Gets a dot-notated key from an array, with a default value if it does
+	 * not exist.
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @param   string  $default  The default value
+	 * @return  mixed
+	 */
+	public static function get($array, $key, $default = null)
+	{
+		if (is_null($key))
+		{
+			return $array;
+		}
+
+		if (is_array($key))
+		{
+			$return = array();
+			foreach ($key as $k)
+			{
+				$return[$k] = static::get($array, $k, $default);
+			}
+			return $return;
+		}
+
+		foreach (explode('.', $key) as $key_part)
+		{
+			if ( ! is_array($array) or ! array_key_exists($key_part, $array))
+			{
+				return \Fuel::value($default);
+			}
+
+			$array = $array[$key_part];
+		}
+
+		return $array;
+	}
+
+	/**
+	 * Set an array item (dot-notated) to the value.
+	 *
+	 * @param   array   $array  The array to insert it into
+	 * @param   mixed   $key    The dot-notated key to set or array of keys
+	 * @param   mixed   $value  The value
+	 * @return  void
+	 */
+	public static function set(&$array, $key, $value = null)
+	{
+		if (is_null($key))
+		{
+			$array = $value;
+			return;
+		}
+
+		if (is_array($key))
+		{
+			foreach ($key as $k => $v)
+			{
+				static::set($array, $k, $value);
+			}
+		}
+
+		$keys = explode('.', $key);
+
+		while (count($keys) > 1)
+		{
+			$key = array_shift($keys);
+
+			if ( ! isset($array[$key]) or ! is_array($array[$key]))
+			{
+				$array[$key] = array();
+			}
+
+			$array =& $array[$key];
+		}
+
+		$array[array_shift($keys)] = $value;
+	}
+
+	/**
 	 * Converts a multi-dimensional associative array into an array of key => values with the provided field names
 	 *
 	 * @param   array   the array to convert
@@ -183,31 +263,11 @@ class Arr {
 	 * @param   mixed  the key to fetch from the array
 	 * @param   mixed  the value returned when not an array or invalid key
 	 * @return  mixed
+	 * @deprecated until 1.2
 	 */
 	public static function element($array, $key, $default = false)
 	{
-		$key = explode('.', $key);
-		if(count($key) > 1)
-		{
-			if ( ! is_array($array) or ! array_key_exists($key[0], $array))
-			{
-				return ($default instanceof \Closure) ? $default() : $default;
-			}
-			$array = $array[$key[0]];
-			unset($key[0]);
-			$key = implode('.', $key);
-			$array = static::element($array, $key, $default);
-			return $array;
-		}
-		else
-		{
-			$key = $key[0];
-			if ( ! is_array($array) or ! array_key_exists($key, $array))
-			{
-				return ($default instanceof \Closure) ? $default() : $default;
-			}
-			return $array[$key];
-		}
+		return static::get($array, $key, $default);
 	}
 
 	/**
@@ -217,29 +277,11 @@ class Arr {
 	 * @param   array  the keys to fetch from the array
 	 * @param   mixed  the value returned when not an array or invalid key
 	 * @return  mixed
+	 * @deprecated until 1.2
 	 */
 	public static function elements($array, $keys, $default = false)
 	{
-		$return = array();
-
-		if ( ! is_array($array) or ! is_array($keys))
-		{
-			throw new \InvalidArgumentException('Arr::elements() - $keys and $array must be arrays.');
-		}
-
-		foreach ($keys as $key)
-		{
-			if ( ! array_key_exists($key, $array))
-			{
-				$return[$key] = $default;
-			}
-			else
-			{
-				$return[$key] = $array[$key];
-			}
-		}
-
-		return $return;
+		return static::get($array, $keys, $default);
 	}
 
 	/**

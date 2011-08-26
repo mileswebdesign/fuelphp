@@ -50,10 +50,11 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      * @access  public
      * @param   mixed   $resource
      * @param   string  $type 
+     * @param   string  $name
      */
-    final protected function acl($resource, $type = null) 
+    final protected function acl($resource, $type = null, $name = null) 
     {
-        $status = \Hybrid\Acl::access_status($resource, $type);
+        $status = \Hybrid\Acl::instance($name)->access_status($resource, $type);
 
         switch ($status) 
         {
@@ -68,14 +69,14 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      * 
      * @access  public
      */
-    public function before($data = null) 
+    public function before() 
     {
         $this->language     = \Hybrid\Factory::get_language();
         $this->user         = \Hybrid\Auth::instance('user')->get();
 
         \Event::trigger('controller_before');
         
-        $this->prepare_template($data);
+        $this->prepare_template();
 
         return parent::before();
     }
@@ -112,14 +113,11 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      * 
      * @access  protected
      */
-    protected function prepare_template($data = null)
+    protected function prepare_template()
     {
         if (true === $this->auto_render)
         {
             $this->template = \Hybrid\Template::factory($this->template);
-            
-            // Set the data to the template if provided
-            $data and $this->template->view->set_global($data);
         }
     }
     

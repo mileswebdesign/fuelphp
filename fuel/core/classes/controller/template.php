@@ -39,21 +39,22 @@ abstract class Controller_Template extends \Controller {
 		if ($this->auto_render === true)
 		{
 			// Load the template
-			$this->template = \View::factory($this->template);
+			$this->template = \View::forge($this->template);
 		}
 
 		return parent::before();
 	}
 
 	// After contorller method has run output the template
-	public function after()
+	public function after($response)
 	{
-		if ($this->auto_render === true)
+		// If the response is a Response object, we don't want to create a new one
+		if ($this->auto_render === true and ! $response instanceof \Response)
 		{
-			$this->response->body($this->template);
+			$response = \Response::forge($this->template);
 		}
 
-		return parent::after();
+		return parent::after($response);
 	}
 
 }

@@ -36,20 +36,26 @@ class Template_Normal extends Template_Driver {
      *
      * @static
      * @access  public
-     * @param   string  $theme
-     * @param   string  $filename
+     * @param   string  $name
      * @return  void
      */
-    public static function factory($folder = null, $filename = null)
+    public static function factory($name = null)
     {
-        return new static($folder, $filename);
+        $driver = 'normal';
+        
+        if (!is_null($name) and !empty($name))
+        {
+            $driver .= ".{$name}";
+        }
+
+        return \Hybrid\Template::factory($driver);
     }
 
     /**
      * Initiate a new template object
      *
      * @access  public
-     * @param   string  $theme
+     * @param   string  $folder
      * @param   string  $filename
      * @return  void
      * @throws  \Fuel_Exception
@@ -85,7 +91,35 @@ class Template_Normal extends Template_Driver {
      * @return  self
      * @throws  \Fuel_Exception
      */
-    private function load_assets() {}
+    public function load_assets($forced_load = false)
+    {
+      throw new \Fuel_Exception("No asset loading for \\Hybrid\\Template_Normal");
+    }
+
+    /**
+     * Set folder location
+     *
+     * @access  public
+     * @return  self
+     * @throws  \Fuel_Exception
+     */
+    public function set_folder($path = null)
+    {
+        // this is not the best way of doing it, the request is not cached and going to be slow
+        // if there's a lot of paths and files
+        $files = \Fuel::list_files('views/' . $path, '*.php');
+
+        if (empty($files))
+        {
+            throw new \Fuel_Exception("Path {$path} does not appear to a valid folder or contain any View files");
+        }
+        else 
+        {
+            $this->folder = $path;
+        }
+
+        return $this;
+    }
 
     /**
      * Load partial view

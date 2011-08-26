@@ -44,7 +44,10 @@ abstract class Controller {
 	/**
 	 * This method gets called after the action is called
 	 */
-	public function after() {}
+	public function after($response)
+	{
+		return $response;
+	}
 
 	/**
 	 * This method returns the named parameter requested, or all of them
@@ -82,7 +85,7 @@ abstract class Controller {
 	 */
 	public function render($view, $data = array(), $auto_encode = null)
 	{
-		$this->response->body .= \View::factory($view, $data, $auto_encode);
+		$this->response->body .= \View::forge($view, $data, $auto_encode);
 	}
 }
 

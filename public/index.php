@@ -2,7 +2,7 @@
 /**
  * Set error reporting and display errors settings.  You will want to change these when in production.
  */
-error_reporting(E_ALL | E_STRICT);
+error_reporting(-1);
 ini_set('display_errors', 1);
 
 // Use an anonymous function to keep the global namespace clean
@@ -41,13 +41,13 @@ require_once APPPATH.'bootstrap.php';
 // Generate the request, execute it and send the output.
 try
 {
-	$response = Request::factory()->execute()->response();
+	$response = Request::forge()->execute()->response();
 }
 catch (Request404Exception $e)
 {
 	if ($route = Config::get('routes._404_'))
 	{
-		$response = Request::factory($route)->execute()->response();
+		$response = Request::forge($route)->execute()->response();
 	}
 	else
 	{

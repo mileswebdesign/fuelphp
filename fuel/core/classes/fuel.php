@@ -48,7 +48,7 @@ class Fuel {
 	const L_INFO = 4;
 	const L_ALL = 5;
 
-	const VERSION = '1.0';
+	const VERSION = '1.1-dev';
 
 	public static $initialized = false;
 
@@ -632,6 +632,19 @@ class Fuel {
 				\Lang::load((is_int($lang) ? $lang_group : $lang), (is_int($lang) ? true : $lang_group));
 			}
 		}
+	}
+
+	/**
+	 * Takes a value and checks if it is a Closure or not, if it is it
+	 * will return the result of the closure, if not, it will simply return the
+	 * value.
+	 *
+	 * @param   mixed  $var  The value to get
+	 * @return  mixed
+	 */
+	public static function value($var)
+	{
+		return ($var instanceof \Closure) ? $var() : $var;
 	}
 
 	/**

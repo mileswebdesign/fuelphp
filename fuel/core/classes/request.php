@@ -21,7 +21,7 @@ class Request404Exception extends \Fuel_Exception {
 	 */
 	public function handle()
 	{
-		$response = new \Response(\View::factory('404'), 404);
+		$response = new \Response(\View::forge('404'), 404);
 		\Event::shutdown();
 		$response->send(true);
 		return;
@@ -36,7 +36,7 @@ class Request404Exception extends \Fuel_Exception {
  *
  * Example Usage:
  *
- *     $request = Request::factory('foo/bar')->execute();
+ *     $request = Request::forge('foo/bar')->execute();
  *     echo $request->response();
  *
  * @package     Fuel
@@ -59,19 +59,30 @@ class Request {
 	protected static $active = false;
 
 	/**
+	 * This method is deprecated...use forge() instead.
+	 *
+	 * @deprecated until 1.2
+	 */
+	public static function factory($uri = null, $route = true)
+	{
+		\Log::warning('This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		return static::forge($uri, $route);
+	}
+
+	/**
 	 * Generates a new request.  The request is then set to be the active
 	 * request.  If this is the first request, then save that as the main
 	 * request for the app.
 	 *
 	 * Usage:
 	 *
-	 *     Request::factory('hello/world');
+	 *     Request::forge('hello/world');
 	 *
 	 * @param   string   The URI of the request
 	 * @param   bool     Whether to use the routes to determine the Controller and Action
 	 * @return  Request  The new request object
 	 */
-	public static function factory($uri = null, $route = true)
+	public static function forge($uri = null, $route = true)
 	{
 		logger(Fuel::L_INFO, 'Creating a new Request with URI = "'.$uri.'"', __METHOD__);
 
@@ -81,19 +92,13 @@ class Request {
 			$request->parent = static::$active;
 			static::$active->children[] = $request;
 		}
-		static::$active = $request;
-
-		if ( ! static::$main)
-		{
-			logger(Fuel::L_INFO, 'Setting main Request', __METHOD__);
-			static::$main = $request;
-		}
 
 		return $request;
 	}
 
 	/**
 	 * Returns the main request instance (the one from the browser or CLI).
+	 * This is the first executed Request, not necessarily the root parent of the current request.
 	 *
 	 * Usage:
 	 *
@@ -146,10 +151,7 @@ class Request {
 	public static function reset_request()
 	{
 		// Let's make the previous Request active since we are done executing this one.
-		if ($parent = static::$active->parent())
-		{
-			static::$active = $parent;
-		}
+		static::$active = static::$active->parent();
 	}
 
 
@@ -312,7 +314,7 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $request = Request::factory('hello/world')->execute();
+	 *     $request = Request::forge('hello/world')->execute();
 	 *
 	 * @param  array|null  $method_params  An array of parameters to pass to the method being executed
 	 * @return  Request  This request object
@@ -321,68 +323,115 @@ class Request {
 	{
 		logger(Fuel::L_INFO, 'Called', __METHOD__);
 
+		// Make the current request active
+		static::$active = $this;
+
+		// First request called is also the main request
+		if ( ! static::$main)
+		{
+			logger(Fuel::L_INFO, 'Setting main Request', __METHOD__);
+			static::$main = $this;
+		}
+
 		if ( ! $this->route)
 		{
 			static::reset_request();
 			throw new \Request404Exception();
 		}
 
-		$controller_prefix = '\\'.($this->module ? ucfirst($this->module).'\\' : '').'Controller_';
-		$method_prefix = 'action_';
-
-		$class = $controller_prefix.($this->directory ? ucfirst($this->directory).'_' : '').ucfirst($this->controller);
-
-		// If the class doesn't exist then 404
-		if ( ! class_exists($class))
+		if ($this->route->callable !== null)
 		{
-			static::reset_request();
-			throw new \Request404Exception();
-		}
-
-		logger(Fuel::L_INFO, 'Loading controller '.$class, __METHOD__);
-		$this->controller_instance = $controller = new $class($this, new \Response);
-
-		$this->action = $this->action ?: (property_exists($controller, 'default_action') ? $controller->default_action : 'index');
-		$method = $method_prefix.$this->action;
-
-		// Allow override of method params from execute
-		if (is_array($method_params))
-		{
-			$this->method_params = array_merge($this->method_params, $method_params);
-		}
-
-		// Allow to do in controller routing if method router(action, params) exists
-		if (method_exists($controller, 'router'))
-		{
-			$method = 'router';
-			$this->method_params = array($this->action, $this->method_params);
-		}
-
-		if (is_callable(array($controller, $method)))
-		{
-			// Call the before method if it exists
-			if (method_exists($controller, 'before'))
+			logger(Fuel::L_INFO, 'Calling closure', __METHOD__);
+			try
 			{
-				logger(Fuel::L_INFO, 'Calling '.$class.'::before', __METHOD__);
-				$controller->before();
+				$response = call_user_func_array($this->route->callable, array($this));
 			}
-
-			logger(Fuel::L_INFO, 'Calling '.$class.'::'.$method, __METHOD__);
-			call_user_func_array(array($controller, $method), $this->method_params);
-
-			// Call the after method if it exists
-			if (method_exists($controller, 'after'))
+			catch (Request404Exception $e)
 			{
-				logger(Fuel::L_INFO, 'Calling '.$class.'::after', __METHOD__);
-				$controller->after();
+				static::reset_request();
+				throw $e;
 			}
-
-			// Get the controller's output
-			$this->response =& $controller->response;
 		}
 		else
 		{
-			throw new \Request404Exception();
+			$controller_prefix = '\\'.($this->module ? ucfirst($this->module).'\\' : '').'Controller_';
+			$method_prefix = 'action_';
+
+			$class = $controller_prefix.($this->directory ? ucfirst($this->directory).'_' : '').ucfirst($this->controller);
+
+			// If the class doesn't exist then 404
+			if ( ! class_exists($class))
+			{
+				static::reset_request();
+				throw new \Request404Exception();
+			}
+
+			logger(Fuel::L_INFO, 'Loading controller '.$class, __METHOD__);
+			$this->controller_instance = $controller = new $class($this, new \Response);
+
+			$this->action = $this->action ?: (property_exists($controller, 'default_action') ? $controller->default_action : 'index');
+			$method = $method_prefix.$this->action;
+
+			// Allow override of method params from execute
+			if (is_array($method_params))
+			{
+				$this->method_params = array_merge($this->method_params, $method_params);
+			}
+
+			// Allow to do in controller routing if method router(action, params) exists
+			if (method_exists($controller, 'router'))
+			{
+				$method = 'router';
+				$this->method_params = array($this->action, $this->method_params);
+			}
+
+			if (is_callable(array($controller, $method)))
+			{
+				// Call the before method if it exists
+				if (method_exists($controller, 'before'))
+				{
+					logger(Fuel::L_INFO, 'Calling '.$class.'::before', __METHOD__);
+					$controller->before();
+				}
+
+				logger(Fuel::L_INFO, 'Calling '.$class.'::'.$method, __METHOD__);
+				try
+				{
+					$response = call_user_func_array(array($controller, $method), $this->method_params);
+				}
+				catch (Request404Exception $e)
+				{
+					static::reset_request();
+					throw $e;
+				}
+
+				// Call the after method if it exists
+				if (method_exists($controller, 'after'))
+				{
+					logger(Fuel::L_INFO, 'Calling '.$class.'::after', __METHOD__);
+					$response = $controller->after($response);
+				}
+			}
+			else
+			{
+				static::reset_request();
+				throw new \Request404Exception();
+			}
+		}
+
+		// Get the controller's output
+		if (is_null($response))
+		{
+			// @TODO remove this in a future version as we will get rid of it.
+			$this->response =& $controller->response;
+		}
+		elseif ($response instanceof \Response)
+		{
+			$this->response =& $response;
+		}
+		else
+		{
+			$this->response = \Response::forge($response, 200);
 		}
 
 		static::reset_request();
@@ -394,7 +443,7 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $response = Request::factory('foo/bar')->execute()->response();
+	 *     $response = Request::forge('foo/bar')->execute()->response();
 	 *
 	 * @return  Response  This Request's Response object
 	 */
@@ -459,7 +508,7 @@ class Request {
 	 *
 	 * Usage:
 	 *
-	 *     $request = Request::factory('hello/world')->execute();
+	 *     $request = Request::forge('hello/world')->execute();
 	 *     echo $request;
 	 *
 	 * @return  string  the response
