@@ -46,7 +46,7 @@ class Auth_Connection  {
      * @return  Auth_Connection
      * @throws  \Fuel_Exception
      */
-    public static function factory($name)
+    public static function factory($name = null)
     {
         if (\is_null($name))
         {
@@ -81,7 +81,7 @@ class Auth_Connection  {
      * @return  Auth_Connection
      * @see     self::factory
      */
-    public static function instance($name)
+    public static function instance($name = null)
     {
         return static::factory($name);
     }
@@ -174,14 +174,14 @@ class Auth_Connection  {
      */
     public function __construct()
     {
-        // load ACL configuration
+        // load Auth configuration
         $config             = \Config::get('app.auth', \Config::get('app.user_table', array()));
 
         $reserved_property  = array('optional_fields');
         
         foreach ($config as $key => $value)
         {
-            if (!\property_exists('\\Hybrid\\Auth_Connection', "{$key}") or \in_array($key, $reserved_property))
+            if (!\property_exists($this, "{$key}") or \in_array($key, $reserved_property))
             {
                 continue;
             }
@@ -204,9 +204,6 @@ class Auth_Connection  {
                 $this->items[$field] = '';
             }
         }
-
-        // this is optional, but useful as a shorthand
-        $this->acl          = new \Hybrid\Acl;
     }
 
     /**
