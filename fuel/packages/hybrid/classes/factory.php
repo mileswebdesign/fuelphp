@@ -39,6 +39,7 @@ class Factory {
      */
     public static function _init() 
     {
+        // initiate this only once
         if (!is_null(static::$identity)) 
         {
             return;
@@ -94,7 +95,7 @@ class Factory {
         } 
         else 
         {
-            $request = \Request::factory(\Config::get('routes._maintenance_mode_'))->execute();
+            $request = \Request::forge(\Config::get('routes._maintenance_mode_'))->execute();
             exit($request->send_headers()->response());
         }
     }
@@ -133,7 +134,7 @@ class Factory {
      */
     public static function view($file, $data = null, $encode = null) 
     {
-        return \View::factory(static::$language . DS . $file, $data, $encode);
+        return \View::forge(static::$language . DS . $file, $data, $encode);
     }
 
 }

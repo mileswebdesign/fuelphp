@@ -34,6 +34,13 @@ namespace Hybrid;
  
 class Acl {
 
+    /**
+     * Cache ACL instance so we can reuse it on multiple request. 
+     * 
+     * @static
+     * @access  protected
+     * @var     array
+     */
     protected static $instances = array();
 
     /**
@@ -56,14 +63,14 @@ class Acl {
     }
     
     /**
-     * A shortcode to initiate this class as a new object
+     * Initiate a new Acl instance.
      * 
      * @static
      * @access  public
      * @param   string  $name
-     * @return  static 
+     * @return  \Hybrid\Acl Object 
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
         if (\is_null($name))
         {
@@ -78,19 +85,38 @@ class Acl {
         return static::$instances[$name];
     }
 
-    public static function instance($name = null)
+    /**
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  \Hybrid\Acl Object
+     * @see     self::forge()
+     */
+    public static function factory($name = null)
     {
-        return static::factory($name);
+        return static::forge($name);
     }
 
     /**
-     * Construct and initiate static::_init method as an object
-     * 
-     * Usage:
-     * 
-     * <code>$role = new \Hybrid\Acl;
-     * $role->add_resources('hello-world');</code>
-     * 
+     * Get cached instance, or generate new if currently not available.
+     *
+     * @static
+     * @access  public
+     * @param   string   $name
+     * @return  \Hybrid\Acl Object
+     * @see     self::forge()
+     */
+    public static function instance($name = null)
+    {
+        return static::forge($name);
+    }
+
+    /**
+     * Construct a new object.
+     *
      * @access  public
      */
     public function __construct() {}
@@ -135,13 +161,13 @@ class Acl {
 
         if (!in_array($resource, $this->resources)) 
         {
-            return true;
+            throw new \Fuel_Exception("\Hybrid\Acl: Unable to verify unknown resource: {$resource}.");
         }
 
-        $user = \Hybrid\Auth::instance('user')->get();
+        $user       = \Hybrid\Auth::instance('user')->get();
 
-        $type_id = array_search($type, $types);
-        $length = count($types);
+        $type_id    = array_search($type, $types);
+        $length     = count($types);
 
         foreach ($user->roles as $role) 
         {
@@ -185,6 +211,7 @@ class Acl {
             case true :
                 return 200;
             break;
+
             case false :
                 return 401;
             break;
@@ -216,12 +243,13 @@ class Acl {
     {
         if (is_null($roles)) 
         {
-            return false;
+            throw new \Fuel_Exception("\Hybrid\Acl: Can't add NULL roles.");
         }
 
         if (is_array($roles)) 
         {
             $this->roles = $this->roles + $roles;
+
             return true;
         }
 
@@ -246,12 +274,13 @@ class Acl {
     {
         if (is_null($resources)) 
         {
-            return false;
+            throw new \Fuel_Exception("\Hybrid\Acl: Can't add NULL resources.");
         }
 
         if (is_array($resources)) 
         {
             $this->resources = $this->resources + $resources;
+
             return true;
         }
 
@@ -279,7 +308,7 @@ class Acl {
     {
         if (!in_array($type, static::$types)) 
         {
-            return false;
+            throw new \Fuel_Exception("\Hybrid\Acl: Type {$type} does not exist.");
         }
 
         if (!is_array($roles)) 
@@ -298,7 +327,7 @@ class Acl {
 
             if (!in_array($role, $this->roles)) 
             {
-                throw new \Fuel_Exception("Role {$role} does not exist.");
+                throw new \Fuel_Exception("\Hybrid\Acl: Role {$role} does not exist.");
 
                 continue;
             }
@@ -309,7 +338,7 @@ class Acl {
 
                 if (!in_array($resource, $this->resources)) 
                 {
-                    throw new \Fuel_Exception("Resource {$resource} does not exist.");
+                    throw new \Fuel_Exception("\Hybrid\Acl: Resource {$resource} does not exist.");
 
                     continue;
                 }

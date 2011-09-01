@@ -29,17 +29,17 @@ namespace Hybrid;
 class Template_Frontend extends Template_Driver {
 
     /**
-     * Initiate a new template using factory
+     * Initiate a new template using forge
      *
      * Example:
-     * <code>$template = \Hybrid\Template_Frontend::factory();</code>
+     * <code>$template = \Hybrid\Template_Frontend::forge();</code>
      *
      * @static
      * @access  public
      * @param   string  $name
      * @return  void
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
         $driver = 'frontend';
         
@@ -48,7 +48,12 @@ class Template_Frontend extends Template_Driver {
             $driver .= ".{$name}";
         }
 
-        return \Hybrid\Template::factory($driver);
+        return \Hybrid\Template::forge($driver);
+    }
+
+    public static function factory($name = null)
+    {
+        return static::forge($name);
     }
 
     /**
@@ -73,7 +78,7 @@ class Template_Frontend extends Template_Driver {
             $this->set_filename(static::$config['default_filename']);
         }
 
-        $this->view = \Hybrid\View::factory();
+        $this->view = \Hybrid\View::forge();
     }
 
     /**
@@ -89,7 +94,7 @@ class Template_Frontend extends Template_Driver {
 
         if (empty($available_folders))
         {
-            throw new \Fuel_Exception("\\Hybrid\\Template configuration is not completed");
+            throw new \Fuel_Exception("\Hybrid\Template_Driver: configuration is not completed");
         }
 
         if (is_null($theme) or $theme === '_default_')
@@ -103,7 +108,7 @@ class Template_Frontend extends Template_Driver {
         }
         else
         {
-            throw new \Fuel_Exception("Requested Template folder is not available");
+            throw new \Fuel_Exception("\Hybrid\Template_Frontend: Requested {$theme} folder is not available.");
         }
 
         return $this;
@@ -121,7 +126,7 @@ class Template_Frontend extends Template_Driver {
     {
         $this->load_assets();
         
-        $view = \Hybrid\View::factory();
+        $view = \Hybrid\View::forge();
         $view->set_path($this->folder);
         $view->set_filename($filename);
         $view->auto_encode(static::$config['auto_encode']);

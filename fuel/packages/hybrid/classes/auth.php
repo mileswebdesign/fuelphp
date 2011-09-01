@@ -35,8 +35,7 @@ namespace Hybrid;
 class Auth {
 
     /**
-     * Cache auth instance so we can reuse it on multiple request eventhough 
-     * it's almost impossible to happen
+     * Cache Auth instance so we can reuse it on multiple request.
      * 
      * @static
      * @access  protected
@@ -53,7 +52,7 @@ class Auth {
      * @return  Auth_Driver
      * @throws  \Fuel_Exception
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
         if (\is_null($name))
         {
@@ -73,7 +72,7 @@ class Auth {
             }
             else
             {
-                throw new \Fuel_Exception("Requested {$driver} does not exist");
+                throw new \Fuel_Exception("Requested {$driver} does not exist.");
             }
         }
 
@@ -81,16 +80,30 @@ class Auth {
     }
 
     /**
-     * Retrieves a loaded driver, when drivers are set in config the first driver will also be the default. 
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  self::forge()
+     */
+    public static function factory($name = null)
+    {
+        return static::forge($name);
+    }
+
+    /**
+     * Get cached instance, or generate new if currently not available.
      *
      * @static
      * @access  public
      * @return  Auth_Driver
-     * @see     self::factory()
+     * @see     self::forge()
      */
     public static function instance($name = null)
     {
-        return static::factory($name);
+        return static::forge($name);
     }
 
     /**
@@ -109,7 +122,7 @@ class Auth {
     }
 
     /**
-     * Check if user has any of provided roles (however this should be in \Hybrid\User IMHO)
+     * Check if user has any of provided roles.
      * 
      * @static
      * @access  public
@@ -154,7 +167,7 @@ class Auth {
      */
     public static function login($username, $password, $name = 'normal')
     {
-        return static::factory($name)->login($username, $password);
+        return static::instance($name)->login($username, $password);
     }
 
     /**

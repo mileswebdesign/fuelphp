@@ -36,13 +36,13 @@ if ( ! function_exists('logger'))
 {
 	function logger($level, $msg, $method = null)
 	{
-		! class_exists('Fuel\\Core\\Log') and import('log');
-		! class_exists('Log') and class_alias('Fuel\\Core\\Log', 'Log');
-
 		if ($level > \Config::get('log_threshold'))
 		{
 			return false;
 		}
+
+		! class_exists('Fuel\\Core\\Log') and import('log');
+		! class_exists('Log') and class_alias('Fuel\\Core\\Log', 'Log');
 
 		return \Log::write($level, $msg, $method);
 	}
@@ -142,7 +142,7 @@ if ( ! function_exists('render'))
 }
 
 /**
- * A wrapper function for Lang::line()
+ * A wrapper function for Lang::get()
  *
  * @param	mixed	The string to translate
  * @param	array	The parameters
@@ -150,9 +150,9 @@ if ( ! function_exists('render'))
  */
 if ( ! function_exists('__'))
 {
-	function __($string, $params = array())
+	function __($string, $params = array(), $default = null)
 	{
-		return \Lang::line($string, $params);
+		return \Lang::get($string, $params, $default);
 	}
 }
 

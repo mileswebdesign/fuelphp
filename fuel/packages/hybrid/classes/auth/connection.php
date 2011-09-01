@@ -46,7 +46,7 @@ class Auth_Connection  {
      * @return  Auth_Connection
      * @throws  \Fuel_Exception
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
         if (\is_null($name))
         {
@@ -66,11 +66,16 @@ class Auth_Connection  {
             }
             else
             {
-                throw new \Fuel_Exception("Requested {$driver} does not exist");
+                throw new \Fuel_Exception("Requested {$driver} does not exist.");
             }
         }
 
         return static::$instances[$name];
+    }
+
+    public static function factory($name = null)
+    {
+        return static::forge($name);
     }
 
     /**
@@ -79,11 +84,11 @@ class Auth_Connection  {
      * @static
      * @access  public
      * @return  Auth_Connection
-     * @see     self::factory
+     * @see     self::forge
      */
     public static function instance($name = null)
     {
-        return static::factory($name);
+        return static::forge($name);
     }
 
     /**

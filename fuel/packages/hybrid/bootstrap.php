@@ -22,6 +22,7 @@ Autoloader::add_classes(array (
     'Hybrid\\Restful'                   => __DIR__.'/classes/restserver.php',
     'Hybrid\\Swiftmail'                 => __DIR__.'/classes/swiftmail.php',
     'Hybrid\\Swiftmail_Result'          => __DIR__.'/classes/swiftmail/result.php',
+    'Hybrid\\Uri'                       => __DIR__.'/classes/uri.php',
     'Hybrid\\View'                      => __DIR__.'/classes/view.php',
 
     'Hybrid\\Auth'                      => __DIR__.'/classes/auth.php',
@@ -37,7 +38,7 @@ Autoloader::add_classes(array (
     'Hybrid\\Auth_User'                 => __DIR__.'/classes/auth/user.php',
     
     'Hybrid\\Chart'                     => __DIR__.'/classes/chart.php',
-    'Hybrid\\Chart_Utility'             => __DIR__.'/classes/chart/utility.php',
+    'Hybrid\\Chart_Driver'              => __DIR__.'/classes/chart/driver.php',
     'Hybrid\\Chart_Area'                => __DIR__.'/classes/chart/area.php',
     'Hybrid\\Chart_Bar'                 => __DIR__.'/classes/chart/bar.php',
     'Hybrid\\Chart_GeoMap'              => __DIR__.'/classes/chart/geomap.php',
@@ -53,14 +54,14 @@ Autoloader::add_classes(array (
     'Hybrid\\Controller_Rest'           => __DIR__.'/classes/controller/rest.php',
     'Hybrid\\Controller_Hybrid'         => __DIR__.'/classes/controller/hybrid.php',
 
+    'Hybrid\\Parser'                      => __DIR__.'/classes/parser.php',
+    'Hybrid\\Parser_Driver'               => __DIR__.'/classes/parser/driver.php',
+    'Hybrid\\Parser_Markdown'             => __DIR__.'/classes/parser/markdown.php',
+
     'Hybrid\\Template'                  => __DIR__.'/classes/template.php',
     'Hybrid\\Template_Driver'           => __DIR__.'/classes/template/driver.php',
     'Hybrid\\Template_Normal'           => __DIR__.'/classes/template/normal.php',
     'Hybrid\\Template_Frontend'         => __DIR__.'/classes/template/frontend.php',
-
-    'Hybrid\\Text'                      => __DIR__.'/classes/text.php',
-    'Hybrid\\Text_Driver'               => __DIR__.'/classes/text/driver.php',
-    'Hybrid\\Text_Markdown'             => __DIR__.'/classes/text/markdown.php',
 ));
 
 /* End of file bootstrap.php */

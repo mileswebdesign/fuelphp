@@ -62,12 +62,12 @@ class Date {
 
 	/**
 	 * This method is deprecated...use forge() instead.
-	 * 
+	 *
 	 * @deprecated until 1.2
 	 */
 	public static function factory($timestamp = null, $timezone = null)
 	{
-		\Log::warning('This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
 		return static::forge($timestamp, $timezone);
 	}
 
@@ -214,8 +214,8 @@ class Date {
 			$periods[$j] = \Inflector::pluralize($periods[$j]);
 		}
 
-		$text = \Lang::line('date.text', array(
-			'time' => \Lang::line('date.'.$periods[$j], array('t' => $difference))
+		$text = \Lang::get('date.text', array(
+			'time' => \Lang::get('date.'.$periods[$j], array('t' => $difference))
 		));
 
 		return $text;

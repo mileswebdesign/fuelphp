@@ -117,16 +117,14 @@ abstract class Session_Driver {
 	/**
 	 * set session variables
 	 *
-	 * @param	string	name of the variable to set
-	 * @param	mixed	value
+	 * @param	string|array	name of the variable to set or array of values, array(name => value)
+	 * @param	mixed			value
 	 * @access	public
 	 * @return	void
 	 */
-	public function set($name, $value)
+	public function set($name, $value = null)
 	{
-		$value = ($value instanceof \Closure) ? $value() : $value;
-		
-		$this->data[$name] = $value;
+		\Arr::set($this->data, $name, $value);
 	}
 
 	// --------------------------------------------------------------------
@@ -145,63 +143,7 @@ abstract class Session_Driver {
 		{
 			return $this->data;
 		}
-		elseif (isset($this->data[$name]))
-		{
-			$return = $this->data[$name];
-		}
-
-		if ( ! isset($return) and strpos($name, '.') !== false)
-		{
-			$parts = explode('.', $name);
-
-			switch (count($parts))
-			{
-				case 2:
-					if (isset($this->data[$parts[0]][$parts[1]]))
-					{
-						$return = $this->data[$parts[0]][$parts[1]];
-					}
-				break;
-
-				case 3:
-					if (isset($this->data[$parts[0]][$parts[1]][$parts[2]]))
-					{
-						$return = $this->data[$parts[0]][$parts[1]][$parts[2]];
-					}
-				break;
-
-				case 4:
-					if (isset($this->data[$parts[0]][$parts[1]][$parts[2]][$parts[3]]))
-					{
-						$return = $this->data[$parts[0]][$parts[1]][$parts[2]][$parts[3]];
-					}
-				break;
-
-				default:
-					$return = false;
-					foreach ($parts as $part)
-					{
-						if ($return === false and isset($this->data[$part]))
-						{
-							$return = $this->data[$part];
-						}
-						elseif (isset($return[$part]))
-						{
-							$return = $return[$part];
-						}
-						else
-						{
-							return ($default instanceof \Closure) ? $default() : $default;
-						}
-					}
-				break;
-			}
-		}
-		if ( ! isset($return))
-		{
-			$return = $default;
-		}
-		return ($return instanceof \Closure) ? $return() : $return;
+		return \Arr::get($this->data, $name, $default);
 	}
 
 	// --------------------------------------------------------------------

@@ -28,12 +28,12 @@ abstract class ViewModel {
 
 	/**
 	 * This method is deprecated...use forge() instead.
-	 * 
+	 *
 	 * @deprecated until 1.2
 	 */
 	public static function factory($viewmodel, $method = 'view')
 	{
-		\Log::warning('This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
 		return static::forge($viewmodel, $method);
 	}
 
@@ -44,7 +44,7 @@ abstract class ViewModel {
 	 * @param   string  Method to execute
 	 * @return  ViewModel
 	 */
-	public static function forge($viewmodel, $method = 'view')
+	public static function forge($viewmodel, $method = 'view', $auto_filter = null)
 	{
 		$class = ucfirst(\Request::active()->module).'\\View_'.ucfirst(str_replace(DS, '_', $viewmodel));
 
@@ -56,7 +56,7 @@ abstract class ViewModel {
 			}
 		}
 
-		return new $class($method);
+		return new $class($method, $auto_filter);
 	}
 
 	/**
@@ -66,33 +66,56 @@ abstract class ViewModel {
 
 	/**
 	 * @var  string|View  view name, after instantiation a View object
+	 * @deprecated until v1.2
 	 */
 	protected $_template;
 
 	/**
-	 * @var  bool  whether or not to use auto encoding
+	 * @var  string|View  view name, after instantiation a View object
 	 */
-	protected $_auto_encode;
+	protected $_view;
 
-	protected function __construct($method)
+	/**
+	 * @var  bool  whether or not to use auto filtering
+	 */
+	protected $auto_filter;
+
+	protected function __construct($method, $auto_filter = null)
 	{
-		if (empty($this->_template))
+		// @TODO Remove in 1.2.  This is for backwards compat only.
+		empty($this->_view) and $this->_view = $this->_template;
+
+		if (empty($this->_view))
 		{
+			// Take the class name and guess the view name
 			$class = get_class($this);
-			$this->_template = strtolower(str_replace('_', '/', preg_replace('#^([a-z0-9_]*\\\\)?(View_)?#i', '', $class)));
+			$this->_view = strtolower(str_replace('_', DS, preg_replace('#^([a-z0-9_]*\\\\)?(View_)?#i', '', $class)));
 		}
 
-		$this->set_template();
-		$this->_method		= $method;
-		$this->_auto_encode = \View::$auto_encode;
+		$this->set_view();
+
+		// @TODO Remove in 1.2.  This is for backwards compat only.
+		if ( ! empty($this->_template))
+		{
+			logger(\Fuel::L_WARNING, '$this->_template is deprecated.  Please use a $this->_view instead.', __METHOD__);
+			$this->_view = $this->_template;
+		}
+
+		$this->_method = $method;
 
 		$this->before();
+	}
 
-		// Set this as the controller output if this is the first ViewModel loaded
-		if (empty(\Request::active()->controller_instance->response->body))
-		{
-			\Request::active()->controller_instance->response->body = $this;
-		}
+	/**
+	 * Must return a View object or something compatible
+	 *
+	 * @return	Object	any object on which the template vars can be set and which has a toString method
+	 * @deprecated until 1.2
+	 */
+	protected function set_template()
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a $this->set_view() instead.', __METHOD__);
+		return $this->set_view();
 	}
 
 	/**
@@ -100,27 +123,9 @@ abstract class ViewModel {
 	 *
 	 * @return	Object	any object on which the template vars can be set and which has a toString method
 	 */
-	protected function set_template()
+	protected function set_view()
 	{
-		$this->_template = \View::forge($this->_template);
-	}
-
-	/**
-	 * Change auto encoding setting
-	 *
-	 * @param   null|bool  change setting (bool) or get the current setting (null)
-	 * @return  void|bool  returns current setting or nothing when it is changed
-	 */
-	public function auto_encoding($setting = null)
-	{
-		if (is_null($setting))
-		{
-			return $this->_auto_encode;
-		}
-
-		$this->_auto_encode = (bool) $setting;
-
-		return $this;
+		$this->_view = \View::forge($this->_view);
 	}
 
 	/**
@@ -154,9 +159,13 @@ abstract class ViewModel {
 	 *
 	 * @param	string
 	 */
-	public function get($name)
+	public function &get($key, $default = null)
 	{
-		return $this->_template->{$name};
+		if (is_null($default) and func_num_args() === 1)
+		{
+			return $this->_view->get($key);
+		}
+		return $this->_view->get($key, $default);
 	}
 
 	/**
@@ -165,9 +174,9 @@ abstract class ViewModel {
 	 * @param	string
 	 * @param	mixed
 	 */
-	public function __set($name, $val)
+	public function __set($key, $value)
 	{
-		return $this->set($name, $val, \View::$auto_encode);
+		return $this->set($key, $value);
 	}
 
 	/**
@@ -177,42 +186,49 @@ abstract class ViewModel {
 	 * @param	mixed
 	 * @param	bool|null
 	 */
-	public function set($name, $val, $encode = null)
+	public function set($key, $value, $filter = null)
 	{
-		$this->_template->set($name, $val, $encode);
+		$this->_view->set($key, $value, $filter);
 
 		return $this;
 	}
 
 	/**
-	 * Sets a variable on the template without sanitizing
-	 * Note: Objects are auto-converted to strings unless they're ViewModel, View or Closure instances, if you want
-	 * 		objects not to be converted add them through set_raw().
+	 * Assigns a value by reference. The benefit of binding is that values can
+	 * be altered without re-setting them. It is also possible to bind variables
+	 * before they have values. Assigned values will be available as a
+	 * variable within the view file:
 	 *
-	 * @param	string
-	 * @param	mixed
+	 *     $this->bind('ref', $bar);
+	 *
+	 * @param   string   variable name
+	 * @param   mixed    referenced variable
+	 * @param   bool     Whether to filter the var on output
+	 * @return  $this
 	 */
-	public function set_safe($name, $val)
+	public function bind($key, &$value, $filter = null)
 	{
-		\Error::notice('The ViewModel::set_safe() method is depricated and will be removed at 1.0. Use set(name, var, true) instead.');
-		$this->_template->set($name, $val, true);
+		$this->_view->bind($key, $value, $filter);
 
 		return $this;
 	}
 
 	/**
-	 * Sets a variable on the template without sanitizing
+	 * Change auto filter setting
 	 *
-	 * @param	string
-	 * @param	mixed
+	 * @param   null|bool  change setting (bool) or get the current setting (null)
+	 * @return  void|bool  returns current setting or nothing when it is changed
 	 */
-	public function set_raw($name, $val)
+	public function auto_filter($setting = null)
 	{
-		\Error::notice('The ViewModel::set_safe() method is depricated and will be removed at 1.0. Use set(name, var, false) instead.');
-		$this->_template->set($name, $val, false);
+		if (func_num_args() == 0)
+		{
+			return $this->_view->auto_filter();
+		}
 
-		return $this;
+		return $this->_view->auto_filter($setting);
 	}
+
 
 	/**
 	 * Add variables through method and after() and create template as a string
@@ -222,7 +238,7 @@ abstract class ViewModel {
 		$this->{$this->_method}();
 		$this->after();
 
-		return (string) $this->_template;
+		return (string) $this->_view;
 	}
 
 	/**

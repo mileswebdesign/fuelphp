@@ -41,7 +41,7 @@ class Cache {
 	 */
 	public static function factory($identifier, $config = array())
 	{
-		\Log::warning('This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
 		return static::forge($identifier, $config);
 	}
 
@@ -93,7 +93,7 @@ class Cache {
 	 */
 	public static function set($identifier, $contents = null, $expiration = false, $dependencies = array())
 	{
-		$contents = ($contents instanceof \Closure) ? $contents() : $contents;
+		$contents = \Fuel::value($contents);
 		
 		$cache = static::forge($identifier);
 		return $cache->set($contents, $expiration, $dependencies);

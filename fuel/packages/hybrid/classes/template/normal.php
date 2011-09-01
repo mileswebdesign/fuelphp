@@ -32,14 +32,14 @@ class Template_Normal extends Template_Driver {
      * Initiate a new template using factory
      *
      * Example:
-     * <code>$template = \Hybrid\Template_Normal::factory();</code>
+     * <code>$template = \Hybrid\Template_Normal::forge();</code>
      *
      * @static
      * @access  public
      * @param   string  $name
      * @return  void
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
         $driver = 'normal';
         
@@ -48,7 +48,12 @@ class Template_Normal extends Template_Driver {
             $driver .= ".{$name}";
         }
 
-        return \Hybrid\Template::factory($driver);
+        return \Hybrid\Template::forge($driver);
+    }
+
+    public static function factory($name)
+    {
+        return static::forge($name);
     }
 
     /**
@@ -81,7 +86,7 @@ class Template_Normal extends Template_Driver {
             $this->set_filename(static::$config['default_filename']);
         }
 
-        $this->view = \View::factory();
+        $this->view = \View::forge();
     }
 
     /**
@@ -93,7 +98,7 @@ class Template_Normal extends Template_Driver {
      */
     public function load_assets($forced_load = false)
     {
-      throw new \Fuel_Exception("No asset loading for \\Hybrid\\Template_Normal");
+      throw new \Fuel_Exception("\Hybrid\Template_Normal: Asset loading not available for Template_Normal.");
     }
 
     /**
@@ -111,7 +116,7 @@ class Template_Normal extends Template_Driver {
 
         if (empty($files))
         {
-            throw new \Fuel_Exception("Path {$path} does not appear to a valid folder or contain any View files");
+            throw new \Fuel_Exception("\Hybrid\Template_Normal: Path {$path} does not appear to a valid folder or contain any View files.");
         }
         else 
         {
@@ -131,7 +136,7 @@ class Template_Normal extends Template_Driver {
      */
     public function partial($filename, $data = null)
     {
-        $view = \View::factory();
+        $view = \View::forge();
         $view->set_filename(rtrim($this->folder, '/') . '/' . $filename);
         $view->auto_encode(static::$config['auto_encode']);
 

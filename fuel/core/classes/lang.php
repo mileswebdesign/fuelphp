@@ -28,9 +28,14 @@ class Lang {
 	public static $lines = array();
 
 	/**
-	 * @var  string  language to fall back on when loading a file from the current lang fails
+	 * @var  array  language(s) to fall back on when loading a file from the current lang fails
 	 */
-	public static $fallback = 'en';
+	public static $fallback;
+
+	public static function _init()
+	{
+		static::$fallback = (array) \Config::get('language_fallback', 'en');
+	}
 
 	/**
 	 * Load a language file
@@ -38,21 +43,19 @@ class Lang {
 	 * @param   string
 	 * @param   string|null  name of the group to load to, null for global
 	 */
-	public static function load($file, $group = null)
+	public static function load($file, $group = null, $language = null)
 	{
-		$lang = array();
+		$languages = static::$fallback;
+		array_push($languages, $language ?: \Config::get('language'));
 
-		// Use the current language, failing that use the fallback language
-		$langconf = (is_array(\Config::get('language'))) ? \Config::get('language') : array(\Config::get('language'));
-
-		foreach (array_merge($langconf, (array)static::$fallback) as $language)
+		$lines = array();
+		foreach ($languages as $lang)
 		{
-			if ($path = \Fuel::find_file('lang/'.$language, $file, '.php', true))
+			if ($path = \Fuel::find_file('lang/'.$lang, $file, '.php', true))
 			{
-				$lang = array();
 				foreach ($path as $p)
 				{
-					$lang = $lang + \Fuel::load($p);
+					$lines = $lines + \Fuel::load($p);
 				}
 				break;
 			}
@@ -60,7 +63,7 @@ class Lang {
 
 		if ($group === null)
 		{
-			static::$lines = static::$lines + $lang;
+			static::$lines = static::$lines + $lines;
 		}
 		else
 		{
@@ -69,8 +72,21 @@ class Lang {
 			{
 				static::$lines[$group] = array();
 			}
-			static::$lines[$group] = static::$lines[$group] + $lang;
+			static::$lines[$group] = static::$lines[$group] + $lines;
 		}
+	}
+
+	/**
+	 * Get a line from the language
+	 *
+	 * @param   string  key for the line
+	 * @param   array   array of params to str_replace
+	 * @param   mixed   default value to return
+	 * @return  bool|string  either the line or false when not found
+	 */
+	public static function get($line, array $params = array(), $default = null)
+	{
+		return static::_parse_params(\Arr::get(static::$lines, $line, $default), $params);
 	}
 
 	/**
@@ -79,35 +95,12 @@ class Lang {
 	 * @param   string  key for the line
 	 * @param   array   array of params to str_replace
 	 * @return  bool|string  either the line or false when not found
+	 * @depricated  Remove in v1.2
 	 */
 	public static function line($line, array $params = array())
 	{
-		if (strpos($line, '.') !== false)
-		{
-			$parts = explode('.', $line);
-
-			$return = false;
-			foreach ($parts as $part)
-			{
-				if ($return === false and isset(static::$lines[$part]))
-				{
-					$return = static::$lines[$part];
-				}
-				elseif (isset($return[$part]))
-				{
-					$return = $return[$part];
-				}
-				else
-				{
-					return false;
-				}
-			}
-			return  static::_parse_params($return, $params);
-		}
-
-		isset(static::$lines[$line]) and $line = static::$lines[$line];
-
-		return static::_parse_params($line, $params);
+		logger(\Fuel::L_WARNING, 'This method is deprecated. Please use Lang::get() instead.', __METHOD__);
+		return static::_parse_params(\Arr::get(static::$lines, $line, false), $params);
 	}
 
 	/**
@@ -116,23 +109,12 @@ class Lang {
 	 * @param   string  key to the line
 	 * @param   string  value for the key
 	 * @param   string  group
-	 * @return  bool    success, fails on non-existing group
+	 * @return  bool    success
 	 */
 	public static function set($line, $value, $group = null)
 	{
-		$value = ($value instanceof \Closure) ? $value() : $value;
-
-		if ($group === null)
-		{
-			static::$lines[$line] = $value;
-			return true;
-		}
-		elseif (isset(static::$lines[$group][$line]))
-		{
-			static::$lines[$group][$line] = $value;
-			return true;
-		}
-		return false;
+		$key = ($group ? $group.'.' : '').$line;
+		\Arr::set(static::$lines, $key, $value);
 	}
 
 	/**

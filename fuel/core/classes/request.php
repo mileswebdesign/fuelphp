@@ -65,7 +65,7 @@ class Request {
 	 */
 	public static function factory($uri = null, $route = true)
 	{
-		\Log::warning('This method is deprecated.  Please use a forge() instead.', __METHOD__);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a forge() instead.', __METHOD__);
 		return static::forge($uri, $route);
 	}
 
@@ -134,7 +134,7 @@ class Request {
 	 */
 	public static function show_404()
 	{
-		\Log::warning('This method is deprecated.  Please use a Request404Exception instead.', __METHOD__);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Request404Exception instead.', __METHOD__);
 		throw new \Request404Exception();
 	}
 
@@ -263,22 +263,23 @@ class Request {
 		$this->uri = new \Uri($uri);
 
 		// check if a module was requested
-		if (count($this->uri->segments) and $mod_path = \Fuel::module_exists($this->uri->segments[0]))
+		if (count($this->uri->segments) and $module_path = \Fuel::module_exists($this->uri->segments[0]))
 		{
 			// check if the module has routes
-			if (file_exists($mod_path .= 'config/routes.php'))
+			if (is_file($module_path .= 'config/routes.php'))
 			{
+				$module = $this->uri->segments[0];
+
 				// load and add the module routes
-				$mod_routes = \Config::load(\Fuel::load($mod_path), $this->uri->segments[0] . '_routes');
-				$self = $this;
-				array_walk($mod_routes, function ($route, $name) use (&$self) {
+				$module_routes = \Config::load(\Fuel::load($module_path), $module . '_routes');
+				array_walk($module_routes, function ($route, $name) use ($module) {
 					if ($name === '_root_')
 					{
-						$name = $self->uri->segments[0];
+						$name = $module;
 					}
-					elseif (strpos($name, $self->uri->segments[0].'/') !== 0 and $name != $self->uri->segments[0])
+					elseif (strpos($name, $module.'/') !== 0 and $name != $module)
 					{
-						$name = $self->uri->segments[0].'/'.$name;
+						$name = $module.'/'.$name;
 					}
 					\Config::set('routes.'.$name, $route);
 				});
@@ -295,18 +296,16 @@ class Request {
 			return;
 		}
 
-		if ($this->route->module !== null)
-		{
-			$this->module = $this->route->module;
-			\Fuel::add_module($this->module);
-			$this->add_path(\Fuel::module_exists($this->module));
-		}
-
-		$this->directory = $this->route->directory;
+		$this->module = $this->route->module;
 		$this->controller = $this->route->controller;
 		$this->action = $this->route->action;
 		$this->method_params = $this->route->method_params;
 		$this->named_params = $this->route->named_params;
+
+		if ($this->route->module !== null)
+		{
+			$this->add_path(\Fuel::module_exists($this->module));
+		}
 	}
 
 	/**
@@ -318,9 +317,30 @@ class Request {
 	 *
 	 * @param  array|null  $method_params  An array of parameters to pass to the method being executed
 	 * @return  Request  This request object
+	 * @deprecated until 1.2
 	 */
-	public function execute($method_params = null)
+	 public function execute($method_params = null)
+	 {
+	 	return $this->go($method_params);
+	 }
+
+	/**
+	 * This executes the request and sets the output to be used later.
+	 *
+	 * Usage:
+	 *
+	 *     $request = Request::forge('hello/world')->go();
+	 *
+	 * @param  array|null  $method_params  An array of parameters to pass to the method being executed
+	 * @return  Request  This request object
+	 */
+	public function go($method_params = null)
 	{
+		if (\Fuel::$profiling)
+		{
+			\Profiler::mark(__METHOD__.' Start');
+		}
+
 		logger(Fuel::L_INFO, 'Called', __METHOD__);
 
 		// Make the current request active
@@ -354,10 +374,8 @@ class Request {
 		}
 		else
 		{
-			$controller_prefix = '\\'.($this->module ? ucfirst($this->module).'\\' : '').'Controller_';
 			$method_prefix = 'action_';
-
-			$class = $controller_prefix.($this->directory ? ucfirst($this->directory).'_' : '').ucfirst($this->controller);
+			$class = $this->controller;
 
 			// If the class doesn't exist then 404
 			if ( ! class_exists($class))
@@ -435,6 +453,12 @@ class Request {
 		}
 
 		static::reset_request();
+
+		if (\Fuel::$profiling)
+		{
+			\Profiler::mark(__METHOD__.' End');
+		}
+
 		return $this;
 	}
 

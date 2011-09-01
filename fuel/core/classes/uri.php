@@ -35,7 +35,7 @@ class Uri {
 		{
 			return $request->uri->get_segment($segment, $default);
 		}
-		
+
 		return null;
 	}
 
@@ -50,7 +50,7 @@ class Uri {
 		{
 			return $request->uri->get_segments();
 		}
-		
+
 		return null;
 	}
 
@@ -76,7 +76,7 @@ class Uri {
 		{
 			return $request->uri->get();
 		}
-		
+
 		return null;
 	}
 
@@ -105,7 +105,7 @@ class Uri {
 		}
 		$url .= ltrim($uri, '/');
 
-		substr($url, -1) != '/' and $url .= \Config::get('url_suffix');
+		substr($url, -1) != '/' and strrchr($url, '.') !== \Config::get('url_suffix') and $url .= \Config::get('url_suffix');
 
 		if ( ! empty($get_variables))
 		{
@@ -180,8 +180,18 @@ class Uri {
 	 */
 	public function __construct($uri = null)
 	{
+		if (\Fuel::$profiling)
+		{
+			\Profiler::mark(__METHOD__.' Start');
+		}
+
 		$this->uri = trim($uri ?: \Input::uri(), '/');
-		$this->segments = explode('/', $this->uri);
+		$this->segments = $this->uri === '' ? array() : explode('/', $this->uri);
+
+		if (\Fuel::$profiling)
+		{
+			\Profiler::mark(__METHOD__.' End');
+		}
 	}
 
 	/**
@@ -206,7 +216,7 @@ class Uri {
 
 	/**
 	 * Get the specified URI segment, return default if it doesn't exist.
-	 * 
+	 *
 	 * Segment index is 1 based, not 0 based
 	 *
 	 * @param   string  $segment  The 1-based segment index
@@ -220,7 +230,7 @@ class Uri {
 			return $this->segments[$segment - 1];
 		}
 
-		return ($default instanceof \Closure) ? $default() : $default;
+		return \Fuel::value($default);
 	}
 
 	/**

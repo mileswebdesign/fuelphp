@@ -38,7 +38,7 @@ import('swift/swift_required', 'vendor');
      * @param   array   $config     An array to overwrite default config from config/email.php.
      * @return  self
      */
-    public static function factory($config = array())
+    public static function forge($config = array())
     {
         $initconfig = \Config::load('email', null, true);
         
@@ -48,6 +48,11 @@ import('swift/swift_required', 'vendor');
         }
 
         return new static($config);
+    }
+
+    public static function factory($config = array())
+    {
+        return static::forge($config);
     }
 
     /**
@@ -117,7 +122,7 @@ import('swift/swift_required', 'vendor');
         }
         else
         {
-            throw new \Fuel_Exception("Swiftmail protocol: " . $config['protocol'] . " does not exist");
+            throw new \Fuel_Exception("\Hybrid\Swiftmail: Transport protocol " . $config['protocol'] . " does not exist.");
         }
     }
 
@@ -357,7 +362,7 @@ import('swift/swift_required', 'vendor');
      */
     public static function dynamic_attach($contents, $filename, $disposition = 'attachment')
     {
-        throw new \Fuel_Exception("File attachment has not been implemented yet");
+        throw new \Fuel_Exception("\Hybrid\Swiftmail: Dynamic file attachment has not been implemented yet.");
 
         return $this;
     }
