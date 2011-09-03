@@ -123,7 +123,7 @@ class Factory {
         return static::$language;
     }
 
-    public static import($path, $folder = 'classes')
+    public static function import($path, $folder = 'classes')
     {
         $dir_path = __DIR__.'/../';
         $path     = str_replace('/', DIRECTORY_SEPARATOR, $path);
