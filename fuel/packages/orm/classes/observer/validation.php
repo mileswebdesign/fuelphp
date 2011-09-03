@@ -46,17 +46,21 @@ class Observer_Validation extends Observer {
 		}
 		$_generated[$class][] = $fieldset;
 
-		$fieldset->validation()->add_callable($obj);
-
 		$properties = is_object($obj) ? $obj->properties() : $class::properties();
 		foreach ($properties as $p => $settings)
 		{
-			$field = $fieldset->add($p, ! empty($settings['label']) ? $settings['label'] : $p);
-			if (empty($settings['validation']))
+			if (isset($settings['form']['options']))
 			{
-				continue;
+				foreach ($settings['form']['options'] as $key => $value)
+				{
+					$settings['form']['options'][$key] = __($value) ?: $value;
+				}
 			}
-			else
+
+			$label       = isset($settings['label']) ? $settings['label'] : $p;
+			$attributes  = isset($settings['form']) ? $settings['form'] : array();
+			$field       = $fieldset->add($p, $label, $attributes);
+			if ( ! empty($settings['validation']))
 			{
 				foreach ($settings['validation'] as $rule => $args)
 				{
@@ -104,7 +108,7 @@ class Observer_Validation extends Observer {
 			! in_array($p, $obj->primary_key()) and $input[$p] = $obj->{$p};
 		}
 
-		if ($val->run($input) === false)
+		if ($val->run($input, false, array($obj)) === false)
 		{
 			throw new ValidationFailed($val->show_errors());
 		}
