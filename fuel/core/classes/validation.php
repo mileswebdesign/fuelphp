@@ -319,7 +319,8 @@ class Validation {
 		foreach($fields as $field)
 		{
 			$value = $this->input($field->name);
-			if ($allow_partial && $value === null)
+			if (($allow_partial === true and $value === null)
+				or (is_array($allow_partial) and ! in_array($field->name, $allow_partial)))
 			{
 				continue;
 			}
@@ -358,7 +359,7 @@ class Validation {
 			{
 				if (method_exists($callback_class, $callback_method))
 				{
-					return array($callback_method => array($callback_class, $callback_method));
+					return array($callback => array($callback_class, $callback_method));
 				}
 			}
 		}
@@ -392,7 +393,7 @@ class Validation {
 					: (is_object(@$callback[0])
 						? get_class(@$callback[0]).'->'.@$callback[1]
 						: @$callback[0].'::'.@$callback[1]);
-			Error::notice('Invalid rule "'.$string.'" passed to Validation, not used.');
+			\Error::notice('Invalid rule "'.$string.'" passed to Validation, not used.');
 			return false;
 		}
 	}

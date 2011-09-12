@@ -63,7 +63,7 @@ class Lang {
 
 		if ($group === null)
 		{
-			static::$lines = static::$lines + $lines;
+			static::$lines = \Arr::merge($lines, static::$lines);
 		}
 		else
 		{
@@ -72,7 +72,7 @@ class Lang {
 			{
 				static::$lines[$group] = array();
 			}
-			static::$lines[$group] = static::$lines[$group] + $lines;
+			static::$lines[$group] = \Arr::merge($lines, static::$lines[$group]);
 		}
 	}
 
@@ -109,7 +109,7 @@ class Lang {
 	 * @param   string  key to the line
 	 * @param   string  value for the key
 	 * @param   string  group
-	 * @return  bool    success
+	 * @return  void
 	 */
 	public static function set($line, $value, $group = null)
 	{

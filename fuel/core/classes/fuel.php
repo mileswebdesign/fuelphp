@@ -186,7 +186,7 @@ class Fuel {
 		foreach (\Config::get('always_load.packages', array()) as $package => $path)
 		{
 			is_string($package) and $path = array($package => $path);
-			static::add_package($path);
+			\Package::load($path);
 		}
 
 		// Load in the routes
@@ -440,20 +440,8 @@ class Fuel {
 	 */
 	public static function add_package($package)
 	{
-		if ( ! is_array($package))
-		{
-			$package = array($package => PKGPATH.$package.DS);
-		}
-		foreach ($package as $name => $path)
-		{
-			if (array_key_exists($name, static::$packages))
-			{
-				continue;
-			}
-			static::add_path($path);
-			static::load($path.'bootstrap.php');
-			static::$packages[$name] = true;
-		}
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Package::load() instead.', __METHOD__);
+		\Package::load($package);
 	}
 
 	/**
@@ -464,7 +452,8 @@ class Fuel {
 	 */
 	public static function remove_package($name)
 	{
-		unset(static::$packages[$name]);
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a Package::unload() instead.', __METHOD__);
+		\Package::unload($name);
 	}
 
 	/**
@@ -509,7 +498,7 @@ class Fuel {
 			// strip the classes directory, we need the module root
 			$path = substr($path, 0, -8);
 		}
-		
+
 		return $path;
 	}
 
@@ -587,10 +576,10 @@ class Fuel {
 		if ( ! is_dir($dir))
 		{
 			// Create the cache directory
-			mkdir($dir, 0777, true);
+			mkdir($dir, octdec(\Config::get('file.chmod.folders', 0777)), true);
 
 			// Set permissions (must be manually set to fix umask issues)
-			chmod($dir, 0777);
+			chmod($dir, octdec(\Config::get('file.chmod.folders', 0777)));
 		}
 
 		// Force the data to be a string

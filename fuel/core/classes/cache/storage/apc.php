@@ -14,7 +14,7 @@ namespace Fuel\Core;
 
 
 
-class Cache_Storage_Memcached extends \Cache_Storage_Driver {
+class Cache_Storage_Apc extends \Cache_Storage_Driver {
 
 	/**
 	 * @const  string  Tag used for opening & closing cache properties
@@ -26,18 +26,13 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	 */
 	protected $config = array();
 
-	/*
-	 * @var  Memcached  storage for the memcached object
-	 */
-	protected $memcached = false;
-
 	public function __construct($identifier, $config)
 	{
 		parent::__construct($identifier, $config);
 
-		$this->config = isset($config['memcached']) ? $config['memcached'] : array();
+		$this->config = isset($config['apc']) ? $config['apc'] : array();
 
-		// make sure we have a memcache id
+		// make sure we have an id
 		$this->config['cache_id'] = $this->_validate_config('cache_id', isset($this->config['cache_id'])
 			? $this->config['cache_id'] : 'fuel');
 
@@ -45,28 +40,10 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		$this->expiration = $this->_validate_config('expiration', isset($this->config['expiration'])
 			? $this->config['expiration'] : $this->expiration);
 
-		if ($this->memcached === false)
+		// do we have the PHP APC extension available
+		if ( ! function_exists('apc_add') )
 		{
-			// make sure we have memcached servers configured
-			$this->config['servers'] = $this->_validate_config('servers', $this->config['servers']);
-
-			// do we have the PHP memcached extension available
-			if ( ! class_exists('Memcached') )
-			{
-				throw new \Fuel_Exception('Memcached cache are configured, but your PHP installation doesn\'t have the Memcached extension loaded.');
-			}
-
-			// instantiate the memcached object
-			$this->memcached = new \Memcached();
-
-			// add the configured servers
-			$this->memcached->addServers($this->config['servers']);
-
-			// check if we can connect to the server(s)
-			if ($this->memcached->getVersion() === false)
-			{
-				throw new \Fuel_Exception('Memcached cache are configured, but there is no connection possible. Check your configuration.');
-			}
+			throw new \Fuel_Exception('Your PHP installation doesn\'t have APC loaded.');
 		}
 	}
 
@@ -141,7 +118,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 			}
 
 			// get the cache index
-			$index = $this->memcached->get($this->config['cache_id'].$sections);
+			$index = apc_fetch($this->config['cache_id'].$sections);
 
 			// get the key from the index
 			$key = isset($index[$identifier][0]) ? $index[$identifier] : false;
@@ -160,17 +137,11 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	 */
 	public function delete()
 	{
-		// get the memcached key for the cache identifier
+		// get the APC key for the cache identifier
 		$key = $this->_get_key(true);
 
-		// delete the key from the memcached server
-		if ($key and $this->memcached->delete($key) === false)
-		{
-			if ($this->memcached->getResultCode() !== \Memcached::RES_NOTFOUND)
-			{
-				throw new \Fuel_Exception('Memcached returned error code "'.$this->memcached->getResultCode().'" on delete. Check your configuration.');
-			}
-		}
+		// delete the key from the apc store
+		$key and apc_delete($key);
 
 		$this->reset();
 	}
@@ -187,7 +158,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		$section = $this->config['cache_id'].(empty($section)?'':'.'.$section);
 
 		// get the directory index
-		$index = $this->memcached->get($this->config['cache_id'].'__DIR__');
+		$index = apc_fetch($this->config['cache_id'].'__DIR__');
 
 		if (is_array($index))
 		{
@@ -204,17 +175,17 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 			// loop through the indexes, delete all stored keys, then delete the indexes
 			foreach ($dirs as $dir)
 			{
-				$list = $this->memcached->get($dir);
+				$list = apc_fetch($dir);
 				foreach ($list as $item)
 				{
-					$this->memcached->delete($item[0]);
+					apc_delete($item[0]);
 				}
-				$this->memcached->delete($dir);
+				apc_delete($dir);
 			}
 
 			// update the directory index
 			$index = array_diff($index, $dirs);
-			$this->memcached->set($this->config['cache_id'].'__DIR__', $index);
+			apc_add($this->config['cache_id'].'__DIR__', $index);
 		}
 	}
 
@@ -225,15 +196,15 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	 */
 	protected function _set()
 	{
-		// get the memcached key for the cache identifier
+		// get the apc key for the cache identifier
 		$key = $this->_get_key();
 
 		$payload = $this->prep_contents();
 
-		// write it to the memcached server
-		if ($this->memcached->set($key, $payload, ! is_null($this->expiration) ? (int) $this->expiration : 0) === false)
+		// write it to the apc store
+		if (apc_add($key, $payload, ! is_null($this->expiration) ? (int) $this->expiration : 0) === false)
 		{
-			throw new \Fuel_Exception('Memcached returned error code "'.$this->memcached->getResultCode().'" on write. Check your configuration.');
+			throw new \RuntimeException('APC returned failed to write. Check your configuration.');
 		}
 
 		return true;
@@ -246,11 +217,11 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	 */
 	protected function _get()
 	{
-		// get the memcached key for the cache identifier
+		// get the apc key for the cache identifier
 		$key = $this->_get_key();
 
-		// fetch the cached data from the Memcached server
-		$payload = $this->memcached->get($key);
+		// fetch the cached data from the apc store
+		$payload = apc_fetch($key);
 
 		try
 		{
@@ -289,35 +260,6 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 				}
 			break;
 
-			case 'servers':
-				// do we have a servers config
-				if ( empty($value) OR ! is_array($value))
-				{
-					$value = array('default' => array('host' => '127.0.0.1', 'port' => '11211'));
-				}
-
-				// validate the servers
-				foreach ($value as $key => $server)
-				{
-					// do we have a host?
-					if ( ! isset($server['host']) OR ! is_string($server['host']))
-					{
-						throw new \Fuel_Exception('Invalid Memcached server definition in the cache configuration.');
-					}
-					// do we have a port number?
-					if ( ! isset($server['port']) OR ! is_numeric($server['port']) OR $server['port'] < 1025 OR $server['port'] > 65535)
-					{
-						throw new \Fuel_Exception('Invalid Memcached server definition in the cache configuration.');
-					}
-					// do we have a relative server weight?
-					if ( ! isset($server['weight']) OR ! is_numeric($server['weight']) OR $server['weight'] < 0)
-					{
-						// set a default
-						$value[$key]['weight'] = 0;
-					}
-				}
-			break;
-
 			default:
 			break;
 		}
@@ -326,7 +268,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 	}
 
 	/**
-	 * Get's the memcached key belonging to the cache identifier
+	 * Get's the apc key belonging to the cache identifier
 	 *
 	 * @param   bool  if true, remove the key retrieved from the index
 	 * @return  string
@@ -348,7 +290,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 		}
 
 		// get the cache index
-		$index = $this->memcached->get($this->config['cache_id'].$sections);
+		$index = apc_fetch($this->config['cache_id'].$sections);
 
 		// get the key from the index
 		$key = isset($index[$identifier][0]) ? $index[$identifier][0] : false;
@@ -358,7 +300,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 			if ( $key !== false )
 			{
 				unset($index[$identifier]);
-				$this->memcached->set($this->config['cache_id'].$sections, $index);
+				apc_add($this->config['cache_id'].$sections, $index);
 			}
 		}
 		else
@@ -370,10 +312,10 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 
 				// create a new index and store the key
 				is_array($index) || $index = array();
-				$this->memcached->set($this->config['cache_id'].$sections, array_merge($index, array($identifier => array($key,$this->created))), 0);
+				apc_add($this->config['cache_id'].$sections, array_merge($index, array($identifier => array($key,$this->created))), 0);
 
 				// get the directory index
-				$index = $this->memcached->get($this->config['cache_id'].'__DIR__');
+				$index = apc_fetch($this->config['cache_id'].'__DIR__');
 
 				if (is_array($index))
 				{
@@ -388,7 +330,7 @@ class Cache_Storage_Memcached extends \Cache_Storage_Driver {
 				}
 
 				// update the directory index
-				$this->memcached->set($this->config['cache_id'].'__DIR__', $index, 0);
+				apc_add($this->config['cache_id'].'__DIR__', $index, 0);
 			}
 		}
 		return $key;

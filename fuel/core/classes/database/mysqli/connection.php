@@ -80,12 +80,12 @@ class Database_MySQLi_Connection extends \Database_Connection {
 			if ($persistent)
 			{
 				// Create a persistent connection
-				$this->_connection =  new \mysqli('p:'.$hostname, $username, $password, $database, $port, $socket);
+				$this->_connection =  new \MySQLi('p:'.$hostname, $username, $password, $database, $port, $socket);
 			}
 			else
 			{
 				// Create a connection and force it to be a new link
-				$this->_connection = new \mysqli($hostname, $username, $password, $database, $port, $socket);
+				$this->_connection = new \MySQLi($hostname, $username, $password, $database, $port, $socket);
 			}
 			if ($this->_connection->error)
       {
@@ -206,6 +206,15 @@ class Database_MySQLi_Connection extends \Database_Connection {
 			else
 			{
 				throw new \Database_Exception($this->_connection->error.' [ '.$sql.' ]', $this->_connection->errno);
+			}
+		}
+
+		// check for multiresults, we don't support those at the moment
+		while($this->_connection->more_results() and $this->_connection->next_result())
+		{
+			if ($more_result = $this->_connection->use_result())
+			{
+				throw new \Database_Exception('The MySQLi driver does not support multiple resultsets', 0);
 			}
 		}
 
