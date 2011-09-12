@@ -173,15 +173,15 @@ class Tests_Html extends TestCase {
 	 */
 	public function test_img()
 	{
-		$index_url = Uri::create('image.png');
+		$file_path = 'image.png';
 		
 		// Internal uri
 		$output = Html::img('image.png');
-		$expected = '<img src="'. $index_url . '" alt="image" />';
+		$expected = '<img src="'. $file_path . '" alt="image" />';
 		$this->assertEquals($expected, $output);
 		
 		$output = Html::img('image.png', array('alt' => 'Image'));
-		$expected = '<img alt="Image" src="'. $index_url . '" />';
+		$expected = '<img alt="Image" src="'. $file_path . '" />';
 		$this->assertEquals($expected, $output);
 		
 		// External uri
