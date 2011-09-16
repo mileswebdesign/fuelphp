@@ -90,7 +90,7 @@ class Lang {
 
 		isset(static::$lines[$line]) and $line = static::$lines[$line];
 
-		return static::_parse_params($line, $params);
+		return \Str::tr($line, $params);
 	}
 
 	public static function set($line, $value, $group = null)
@@ -108,25 +108,6 @@ class Lang {
 		return false;
 	}
 
-	protected static function _parse_params($string, $array = array())
-	{
-		if (is_string($string))
-		{
-			$tr_arr = array();
-
-			foreach ($array as $from => $to)
-			{
-				$tr_arr[':'.$from] = $to;
-			}
-			unset($array);
-
-			return strtr($string, $tr_arr);
-		}
-		else
-		{
-			return $string;
-		}
-	}
 }
 
 
