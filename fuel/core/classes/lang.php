@@ -85,7 +85,7 @@ class Lang {
 					return false;
 				}
 			}
-			return  static::_parse_params($return, $params);
+			return  \Str::tr($return, $params);
 		}
 
 		isset(static::$lines[$line]) and $line = static::$lines[$line];
