@@ -22,6 +22,160 @@ namespace Fuel\Core;
 class Arr {
 
 	/**
+	 * Gets a dot-notated key from an array, with a default value if it does
+	 * not exist.
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @param   string  $default  The default value
+	 * @return  mixed
+	 */
+	public static function get($array, $key, $default = null)
+	{
+		if ( ! is_array($array) or $array instanceof \ArrayAccess)
+		{
+			throw new \InvalidArgumentException('First parameter must be an array or ArrayAccess object.');
+		}
+
+		if (is_null($key))
+		{
+			return $array;
+		}
+
+		if (is_array($key))
+		{
+			$return = array();
+			foreach ($key as $k)
+			{
+				$return[$k] = static::get($array, $k, $default);
+			}
+			return $return;
+		}
+
+		foreach (explode('.', $key) as $key_part)
+		{
+			if ( ! is_array($array) or ! array_key_exists($key_part, $array))
+			{
+				return \Fuel::value($default);
+			}
+
+			$array = $array[$key_part];
+		}
+
+		return $array;
+	}
+
+	/**
+	 * Set an array item (dot-notated) to the value.
+	 *
+	 * @param   array   $array  The array to insert it into
+	 * @param   mixed   $key    The dot-notated key to set or array of keys
+	 * @param   mixed   $value  The value
+	 * @return  void
+	 */
+	public static function set(&$array, $key, $value = null)
+	{
+		if (is_null($key))
+		{
+			$array = $value;
+			return;
+		}
+
+		if (is_array($key))
+		{
+			foreach ($key as $k => $v)
+			{
+				static::set($array, $k, $value);
+			}
+		}
+
+		$keys = explode('.', $key);
+
+		while (count($keys) > 1)
+		{
+			$key = array_shift($keys);
+
+			if ( ! isset($array[$key]) or ! is_array($array[$key]))
+			{
+				$array[$key] = array();
+			}
+
+			$array =& $array[$key];
+		}
+
+		$array[array_shift($keys)] = $value;
+	}
+	
+	/**
+	 * Array_key_exists with a dot-notated key from an array.
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @return  mixed
+	 */
+	public static function key_exists($array, $key)
+	{
+		foreach (explode('.', $key) as $key_part)
+		{
+			if ( ! is_array($array) or ! array_key_exists($key_part, $array))
+			{
+				return false;
+			}
+
+			$array = $array[$key_part];
+		}
+
+		return true;
+	}
+
+	/**
+	 * Unsets dot-notated key from an array
+	 *
+	 * @param   array   $array    The search array
+	 * @param   mixed   $key      The dot-notated key or array of keys
+	 * @param   string  $default  The default value
+	 * @return  mixed
+	 */
+	public static function delete(&$array, $key)
+	{
+		if (is_null($key))
+		{
+			return false;
+		}
+
+		if (is_array($key))
+		{
+			$return = array();
+			foreach ($key as $k)
+			{
+				$return[$k] = static::delete($array, $k);
+			}
+			return $return;
+		}
+
+		$key_parts = explode('.', $key);
+
+		if ( ! is_array($array) or ! array_key_exists($key_parts[0], $array))
+		{
+			return false;
+		}
+
+		$this_key = array_shift($key_parts);
+
+		if ( ! empty($key_parts))
+		{
+			$key = implode('.', $key_parts);
+			return static::delete($array[$this_key], $key);
+		}
+		else
+		{
+			unset($array[$this_key]);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Converts a multi-dimensional associative array into an array of key => values with the provided field names
 	 *
 	 * @param   array   the array to convert
