@@ -14,6 +14,11 @@ namespace Orm;
 
 class Query {
 
+	/**
+	 * This method is deprecated...use forge() instead.
+	 *
+	 * @deprecated until 1.2
+	 */
 	public static function factory($model, $connection = null, $options = array())
 	{
 		return new static($model, $connection, $options);
@@ -520,9 +525,12 @@ class Query {
 					continue;
 				}
 
-				if (empty($conditional) or strpos($conditional[0], $this->alias.'.') === 0)
+				if (empty($conditional)
+					or strpos($conditional[0], $this->alias.'.') === 0
+					or ($type != 'select' and $conditional[0] instanceof \Fuel\Core\Database_Expression))
 				{
-					if ( ! empty($conditional) and $type != 'select')
+					if ($type != 'select' and ! empty($conditional)
+						and ! $conditional[0] instanceof \Fuel\Core\Database_Expression)
 					{
 						$conditional[0] = substr($conditional[0], strlen($this->alias.'.'));
 					}
@@ -911,15 +919,15 @@ class Query {
 	 * @param   bool  false for random selected column or specific column, only works for main model currently
 	 * @return  int   number of rows OR false
 	 */
-	public function count($distinct = false)
+	public function count($column = null, $distinct = true)
 	{
-		$select = $this->select ?: call_user_func($this->model.'::primary_key');
-		$select = $distinct ?: reset($select);
-		$select = \Database_Connection::instance()->table_prefix().
-			(strpos($select, '.') === false ? $this->alias.'.'.$select : $select);
+		$select = $column ?: \Arr::get(call_user_func($this->model.'::primary_key'), 0);
+		$select = (strpos($select, '.') === false ? $this->alias.'.'.$select : $select);
 
 		// Get the columns
-		$columns = \DB::expr('COUNT('.($distinct ? 'DISTINCT ' : '').$select.') AS count_result');
+		$columns = \DB::expr('COUNT('.($distinct ? 'DISTINCT ' : '').
+			\Database_Connection::instance()->quote_identifier($select).
+			') AS count_result');
 
 		// Remove the current select and
 		$query = call_user_func('DB::select', $columns);
@@ -927,7 +935,7 @@ class Query {
 		// Set from table
 		$query->from(array(call_user_func($this->model.'::table'), $this->alias));
 
-		$tmp   = $this->build_query($query, $columns, 'count');
+		$tmp   = $this->build_query($query, $columns, 'select');
 		$query = $tmp['query'];
 		$count = $query->execute($this->connection)->get('count_result');
 
@@ -951,7 +959,10 @@ class Query {
 		is_array($column) and $column = array_shift($column);
 
 		// Get the columns
-		$columns = \DB::expr('MAX('.\Database_Connection::instance()->table_prefix().$this->alias.'.'.$column.') AS max_result');
+		$columns = \DB::expr('MAX('.
+			\Database_Connection::instance()->quote_identifier(
+				\Database_Connection::instance()->table_prefix().$this->alias.'.'.$column).
+			') AS max_result');
 
 		// Remove the current select and
 		$query = call_user_func('DB::select', $columns);
@@ -983,7 +994,10 @@ class Query {
 		is_array($column) and $column = array_shift($column);
 
 		// Get the columns
-		$columns = \DB::expr('MIN('.\Database_Connection::instance()->table_prefix().$this->alias.'.'.$column.') AS min_result');
+		$columns = \DB::expr('MIN('.
+			\Database_Connection::instance()->quote_identifier(
+				\Database_Connection::instance()->table_prefix().$this->alias.'.'.$column).
+			') AS min_result');
 
 		// Remove the current select and
 		$query = call_user_func('DB::select', $columns);
