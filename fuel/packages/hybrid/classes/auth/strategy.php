@@ -60,7 +60,8 @@ abstract class Auth_Strategy {
         if (is_null($this->name))
         {
             // Attempt to guess the name from the class name
-            $this->name = strtolower(str_replace('\Hybrid\Auth_Strategy_', '', get_class($this)));
+            $class_name = \Inflector::denamespace(get_class($this));
+            $this->name = strtolower(str_replace('Auth_Strategy_', '', $class_name));
         }
     }
 
@@ -73,7 +74,7 @@ abstract class Auth_Strategy {
             throw new \Fuel_Exception(sprintf('Provider "%s" has no strategy.', $provider));
         }
         
-        $class = "Auth_Strategy_{$strategy}";
+        $class = "\Hybrid\Auth_Strategy_{$strategy}";
         return new $class($provider);
     }
 
