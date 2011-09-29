@@ -54,8 +54,6 @@ abstract class OAuth {
 				array(':url' => 'http://php.net/curl_setopt_array'));
 		}
 		
-		curl_setopt($remote, CURLOPT_SSL_VERIFYPEER, false);
-
 		// Get the response
 		$response = curl_exec($remote);
 
