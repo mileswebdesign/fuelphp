@@ -1,12 +1,12 @@
 <?php
 
-namespace Autho;
+namespace Hybrid;
 
 class Test_Auth extends \Fuel\Core\TestCase {
 
     public function setup()
     {
-        \Fuel::add_package('autho');
+        \Fuel::add_package('hybrid');
         \Config::load('autho', 'autho');
         \Config::set('autho.salt', '12345');
     }
