@@ -53,7 +53,7 @@ abstract class OAuth {
 			throw new Exception('Failed to set CURL options, check CURL documentation: :url',
 				array(':url' => 'http://php.net/curl_setopt_array'));
 		}
-		
+
 		// Get the response
 		$response = curl_exec($remote);
 
