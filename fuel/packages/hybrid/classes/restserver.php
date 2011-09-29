@@ -22,11 +22,11 @@ namespace Hybrid;
  * 
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Restful
+ * @category    Restserver
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-class Restful {
+class Restserver {
     
     /** 
      * List all supported methods, the first will be the default format
@@ -182,11 +182,11 @@ class Restful {
      * 
      * @access  public
      * @param   string  $rest_format
-     * @return  Restful 
+     * @return  Restserver 
      */
     public function format($rest_format = '')
     {
-        if (\is_null($rest_format) or empty($rest_format))
+        if (is_null($rest_format) or empty($rest_format))
         {
             return $this;
         }
@@ -243,7 +243,7 @@ class Restful {
         $response->format = $format;
         
         // If the format method exists, call and return the output in that format
-        if (\method_exists('\\Format', 'to_' . $format))
+        if (method_exists('\\Format', 'to_' . $format))
         {
             $response->body = \Format::factory($this->data)->{'to_'.$format}();
         }
@@ -489,3 +489,5 @@ class Restful {
     }
     
 }
+
+class Restful extends Restserver {}

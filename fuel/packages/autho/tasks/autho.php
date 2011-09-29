@@ -146,11 +146,11 @@ HELP;
      * @access  protected
      * @return  void
      */
-    protected static function install_config_files($file = 'autho')
+    protected static function install_config($file = 'autho')
     {
         $path = APPPATH.'config'.DS.$file.'.php';
 
-        $content = file_get_contents(PKGPATH.'hybrid/config/'.$path.'.php');
+        $content = file_get_contents(PKGPATH.'autho/config/'.$file.'.php');
 
         switch(true)
         {
@@ -237,21 +237,21 @@ HELP;
             }
 
             \Oil\Generate::model(array(
-                'roles',
+                'role',
                 'name:string',
                 'active:tinyint[1]',
             ));
             \Oil\Generate::$create_files = array();
 
             \Oil\Generate::model(array(
-                'users_roles',
+                'users_role',
                 'user_id:int',
                 'role_id:int',
             ));
             \Oil\Generate::$create_files = array();
 
             \Oil\Generate::model(array(
-                'authenticates',
+                'authenticate',
                 'user_id:int',
                 'provider:string[50]',
                 'uid:string',
