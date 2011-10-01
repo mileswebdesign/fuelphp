@@ -138,6 +138,36 @@ class Form {
 	}
 
 	/**
+	 * Create a fieldset open tag
+	 *
+	 * @param   array   array with tag attribute settings
+	 * @param   string  string for the fieldset legend
+	 * @return  string
+	 */
+	public static function fieldset_open($attributes = array(), $legend = null)
+	{
+		$fieldset_open = '<fieldset ' . array_to_attr($attributes) . ' >';
+
+		! is_null($legend) and $attributes['legend'] = $legend;
+		if ( ! empty($attributes['legend']))
+		{
+			$fieldset_open.= "\n<legend>".$attributes['legend']."</legend>";
+		}
+
+		return $fieldset_open;
+	}
+
+	/**
+	 * Create a fieldset close tag
+	 *
+	 * @return string
+	 */
+	public static function fieldset_close()
+	{
+		return '</fieldset>';
+	}
+
+	/**
 	 * Create a form input
 	 *
 	 * @param   string|array  either fieldname or full attributes array (when array other params are ignored)

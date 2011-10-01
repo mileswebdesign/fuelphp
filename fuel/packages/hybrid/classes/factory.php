@@ -95,8 +95,11 @@ class Factory {
         } 
         else 
         {
-            $request = \Request::forge(\Config::get('routes._maintenance_mode_'))->execute();
-            exit($request->send_headers()->response());
+            $request = \Request::factory(\Config::get('routes._maintenance_mode_'))->execute();
+            $response = $request->response();
+            $response->send(true);
+            \Event::shutdown();
+            exit();
         }
     }
 
