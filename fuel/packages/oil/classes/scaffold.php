@@ -60,8 +60,9 @@ class Scaffold
 		$data['controller'] = 'Controller_'.\Inflector::pluralize(\Inflector::classify($full_underscores));
 
 		// If a folder is used, the entity is the last part
-		$data['singular'] = $singular = \Inflector::singularize(end(explode(DS, $full_thing)));
-		$data['model'] = $model_name = 'Model_'.\Inflector::classify($full_underscores);
+		$parts = explode(DS, $full_thing);
+		$data['singular'] = $singular = \Inflector::singularize(end($parts));
+		$data['model'] = $model_name = \Inflector::classify($full_underscores);
 		$data['plural'] = $plural = \Inflector::pluralize($singular);
 		$data['fields'] = $fields;
 
