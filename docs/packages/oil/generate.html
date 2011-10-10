@@ -74,9 +74,9 @@
 	Created view: APPPATH/views/posts/action3.php
 	Created controller: APPPATH/classes/controller/posts.php</code></pre>
 	
-			<p>This will produce a controller that looks like this:</p>
+				<p>This will produce a controller that looks like this:</p>
 	
-			<pre class="php"><code>class Controller_Posts extends Controller_Template {
+				<pre class="php"><code>class Controller_Posts extends Controller_Template {
 
 	public function action_action1()
 	{
@@ -307,76 +307,56 @@ Migrated to latest version: 3.
 /* End of file monkeys.php */
 </code></pre>
 
-<<<<<<< HEAD
-			<h3 id="configs">Configs</h3>
-=======
-		<a name="configs"></a>
-			<h3>Configs</h3>
->>>>>>> Push Config generation documentation for docs below Scafolding
+				<h3 id="configs">Configs</h3>
 
-			<p>
-				To generate a <a href="../../classes/config.html">Config</a>, use the following command:
-			</p>
+				<p>
+					To generate a <a href="../../classes/config.html">Config</a>, use the following command:
+				</p>
 
-			<pre class="cli">$ php oil g config sample hello:world
-	Created config: APPPATH/config/sample.php</pre>
+				<pre class="cli"><code>$ php oil g config sample hello:world
+	Created config: APPPATH/config/sample.php</code></pre>
 
-			<p>This will produce a config that looks like this:</p>
+				<p>This will produce a config that looks like this:</p>
 
-			<pre class="php"><code>return array (
+				<pre class="php"><code>return array (
 	'hello' => 'world',
 );
 
 /* End of file sample.php */</code></pre>
 			
-			<h3>Generate Config from COREPATH</h3>
-			<p>
-				To combine config from COREPATH/config if APPPATH/config doesn't have one
-			</p>
+				<h3>Generate Config from COREPATH</h3>
+				<p>
+					To combine config from COREPATH/config if APPPATH/config doesn't have one
+				</p>
 			
-			<pre class="cli">$ php oil g config package
-	Created config: APPPATH/config/package.php</pre>
+				<pre class="cli"><code>$ php oil g config package
+	Created config: APPPATH/config/package.php</code></pre>
 			
-			<p>This will produce a config that looks like this:</p>
+				<p>This will produce a config that looks like this:</p>
 
-			<pre class="php"><code>return array (
+				<pre class="php"><code>return array (
 	'sources' => 
 	array (
 		0 => 'github.com/fuel-packages',
 	),
 );</code></pre>
 			
-			<h3>Force Update Config from COREPATH &amp; APPPATH</h3>
-			<p>
-				To combine config from COREPATH/config and combine APPPATH/config to APPPATH/config
-			</p>
+				<h3>Force Update Config from COREPATH &amp; APPPATH</h3>
+				<p>
+					To combine config from COREPATH/config and combine APPPATH/config to APPPATH/config
+				</p>
 			
-			<pre class="cli">$ php oil g config form -overwrite
-	Created config: APPPATH/config/form.php</pre>
+				<pre class="cli"><code>$ php oil g config form -overwrite
+	Created config: APPPATH/config/form.php</code></pre>
 			
-			<p>This will produce a config that looks like this:</p>
+				<p>This will produce a config that looks like this:</p>
 
-			<pre class="php"><code>return array (
+				<pre class="php"><code>return array (
 	'prep_value' => true,
 	'auto_id' => true,
 	'auto_id_prefix' => '',
 	'form_method' => 'post',
-	'form_template' => '		{form_open}
-{fields}
-		{form_close}
-',
-	'field_template' => '			{label} {field}
-',
-	'multi_field_template' => '{fields}			{label}{required} {field}{fields}',
-	'required_mark' => '*',
 );
-<<<<<<< HEAD
-=======
-
-/* End of file form.php */</code></pre>
-
-		</section>
->>>>>>> Push Config generation documentation for docs below Scafolding
 
 /* End of file form.php */</code></pre>
 	
