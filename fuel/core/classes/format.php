@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -237,6 +237,20 @@ class Format {
 		// converted to an array first
 		$data = (is_array($data) or is_object($data)) ? $this->to_array($data) : $data;
 		return json_encode($data);
+	}
+
+	/**
+	 * To JSONP conversion
+	 *
+	 * @param mixed $data
+	 * @return string
+	 */ 
+	public function to_jsonp($data = null)
+	{
+		 $callback = \Input::get_post('callback', null); 
+		 is_null($callback) and $callback = 'response'; 
+
+		 return $callback.'('.$this->to_json($data).')';
 	}
 
 	/**

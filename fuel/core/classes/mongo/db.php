@@ -1,9 +1,6 @@
 <?php
 /**
- * Fuel
- *
- * Fuel is a fast, lightweight, community driven PHP5 framework.
- *
+ * Part of the Fuel framework. *
  * @package		Fuel
  * @version		1.0
  * @author		Fuel Development Team
@@ -262,12 +259,12 @@ class Mongo_Db {
 	{
 	 	if ( ! is_array($includes))
 	 	{
-	 		$includes = array();
+	 		$includes = array($includes);
 	 	}
 
 	 	if ( ! is_array($excludes))
 	 	{
-	 		$excludes = array();
+	 		$excludes = array($excludes);
 	 	}
 
 	 	if ( ! empty($includes))

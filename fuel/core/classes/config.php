@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -96,7 +96,7 @@ class Config {
 		$content = <<<CONF
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package		Fuel
  * @version		1.0
@@ -110,7 +110,7 @@ class Config {
 CONF;
 		$content .= 'return '.str_replace('  ', "\t", var_export($config, true)).';';
 
-		if ( ! $path = \Fuel::find_file('config', $file, '.php'))
+		if ( ! $path = \Finder::search('config', $file, '.php'))
 		{
 			if ($pos = strripos($file, '::'))
 			{

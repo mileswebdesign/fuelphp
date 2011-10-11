@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -51,7 +51,7 @@ class Lang {
 		$lines = array();
 		foreach ($languages as $lang)
 		{
-			if ($path = \Fuel::find_file('lang/'.$lang, $file, '.php', true))
+			if ($path = \Finder::search('lang/'.$lang, $file, '.php', true))
 			{
 				foreach ($path as $p)
 				{

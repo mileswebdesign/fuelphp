@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -77,7 +77,7 @@ function setup_autoloader()
 		'Fuel\\Core\\Config_Json'          => COREPATH.'classes/config/json.php',
 		'Fuel\\Core\\Config_Interface'     => COREPATH.'classes/config/interface.php',
 		'Fuel\\Core\\Config_Php'           => COREPATH.'classes/config/php.php',
-		'Fuel\\Core\\Config_Yaml'          => COREPATH.'classes/config/yaml.php',
+		'Fuel\\Core\\Config_Yml'          => COREPATH.'classes/config/yml.php',
 		'Fuel\\Core\\Controller'           => COREPATH.'classes/controller.php',
 		'Fuel\\Core\\Controller_Rest'      => COREPATH.'classes/controller/rest.php',
 		'Fuel\\Core\\Controller_Template'  => COREPATH.'classes/controller/template.php',
@@ -108,6 +108,7 @@ function setup_autoloader()
 		'Fuel\\Core\\Fuel'           => COREPATH.'classes/fuel.php',
 		'Fuel\\Core\\FuelException'  => COREPATH.'classes/fuel.php',
 		'Fuel\\Core\\Fuel_Exception' => COREPATH.'classes/fuel.php',
+		'Fuel\\Core\\Finder'         => COREPATH.'classes/finder.php',
 
 		'Fuel\\Core\\Date'    => COREPATH.'classes/date.php',
 		'Fuel\\Core\\Debug'   => COREPATH.'classes/debug.php',

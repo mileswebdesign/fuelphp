@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -243,7 +243,7 @@ class Autoloader {
 				foreach (static::$namespaces as $ns => $path)
 				{
 					$ns = ltrim($ns, '\\');
-					if (strpos($full_ns, $ns) === 0)
+					if (stripos($full_ns, $ns) === 0)
 					{
 						$path .= static::class_to_path(
 							substr($class, strlen($ns) + 1),

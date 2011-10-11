@@ -60,7 +60,11 @@ abstract class Provider {
 			$this->name = strtolower(substr(get_class($this), strlen('OAuth2\\Provider_')));
 		}
 		
-		$this->client_id = \Arr::get($options, 'id');
+		if ( ! $this->client_id = \Arr::get($options, 'id'))
+		{
+			throw new Exception('Required option not provided: id');
+		}
+		
 		$this->client_secret = \Arr::get($options, 'secret');
 		$this->scope = \Arr::get($options, 'scope');
 		
@@ -111,6 +115,7 @@ abstract class Provider {
 			'client_id' => $this->client_id,
 			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
 			'state' => $state,
+			'response_type' => 'code',
 			'scope' => $this->scope,
 		);
 		
@@ -131,7 +136,8 @@ abstract class Provider {
 			'client_id' => $this->client_id,
 			'client_secret' => $this->client_secret,
 			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
-			'code' => $code,	
+			'code' => $code,
+			'response_type' => 'token',
 		);
 		
 		$url = $this->url_access_token().'?'.http_build_query($params);

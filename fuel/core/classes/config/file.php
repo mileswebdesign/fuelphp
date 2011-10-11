@@ -84,9 +84,12 @@ abstract class Config_File implements Config_Interface
 	 * @param   bool  $multiple  Whether to load multiple files or not
 	 * @return  array
 	 */
-	protected function find_file($multiple = true)
+	protected function find_file()
 	{
-		if ($paths = \Fuel::find_file('config', $this->file, $this->ext, $multiple))
+		$paths = \Finder::search('config', $this->file, $this->ext, true);
+		$paths = array_merge(\Finder::search('config/'.\Fuel::$env, $this->file, $this->ext, true), $paths);
+
+		if (count($paths) > 0)
 		{
 			return array_reverse($paths);
 		}
