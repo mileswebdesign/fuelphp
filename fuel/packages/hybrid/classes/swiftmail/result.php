@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Swiftmail_Result {
-
+class Swiftmail_Result 
+{
     public $success    = false;
     public $failures   = null;
     public $total_sent = 0;
