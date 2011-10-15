@@ -27,8 +27,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Test_Acl extends \Fuel\Core\TestCase {
-    
+class Test_Acl extends \Fuel\Core\TestCase 
+{    
     private $enable_test = true;
 
     /**
@@ -43,10 +43,18 @@ class Test_Acl extends \Fuel\Core\TestCase {
         $acl->add_resources(array('blog', 'forum', 'news'));
         $acl->allow('guest', array('blog'), 'view');
         $acl->deny('guest', 'forum');
-        $user_table = \DB::list_tables('users');
         
+        try
+        {
+            $user_table = \DB::list_tables('users');
+        }
+        catch (\FuelException $e)
+        {
+            // in case when list table is not supported by Database Connection
+            $user_table = array();
+        }
 
-        if(empty($user_table))
+        if (empty($user_table))
         {
             $this->markTestSkipped('User table is not available');
         }

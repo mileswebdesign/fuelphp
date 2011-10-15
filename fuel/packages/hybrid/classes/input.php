@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-class Input {
-
+class Input 
+{
     /**
      * Store \Hybrid\Request object (if available)
      * 
@@ -63,6 +63,13 @@ class Input {
         static::$request = null;
     }
 
+    /**
+     * Magic method to handle every static method available in \Fuel\Core\Input
+     *
+     * @static
+     * @access  public
+     * @return  mixed
+     */
     public static function __callStatic($name, $args) 
     {
         // If $request is null, it's a request from \Fuel\Core\Request so use it instead
@@ -72,14 +79,14 @@ class Input {
         }
         
         // Check whether this request is from \Fuel\Core\Request or \Hybrid\Request
-        $using_hybrid       = false;
-
-        $default            = null;
-        $index              = null;
+        $using_hybrid = false;
+        
+        $default      = null;
+        $index        = null;
         
         if ( ! is_null(static::$request) and static::$request->method !== '') 
         {
-            $using_hybrid   = true;
+            $using_hybrid = true;
         }
 
         if ( ! $using_hybrid and $name == 'method') 
@@ -90,9 +97,9 @@ class Input {
         switch (true) 
         {
             case count($args) > 1 :
-                $default    = $args[1];
+                $default = $args[1];
             case count($args) > 0 :
-                $index      = $args[0];
+                $index   = $args[0];
             break;
         }
 

@@ -22,39 +22,32 @@ namespace Hybrid;
  *
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Parser_Markdown
+ * @category    Parser_Bbcode
  * @category    Test
- * @author      Mior Muhammad Zaki <crynobone@gmail.com>
+ * @author      Ignacio Muñoz Fernandez <nmunozfernandez@gmail.com>
  */
 
-class Test_Parser_Markdown extends \Fuel\Core\TestCase {
-    
+class Test_Parser_Bbcode extends \Fuel\Core\TestCase 
+{
     /**
      * Setup the test
      */
     public function setup()
     {
-        \Package::load('hybrid');
+        \Fuel::add_package('hybrid');
     }
 
     /**
-     * Test Parser_Markdown::parse()
+     * Test Parser_Bbcode::parse();
      *
      * @test
      */
     public function test_parse()
     {
-        $text = "Hello world
+        $text     = "[b]strong[/b][i]italic[/i]";
+        $output   = Parser::forge('Bbcode')->parse($text);
+        $expected = "<b>strong</b><i>italic</i>";
 
-* Thank you";
-        $output   = Parser::forge('markdown')->parse($text);
-        $expected = "<p>Hello world</p>
-
-<ul>
-<li>Thank you</li>
-</ul>
-";
         $this->assertEquals($expected, $output);
     }
-    
 }

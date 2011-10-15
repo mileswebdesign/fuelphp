@@ -33,8 +33,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Acl {
-    
+class Acl 
+{    
     /**
      * Cache ACL instance so we can reuse it on multiple request. 
      * 
@@ -70,7 +70,7 @@ class Acl {
      * @static
      * @access  public
      * @param   string  $name
-     * @return  \Hybrid\Acl Object 
+     * @return  object  Acl
      */
     public static function forge($name = null)
     {
@@ -94,7 +94,7 @@ class Acl {
      * @static
      * @access  public
      * @param   string  $name
-     * @return  \Hybrid\Acl Object
+     * @return  object  Acl
      * @see     self::forge()
      */
     public static function factory($name = null)
@@ -109,8 +109,8 @@ class Acl {
      *
      * @static
      * @access  public
-     * @param   string   $name
-     * @return  \Hybrid\Acl Object
+     * @param   string  $name
+     * @return  object  Acl
      * @see     self::forge()
      */
     public static function instance($name = null)
@@ -155,7 +155,7 @@ class Acl {
      *
      * @access  public
      * @param   mixed   $resource
-     * @param   string  $type need to be any one of deny, view, create, edit, delete or all
+     * @param   string  $type       need to be any one of deny, view, create, edit, delete or all
      * @return  bool
      */
     public function access($resource, $type = 'view') 
@@ -164,7 +164,7 @@ class Acl {
 
         if ( ! in_array($resource, $this->resources)) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Unable to verify unknown resource: {$resource}.");
+            throw new \FuelException("\Hybrid\Acl: Unable to verify unknown resource: {$resource}.");
         }
 
         $user       = Auth::instance('user')->get();
@@ -179,19 +179,19 @@ class Acl {
 
         foreach ($user->roles as $role) 
         {
-            if ( ! isset($this->acl[$role . '/' . $resource])) 
+            if ( ! isset($this->acl[$role.'/'.$resource])) 
             {
                 continue;
             }
 
-            if ($this->acl[$role . '/' . $resource] == $type) 
+            if ($this->acl[$role.'/'.$resource] == $type) 
             {
                 return true;
             }
 
             for ($i = ($type_id + 1); $i < $length; $i++) 
             {
-                if ($this->acl[$role . '/' . $resource] == $types[$i]) 
+                if ($this->acl[$role.'/'.$resource] == $types[$i]) 
                 {
                     return true;
                 }
@@ -207,9 +207,9 @@ class Acl {
      *
      * @access  public
      * @param   mixed   $resource
-     * @param   string  $type need to be any one of static::$type
+     * @param   string  $type       need to be any one of static::$type
      * @return  bool
-     * @see     \Hybrid\Acl::access()
+     * @see     self::access()
      */
     public function access_status($resource, $type = 'view') 
     {
@@ -244,14 +244,14 @@ class Acl {
      * Add new user roles to the this instance
      * 
      * @access  public
-     * @param   mixed $roles
+     * @param   mixed   $roles
      * @return  bool
      */
     public function add_roles($roles = null) 
     {
         if (is_null($roles)) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Can't add NULL roles.");
+            throw new \FuelException("\Hybrid\Acl: Can't add NULL roles.");
         }
 
         if (is_string($roles)) 
@@ -288,7 +288,7 @@ class Acl {
     {
         if (is_null($resources)) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Can't add NULL resources.");
+            throw new \FuelException("\Hybrid\Acl: Can't add NULL resources.");
         }
 
 
@@ -323,13 +323,13 @@ class Acl {
      * @param   mixed   $resources
      * @param   string  $type
      * @return  bool
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function allow($roles, $resources, $type = 'view') 
     {
         if ( ! in_array($type, static::$types)) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Type {$type} does not exist.");
+            throw new \FuelException("\Hybrid\Acl: Type {$type} does not exist.");
         }
 
         if ( ! is_array($roles)) 
@@ -348,7 +348,7 @@ class Acl {
 
             if ( ! in_array($role, $this->roles)) 
             {
-                throw new \Fuel_Exception("\Hybrid\Acl: Role {$role} does not exist.");
+                throw new \FuelException("\Hybrid\Acl: Role {$role} does not exist.");
 
                 continue;
             }
@@ -359,12 +359,12 @@ class Acl {
 
                 if (!in_array($resource, $this->resources)) 
                 {
-                    throw new \Fuel_Exception("\Hybrid\Acl: Resource {$resource} does not exist.");
+                    throw new \FuelException("\Hybrid\Acl: Resource {$resource} does not exist.");
 
                     continue;
                 }
 
-                $id = $role . '/' . $resource;
+                $id = $role.'/'.$resource;
 
                 $this->acl[$id] = $type;
             }

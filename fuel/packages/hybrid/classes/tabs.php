@@ -22,11 +22,11 @@ namespace Hybrid;
  * 
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Html_Tabs
+ * @category    Tabs
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
- class Html_Tabs {
+ class Tabs {
     
     protected static $instances = array();
 
@@ -43,6 +43,11 @@ namespace Hybrid;
         }
 
         return static::$instances[$name];
+    }
+
+    public static function instance($name)
+    {
+        return static::forge($name);
     }
 
     protected $tabs   = array();
@@ -69,7 +74,7 @@ namespace Hybrid;
     {
         if (empty($title))
         {
-            throw new \FuelException("\Hybrid\Html_Tabs: Unable to add empty tab.");
+            throw new \FuelException("\Hybrid\Tabs: Unable to add empty tab.");
         }
 
         if (empty($content) or ! strval($content))

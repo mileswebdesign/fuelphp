@@ -13,10 +13,6 @@
 
 namespace Hybrid;
 
-Factory::import('markdown/markdown', 'vendor');
-
-use \Markdown;
-
 /**
  * Hybrid 
  * 
@@ -26,33 +22,23 @@ use \Markdown;
  * 
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Parser_Markdown
- * @author      Mior Muhammad Zaki <crynobone@gmail.com>
+ * @category    Cli
+ * @author      Ignacio Muñoz Fernandez <nmunozfernandez@gmail.com>
  */
- 
-class Parser_Markdown extends Parser_Driver 
+
+class Cli extends \Fuel\Core\Cli 
 {
     /**
-     * Construct a new instance (don't do anything right now)
-     *
+     * An alias for Cli::write() to output $text only when specify -v or --verbose options
+     * 
      * @access  public
-     * @return  void
+     * @param   string|array    $text   the text to output, or array of lines
      */
-    public function __construct() {}
-
-    /**
-     * Parse markdown formatted text to HTML
-     *
-     * @access  public
-     */
-    public function parse($text = '')
+    public static function verbose($text = '', $foreground = null, $background = null)
     {
-        if (empty($text) or ! strval($text))
+        if (static::option('v') !== null or static::option('verbose') !== null)
         {
-            $text = '';
+            static::write($text, $foreground, $background);
         }
-
-        return \Markdown($text);
     }
-
 }
