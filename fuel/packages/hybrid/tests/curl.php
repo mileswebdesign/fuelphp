@@ -27,8 +27,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Test_Curl extends \Fuel\Core\TestCase 
-{
+class Test_Curl extends \Fuel\Core\TestCase {
+
     /**
      * Setup the test
      */
@@ -53,7 +53,7 @@ class Test_Curl extends \Fuel\Core\TestCase
      * Test Curl::forge() given invalid driver
      *
      * @test
-     * @expectedException \FuelException
+     * @expectedException \Fuel_Exception
      */
     public function test_forge_expected_exception_given_invalid_method()
     {

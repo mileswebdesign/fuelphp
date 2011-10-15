@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Template_Frontend extends Template_Driver 
-{
+class Template_Frontend extends Template_Driver {
+
     /**
      * Initiate a new template using forge
      *
@@ -74,6 +74,7 @@ class Template_Frontend extends Template_Driver
      * @param   string  $theme
      * @param   string  $filename
      * @return  void
+     * @throws  \Fuel_Exception
      */
     public function __construct($theme = null, $filename = null)
     {
@@ -96,7 +97,7 @@ class Template_Frontend extends Template_Driver
      *
      * @access  public
      * @return  self
-     * @throws  \FuelException
+     * @throws  \Fuel_Exception
      */
     public function set_theme($theme = null)
     {
@@ -104,7 +105,7 @@ class Template_Frontend extends Template_Driver
 
         if (empty($available_folders))
         {
-            throw new \FuelException("\Hybrid\Template_Driver: configuration is not completed");
+            throw new \Fuel_Exception("\Hybrid\Template_Driver: configuration is not completed");
         }
 
         if (is_null($theme) or $theme === '_default_')
@@ -118,7 +119,7 @@ class Template_Frontend extends Template_Driver
         }
         else
         {
-            throw new \FuelException("\Hybrid\Template_Frontend: Requested {$theme} folder is not available.");
+            throw new \Fuel_Exception("\Hybrid\Template_Frontend: Requested {$theme} folder is not available.");
         }
 
         return $this;

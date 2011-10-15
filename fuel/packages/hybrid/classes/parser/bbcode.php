@@ -30,8 +30,8 @@ use \Decoda;
  * @author      Ignacio Muñoz Fernandez <nmunozfernandez@gmail.com>
  */
  
-class Parser_Bbcode extends Parser_Driver 
-{
+class Parser_Bbcode extends Parser_Driver {
+
     /**
      * Construct a new instance (don't do anything right now)
      *
@@ -53,7 +53,7 @@ class Parser_Bbcode extends Parser_Driver
         }
 
         $decoda = new Decoda($text);
-        return $decoda->parse(true);
+        return $decoda->parse();
     }
 
 }

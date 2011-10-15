@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Uri extends \Fuel\Core\Uri 
-{
+class Uri extends \Fuel\Core\Uri {
+
     /**
      * Build query string
      * 
@@ -68,7 +68,7 @@ class Uri extends \Fuel\Core\Uri
             $check_get_input($values, $dataset);
         }
         
-        return $start_with.implode('&', $dataset);
+        return $start_with . implode('&', $dataset);
     }
     
 }

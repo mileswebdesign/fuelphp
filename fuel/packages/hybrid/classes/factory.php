@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-class Factory 
-{
+class Factory {
+
     private static $identity = null;
     private static $language = 'en';
 
@@ -54,7 +54,7 @@ class Factory
             static::maintenance_mode();
         }
 
-        $lang = \Session::get(static::$identity.'_lang');
+        $lang = \Session::get(static::$identity . '_lang');
 
         if ( ! is_null($lang)) 
         {
@@ -75,7 +75,7 @@ class Factory
      * 
      * @static
      * @access  protected
-     * @throws  \FuelException
+     * @throws  \Fuel_Exception
      */
     protected static function maintenance_mode() 
     {
@@ -85,13 +85,13 @@ class Factory
 
         if ($call_count > 1) 
         {
-            throw new \FuelException('It appears your _maintenance_mode_ route is incorrect.  Multiple Recursion has happened.');
+            throw new \Fuel_Exception('It appears your _maintenance_mode_ route is incorrect.  Multiple Recursion has happened.');
         }
 
 
         if (\Config::get('routes._maintenance_mode_') === null) 
         {
-            throw new \FuelException('It appears your _maintenance_mode_ route is null.');
+            throw new \Fuel_Exception('It appears your _maintenance_mode_ route is null.');
         } 
         else 
         {
@@ -132,8 +132,6 @@ class Factory
      *
      * @static
      * @access  public
-     * @param   string  $path
-     * @param   string  $folder
      * @return  void
      */
     public static function import($path, $folder = 'classes')
