@@ -56,7 +56,7 @@ class Auth
     {
         $path = \Config::get("autho.urls.{$type}");
 
-        if (is_null($path))
+        if (null === $path)
         {
             throw new \FuelException("\Hybrid\Auth_Driver: Unable to redirect using {$type} type.");
         }
@@ -77,7 +77,7 @@ class Auth
      */
     public static function forge($name = null)
     {
-        if (is_null($name))
+        if (null === $name)
         {
             $name = 'user';
         }
@@ -211,6 +211,15 @@ class Auth
         return true;
     }
 
+    /**
+     * Link user account with external provider
+     *
+     * @static
+     * @access  public
+     * @param   int     $user_id
+     * @param   array   $user_data
+     * @return  bool
+     */
     public static function link_account($user_id, $user_data)
     {
         if (empty($user_data) or ! isset($user_data['credentials']))

@@ -28,11 +28,32 @@ namespace Hybrid;
 
  class Tabs {
     
+    /**
+     * Cache Tabs instance so we can reuse it on multiple request.
+     * 
+     * @static
+     * @access  protected
+     * @var     array
+     */
     protected static $instances = array();
 
+    public static function _init()
+    {
+        \Config::load('hybrid', 'hybrid');
+    }
+
+    /**
+     * Initiate a new Tabs instance.
+     * 
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @param   array   $config
+     * @return  object  Tabs
+     */
     public static function forge($name = null, $config = array())
     {
-        if (is_null($name))
+        if (null === $name)
         {
             $name = 'default';
         }
@@ -45,31 +66,96 @@ namespace Hybrid;
         return static::$instances[$name];
     }
 
+    /**
+     * Get cached instance, or generate new if currently not available.
+     *
+     * @static
+     * @access  public
+     * @return  Tabs
+     * @param   string  $name
+     * @see     self::forge()
+     */
     public static function instance($name)
     {
         return static::forge($name);
     }
 
+    /**
+     * List of tabs
+     *
+     * @access  protected
+     * @var     array
+     */
     protected $tabs   = array();
+    
+    /**
+     * Name of this instance
+     *
+     * @access  protected
+     * @var     string
+     */
     protected $name   = null;
+    
+    /**
+     * Configuration
+     *
+     * @access  protected
+     * @var     array
+     */
     protected $config = array();
 
+    /**
+     * Construct a new instance
+     *
+     * @access  protected
+     * @param   string  $name
+     * @param   array   $config
+     * @return  void
+     */
     protected function __construct($name, $config)
     {
+        $this->config = \Config::get('hybrid.tabs');
         $this->name   = $name;
-        $this->config = array_merge($this->config, $config);
+        $this->config = array_merge($config, $this->config);
     }
 
+    /**
+     * Append a new tab
+     *
+     * @access  public
+     * @param   string  $title
+     * @param   string  $content
+     * @return  self
+     * @see     self::add()
+     */
     public function append($title, $content = '')
     {
         return $this->add($title, $content, false);
     }
 
+    /**
+     * Prepend a new tab
+     *
+     * @access  public
+     * @param   string  $title
+     * @param   string  $content
+     * @return  self
+     * @see     self::add()
+     */
     public function prepend($title, $content = '')
     {
         return $this->add($title, $content, true);
     }
 
+    /**
+     * Add a new tab, prepending or appending
+     *
+     * @access  public
+     * @param   string  $title
+     * @param   string  $content
+     * @param   bool    $prepend
+     * @return  self
+     */
     public function add($title, $content = '', $prepend = false)
     {
         if (empty($title))
@@ -100,27 +186,43 @@ namespace Hybrid;
         return $this;
     }
 
+    /**
+     * Render self::view
+     *
+     * @access  public
+     * @see     self::render()
+     */
     public function __toString()
     {
         return $this->render();
     }
 
+    /**
+     * Render Tabs as a view
+     *
+     * @access  public
+     * @return  string
+     */
     public function render()
     {
-        $title   = '<ul class="tabs">';
-        $content = '<div class="pill-content">';
+        $template = $this->config['template'];
+
+        $title   = $template['title_open'];
+        $content = $template['content_open'];
 
         foreach ($this->tabs as $count => $tab)
         {
             $active = ($count === 0 ? 'class="active"' : '');
-            $title .= \Str::tr('<li :active><a href="#:slug">:title</a></li>', array('active' => $active, 'slug' => $tab->slug, 'title' => $tab->title));
-            $content .= \Str::tr('<div :active id=":slug">:content</div>', array('active' => $active, 'slug' => $tab->slug, 'content' => $tab->content));
+            $title .= \Str::tr($template['title'], array('active' => $active, 'slug' => $tab->slug, 'title' => $tab->title));
+            $content .= \Str::tr($template['content'];, array('active' => $active, 'slug' => $tab->slug, 'content' => $tab->content));
         }
 
-        $title   .= '</ul>';
-        $content .= '</div>';
+        $title   .= $template['title_close'];
+        $content .= $template['content_close'];
+        
+        $prefix = \Config::get('hybrid.tabs.prefix', '');
 
-        return '<div id="tab_'.ltrim($this->name, 'tab_').'">'.$title.$content.'</div>';
+        return \Str::tr($template['wrapper_open'], array('id' => $prefix.ltrim($this->name, $prefix))).$title.$content.$template['wrapper_close'];
     }
 
  }
