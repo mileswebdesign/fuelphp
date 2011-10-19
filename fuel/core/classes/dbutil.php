@@ -117,7 +117,7 @@ class DBUtil
 	 */
 	public static function modify_fields($table, $fields)
 	{
-		return static::alter_fields('CHANGE', $table, $fields);
+		return static::alter_fields('MODIFY', $table, $fields);
 	}
 
 	/**
@@ -150,23 +150,23 @@ class DBUtil
 		}
 		else
 		{
-			$use_brackets = ! in_array($type, array('ADD', 'CHANGE', 'MODIFY'));
-			$sql .= $type.' ';
+			$use_brackets = ! in_array($type, array('CHANGE', 'MODIFY'));
+			$use_brackets and $sql .= $type.' ';
 			$use_brackets and $sql .= '(';
-			$sql .= static::process_fields($fields);
+			$sql .= static::process_fields($fields, (( ! $use_brackets) ? $type.' ' : ''));
 			$use_brackets and $sql .= ')';
 		}
 
 		return \DB::query($sql, \DB::UPDATE)->execute();
 	}
 
-	protected static function process_fields($fields)
+	protected static function process_fields($fields, $prefix = '')
 	{
 		$sql_fields = array();
 
 		foreach ($fields as $field => $attr)
 		{
-			$sql = "\n\t";
+			$sql = "\n\t".$prefix;
 			$attr = array_change_key_case($attr, CASE_UPPER);
 
 			$sql .= \DB::quote_identifier($field);
