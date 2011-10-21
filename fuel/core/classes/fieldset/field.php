@@ -35,7 +35,7 @@ class Fieldset_Field
 	protected $name = '';
 
 	/**
-	 * @var  string  Field type for form generation
+	 * @var  string  Field type for form generation, false to prevent it showing
 	 */
 	protected $type = 'text';
 
@@ -78,10 +78,10 @@ class Fieldset_Field
 	 * @param  array
 	 * @param  Fieldset
 	 */
-	public function __construct($name, $label = '', array $attributes = array(), array $rules = array(), Fieldset $fieldset)
+	public function __construct($name, $label = '', array $attributes = array(), array $rules = array(), $fieldset = null)
 	{
 		$this->name = (string) $name;
-		$this->fieldset = $fieldset;
+		$this->fieldset = $fieldset instanceof Fieldset ? $fieldset : null;
 
 		// Don't allow name in attributes
 		unset($attributes['name']);
@@ -110,6 +110,23 @@ class Fieldset_Field
 	}
 
 	/**
+	 * @param   Fieldset  Fieldset to assign the field to
+	 * @return  Fieldset_Field
+	 * @throws  \RuntimeException
+	 */
+	public function set_fieldset(Fieldset $fieldset)
+	{
+		if ($this->fieldset)
+		{
+			throw new \RuntimeException('Field already belongs to a fieldset, cannot be reassigned.');
+		}
+
+		$this->fieldset = $fieldset;
+
+		return $this;
+	}
+
+	/**
 	 * Change the field label
 	 *
 	 * @param   string
@@ -131,7 +148,7 @@ class Fieldset_Field
 	 */
 	public function set_type($type)
 	{
-		$this->type = (string) $type;
+		$this->type = $type;
 		$this->set_attribute('type', $type);
 
 		return $this;

@@ -10,6 +10,8 @@
  * @link       http://fuelphp.com
  */
 
+namespace Fuel\Core;
+
 /**
  * The Autloader is responsible for all class loading.  It allows you to define
  * different load paths based on namespaces.  It also lets you set explicit paths
@@ -230,7 +232,10 @@ class Autoloader
 		}
 		elseif ($full_class = static::find_core_class($class))
 		{
-			class_exists($full_class, false) or include static::prep_path(static::$classes[$full_class]);
+			if ( ! class_exists($full_class, false) and ! interface_exists($full_class, false))
+			{
+				include static::prep_path(static::$classes[$full_class]);
+			}
 			class_alias($full_class, $class);
 			static::init_class($class);
 			$loaded = true;
@@ -330,7 +335,7 @@ class Autoloader
 	 *
 	 * @param	string	the class name
 	 */
-	private static function init_class($class)
+	protected static function init_class($class)
 	{
 		if (static::$auto_initialize === $class)
 		{

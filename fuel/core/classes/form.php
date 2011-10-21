@@ -566,7 +566,7 @@ class Form
 	 * @param   array  $attr
 	 * @return  string
 	 */
-	private static function attr_to_string($attr)
+	protected static function attr_to_string($attr)
 	{
 		unset($attr['label']);
 		return array_to_attr($attr);
@@ -712,6 +712,9 @@ class Form
 				break;
 			case 'button':
 				$build_field = static::button($field->name, $field->value, $field->attributes);
+				break;
+			case false:
+				$build_field = '';
 				break;
 			default:
 				$build_field = static::input($field->name, $field->value, $field->attributes);
