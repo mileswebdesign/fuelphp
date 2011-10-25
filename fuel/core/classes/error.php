@@ -54,13 +54,13 @@ class Error
 			logger(Fuel::L_ERROR, $severity.' - '.$last_error['message'].' in '.$last_error['file'].' on line '.$last_error['line']);
 
 			$error = new \ErrorException($last_error['message'], $last_error['type'], 0, $last_error['file'], $last_error['line']);
-			if (\Fuel::$env == \Fuel::PRODUCTION AND !\Fuel::$is_cli)
-			{	
-				static::show_production_error($error);
+			if (\Fuel::$env != Fuel::PRODUCTION)
+			{
+				static::show_php_error($error);
 			}
 			else
 			{
-				static::show_php_error($error);
+				static::show_production_error($error);
 			}
 
 			exit(1);
@@ -83,13 +83,13 @@ class Error
 		$severity = ( ! isset(static::$levels[$e->getCode()])) ? $e->getCode() : static::$levels[$e->getCode()];
 		logger(Fuel::L_ERROR, $severity.' - '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
 
-		if (\Fuel::$env == \Fuel::PRODUCTION AND !\Fuel::$is_cli)
+		if (\Fuel::$env != Fuel::PRODUCTION)
 		{
-			static::show_production_error($e);
+			static::show_php_error($e);
 		}
 		else
 		{
-			static::show_php_error($e);
+			static::show_production_error($e);
 		}
 	}
 
@@ -222,6 +222,12 @@ class Error
 	 */
 	public static function show_production_error(\Exception $e)
 	{
+		// when we're on CLI, always show the php error
+		if (\Fuel::$is_cli)
+		{
+			return static::show_php_error($e);
+		}
+
 		if ( ! headers_sent())
 		{
 			$protocol = \Input::server('SERVER_PROTOCOL') ? \Input::server('SERVER_PROTOCOL') : 'HTTP/1.1';

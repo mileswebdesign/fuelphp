@@ -212,7 +212,7 @@ abstract class Email_Driver
 	 */
 	 public function subject($subject)
 	 {
-	 	$this->subject = $subject;
+	 	$this->subject = (string) $subject;
 
 	 	return $this;
 	 }
@@ -414,6 +414,7 @@ abstract class Email_Driver
 	 * @param	bool	$inline		whether to include the file inline
 	 * @param	string	$mime		the file's mime-type
 	 * @param	string	$mime		the file's mime-type
+	 * @return  object              $this
 	 */
 	public function attach($file, $inline = false, $cid = null, $mime = null)
 	{
@@ -502,7 +503,7 @@ abstract class Email_Driver
 	 * @param	string	$encoding	the encoding
 	 * @retun	string	the encoded file data
 	 */
-	 public static function encode_file($file, $newline, $length = 76)
+	 protected static function encode_file($file, $newline, $length = 76)
 	 {
 		if (($contents = file_get_contents($file)) === false or empty($contents))
 		{
@@ -952,57 +953,6 @@ abstract class Email_Driver
 	}
 
 	/**
-	 * Returns the uft8 character boundary
-	 *
-	 * @param	string	$encoded_text	utf-8 encoded text
-	 * @param	int		$max_length		the max boundary position
-	 * @return	int		the fount char boundary
-	 */
-	public static function utf8_char_boundary($encoded_text, $max_length) {
-		$found_split_pos = false;
-		$look_back = 3;
-		while ( ! $found_split_pos)
-		{
-			$last_chunk = substr($encoded_text, $max_length - $look_back, $look_back);
-			$encoded_char_pos = strpos($last_chunk, '=');
-			if ($encoded_char_pos !== false)
-			{
-				// Found start of encoded character byte within $lookBack block.
-				// Check the encoded byte value (the 2 chars after the '=')
-				$hex = substr($encoded_text, $max_length - $look_back + $encoded_char_pos + 1, 2);
-				$dec = hexdec($hex);
-				if ($dec < 128)
-				{
-					// Single byte character.
-					// If the encoded char was found at pos 0, it will fit
-					// otherwise reduce maxLength to start of the encoded char
-					$max_length = ($encoded_char_pos == 0) ? $max_length :
-					$max_length - ($look_back - $encoded_char_pos);
-					$found_split_pos = true;
-				}
-				elseif ($dec >= 192)
-				{
-					// First byte of a multi byte character
-					// Reduce maxLength to split at start of character
-					$max_length = $max_length - ($look_back - $encoded_char_pos);
-					$foundSplitPos = true;
-				}
-				elseif ($dec < 192)
-				{
-					// Middle byte of a multi byte character, look further back
-					$lookBack += 3;
-				}
-			}
-			else
-			{
-				// No encoded character found
-				$found_split_pos = true;
-			}
-		}
-		return $max_length;
-	}
-
-	/**
 	 * Wraps the body or alt text
 	 *
 	 * @param	string	$message	the text to wrap
@@ -1029,7 +979,7 @@ abstract class Email_Driver
 	 */
 	protected static function prep_newlines($string, $newline = null)
 	{
-		$newline or $newline = \Config::get('email.defaults.newline');
+		$newline or $newline = \Config::get('email.defaults.newline', "\n");
 
 		$replace = array(
 			"\r\n"	=> "\n",
@@ -1053,9 +1003,9 @@ abstract class Email_Driver
 	 * @param	string	$encoding	the charset
 	 * @return	string	encoded string
 	 */
-	public static function encode_string($string, $encoding, $newline = null)
+	protected static function encode_string($string, $encoding, $newline = null)
 	{
-		$newline or $newline = \Config::get('email.defaults.newline', "\r\n");
+		$newline or $newline = \Config::get('email.defaults.newline', "\n");
 
 		switch ($encoding)
 		{

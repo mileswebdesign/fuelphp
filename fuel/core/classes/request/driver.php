@@ -29,9 +29,19 @@ abstract class Request_Driver
 	protected $params = array();
 
 	/**
+	 * @var  array  params set during object creation are handled as the defaults
+	 */
+	protected $default_params = array();
+
+	/**
 	 * @var  array  driver specific options
 	 */
 	protected $options = array();
+
+	/**
+	 * @var  array  options set during object creation are handled as the defaults
+	 */
+	protected $default_options = array();
 
 	/**
 	 * @var  array  http headers set for the request
@@ -88,6 +98,9 @@ abstract class Request_Driver
 				$this->{'set_'.$key}($value);
 			}
 		}
+
+		$this->default_options  = $this->options;
+		$this->default_params   = $this->params;
 	}
 
 	/**
@@ -229,8 +242,8 @@ abstract class Request_Driver
 	 */
 	protected function set_defaults()
 	{
-		$this->options   = array();
-		$this->params    = array();
+		$this->options   = $this->default_options;
+		$this->params    = $this->default_params;
 		return $this;
 	}
 

@@ -324,9 +324,11 @@ class Model implements \ArrayAccess, \Iterator {
 	/**
 	 * Get the class's observers and what they observe
 	 *
+	 * @param   string  specific observer to retrieve info of, allows direct param access by using dot notation
+	 * @param   mixed   default return value when specific key wasn't found
 	 * @return  array
 	 */
-	public static function observers()
+	public static function observers($specific = null, $default = null)
 	{
 		$class = get_called_class();
 
@@ -343,11 +345,26 @@ class Model implements \ArrayAccess, \Iterator {
 					}
 					else
 					{
-						$observers[$obs_k] = (array) $obs_v;
+						if (is_string($obs_v) or (is_array($obs_v) and is_int(key($obs_v))))
+						{
+							// @TODO deprecated until v1.2
+							logger(\Fuel::L_WARNING, 'Passing observer events as array is deprecated, they must be
+								inside another array under a key "events". Check the docs for more info.', __METHOD__);
+							$observers[$obs_k] = array('events' => (array) $obs_v);
+						}
+						else
+						{
+							$observers[$obs_k] = $obs_v;
+						}
 					}
 				}
 			}
 			static::$_observers_cached[$class] = $observers;
+		}
+
+		if ($specific)
+		{
+			return \Arr::get(static::$_observers_cached[$class], $specific, $default);
 		}
 
 		return static::$_observers_cached[$class];
@@ -978,7 +995,7 @@ class Model implements \ArrayAccess, \Iterator {
 		}
 
 		// Non changed objects don't have to be saved, but return true anyway (no reason to fail)
-		if ( ! $this->is_changed())
+		if ( ! $this->is_changed(array_keys(static::properties())))
 		{
 			return true;
 		}
@@ -1116,8 +1133,9 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public function observe($event)
 	{
-		foreach ($this->observers() as $observer => $events)
+		foreach ($this->observers() as $observer => $settings)
 		{
+			$events = isset($settings['events']) ? $settings['events'] : array();
 			if (empty($events) or in_array($event, $events))
 			{
 				if ( ! class_exists($observer))
@@ -1157,12 +1175,49 @@ class Model implements \ArrayAccess, \Iterator {
 	 */
 	public function is_changed($property = null)
 	{
-		$property = (array) $property ?: array_keys(static::properties());
+		$properties = static::properties();
+		$relations = static::relations();
+		$property = (array) $property ?: array_merge(array_keys($properties), array_keys($relations));
 		foreach ($property as $p)
 		{
-			if ( ! isset($this->_original[$p]) or $this->{$p} !== $this->_original[$p])
+			if (isset($properties[$p]))
 			{
-				return true;
+				if ( ! isset($this->_original[$p]) or $this->{$p} !== $this->_original[$p])
+				{
+					return true;
+				}
+			}
+			elseif (isset($relations[$p]))
+			{
+				if ($relations[$p]->singular)
+				{
+					if (empty($this->_original_relations[$p]) !== empty($this->{$p})
+						or ( ! empty($this->_original_relations[$p])
+							and $this->_original_relations[$p] !== $this->{$p}->implode_pk($this->{$p})))
+					{
+						return true;
+					}
+				}
+				else
+				{
+					$orig_rels = $this->_original_relations[$p];
+					foreach ($this->{$p} as $rk => $r)
+					{
+						if ( ! in_array($r->implode_pk($r), $orig_rels))
+						{
+							return true;
+						}
+						unset($orig_rels[array_search($rk, $orig_rels)]);
+					}
+					if ( ! empty($orig_rels))
+					{
+						return true;
+					}
+				}
+			}
+			else
+			{
+				throw new \OutOfBoundsException('Unknown property or relation: '.$p);
 			}
 		}
 
