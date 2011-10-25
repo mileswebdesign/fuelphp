@@ -33,8 +33,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-abstract class Auth_Driver {
-
+abstract class Auth_Driver 
+{
     /**
      * Adapter object
      *
@@ -80,7 +80,7 @@ abstract class Auth_Driver {
      */
     public function get($name = null)
     {
-        if (is_null($name))
+        if (null === $name)
         {
             return (object) $this->data;
         }

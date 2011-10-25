@@ -33,8 +33,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Acl {
-    
+class Acl 
+{    
     /**
      * Cache ACL instance so we can reuse it on multiple request. 
      * 
@@ -66,20 +66,19 @@ class Acl {
     /**
      * Initiate a new Acl instance.
      * 
-     * @deprecated  1.3.0
      * @static
      * @access  public
      * @param   string  $name
-     * @return  \Hybrid\Acl Object
+     * @return  object  Acl
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
-        if (is_null($name))
+        if (null === $name)
         {
             $name = 'default';
         }
 
-        if (!isset(static::$instances[$name]))
+        if ( ! isset(static::$instances[$name]))
         {
             static::$instances[$name] = new static();
         }
@@ -88,17 +87,34 @@ class Acl {
     }
 
     /**
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  object  Acl
+     * @see     self::forge()
+     */
+    public static function factory($name = null)
+    {
+        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
+        
+        return static::forge($name);
+    }
+
+    /**
      * Get cached instance, or generate new if currently not available.
      *
      * @static
      * @access  public
-     * @param   string   $name
-     * @return  \Hybrid\Acl Object
-     * @see     self::factory()
+     * @param   string  $name
+     * @return  object  Acl
+     * @see     self::forge()
      */
     public static function instance($name = null)
     {
-        return static::factory($name);
+        return static::forge($name);
     }
 
     /**
@@ -114,7 +130,7 @@ class Acl {
      * @access  protected
      * @var     array
      */
-    protected $roles     = array();
+    protected $roles = array('guest');
      
     /**
      * List of resources
@@ -130,7 +146,7 @@ class Acl {
      * @access  protected
      * @var     array
      */
-    protected $acl       = array();
+    protected $acl = array();
 
     /**
      * Verify whether current user has sufficient roles to access the resources based 
@@ -138,38 +154,43 @@ class Acl {
      *
      * @access  public
      * @param   mixed   $resource
-     * @param   string  $type need to be any one of deny, view, create, edit, delete or all
+     * @param   string  $type       need to be any one of deny, view, create, edit, delete or all
      * @return  bool
      */
     public function access($resource, $type = 'view') 
     {
         $types = static::$types;
 
-        if (!in_array($resource, $this->resources)) 
+        if ( ! in_array($resource, $this->resources)) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Unable to verify unknown resource: {$resource}.");
+            throw new \FuelException(__METHOD__.": Unable to verify unknown resource {$resource}.");
         }
 
-        $user       = Auth::instance('user')->get();
+        $user    = Auth::instance('user')->get();
+        
+        $type_id = array_search($type, $types);
+        $length  = count($types);
 
-        $type_id    = array_search($type, $types);
-        $length     = count($types);
+        if (empty($user->roles) and in_array('guest', $this->roles))
+        {
+            array_push($user->roles, 'guest');
+        }
 
         foreach ($user->roles as $role) 
         {
-            if (!isset($this->acl[$role . '/' . $resource])) 
+            if ( ! isset($this->acl[$role.'/'.$resource])) 
             {
                 continue;
             }
 
-            if ($this->acl[$role . '/' . $resource] == $type) 
+            if ($this->acl[$role.'/'.$resource] == $type) 
             {
                 return true;
             }
 
             for ($i = ($type_id + 1); $i < $length; $i++) 
             {
-                if ($this->acl[$role . '/' . $resource] == $types[$i]) 
+                if ($this->acl[$role.'/'.$resource] == $types[$i]) 
                 {
                     return true;
                 }
@@ -185,9 +206,9 @@ class Acl {
      *
      * @access  public
      * @param   mixed   $resource
-     * @param   string  $type need to be any one of static::$type
+     * @param   string  $type       need to be any one of static::$type
      * @return  bool
-     * @see     \Hybrid\Acl::access()
+     * @see     self::access()
      */
     public function access_status($resource, $type = 'view') 
     {
@@ -222,29 +243,32 @@ class Acl {
      * Add new user roles to the this instance
      * 
      * @access  public
-     * @param   mixed $roles
+     * @param   mixed   $roles
      * @return  bool
      */
     public function add_roles($roles = null) 
     {
-        if (is_null($roles)) 
+        if (null === $roles) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Can't add NULL roles.");
-        }
-
-        if (is_array($roles)) 
-        {
-            foreach ($roles as $role)
-            {
-                array_push($this->roles, trim(\Inflector::friendly_title($role, '-', true)));
-            }
-
-            return true;
+            throw new \FuelException(__METHOD__.": Can't add NULL roles.");
         }
 
         if (is_string($roles)) 
         {
-            array_push($this->roles, trim(\Inflector::friendly_title($roles, '-', true)));
+            $roles = func_get_args();
+        }
+        
+        if (is_array($roles)) 
+        {
+            foreach ($roles as $role)
+            {
+                $role = trim(\Inflector::friendly_title($role, '-', true));
+
+                if ( ! in_array($role, $this->roles))
+                {
+                    array_push($this->roles, $role);
+                }
+            }
 
             return true;
         }
@@ -261,24 +285,28 @@ class Acl {
      */
     public function add_resources($resources = null) 
     {
-        if (is_null($resources)) 
+        if (null === $resources) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Can't add NULL resources.");
+            throw new \FuelException(__METHOD__.": Can't add NULL resources.");
+        }
+
+
+        if ( ! is_array($resources)) 
+        {
+            $resources = func_get_args();
         }
 
         if (is_array($resources)) 
         {
             foreach ($resources as $resource)
             {
-                array_push($this->resources, trim(\Inflector::friendly_title($resource, '-', true)));
+                $resource = trim(\Inflector::friendly_title($resource, '-', true));
+                
+                if ( ! in_array($resource, $this->resources))
+                {
+                    array_push($this->resources, $resource);
+                }
             }
-
-            return true;
-        }
-
-        if (is_string($resources)) 
-        {
-            array_push($this->resources, trim(\Inflector::friendly_title($resources, '-', true)));
 
             return true;
         }
@@ -294,21 +322,21 @@ class Acl {
      * @param   mixed   $resources
      * @param   string  $type
      * @return  bool
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function allow($roles, $resources, $type = 'view') 
     {
-        if (!in_array($type, static::$types)) 
+        if ( ! in_array($type, static::$types)) 
         {
-            throw new \Fuel_Exception("\Hybrid\Acl: Type {$type} does not exist.");
+            throw new \FuelException(__METHOD__.": Type {$type} does not exist.");
         }
 
-        if (!is_array($roles)) 
+        if ( ! is_array($roles)) 
         {
             $roles = array($roles);
         }
 
-        if (!is_array($resources)) 
+        if ( ! is_array($resources)) 
         {
             $resources = array($resources);
         }
@@ -317,9 +345,9 @@ class Acl {
         {
             $role = \Inflector::friendly_title($role, '-', true);
 
-            if (!in_array($role, $this->roles)) 
+            if ( ! in_array($role, $this->roles)) 
             {
-                throw new \Fuel_Exception("\Hybrid\Acl: Role {$role} does not exist.");
+                throw new \FuelException(__METHOD__.": Role {$role} does not exist.");
 
                 continue;
             }
@@ -328,14 +356,14 @@ class Acl {
             {
                 $resource = \Inflector::friendly_title($resource, '-', true);
 
-                if (!in_array($resource, $this->resources)) 
+                if ( ! in_array($resource, $this->resources)) 
                 {
-                    throw new \Fuel_Exception("\Hybrid\Acl: Resource {$resource} does not exist.");
+                    throw new \FuelException(__METHOD__.": Resource {$resource} does not exist.");
 
                     continue;
                 }
 
-                $id = $role . '/' . $resource;
+                $id = $role.'/'.$resource;
 
                 $this->acl[$id] = $type;
             }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -13,7 +13,8 @@
 namespace Fuel\Core;
 
 
-class Error {
+class Error
+{
 
 	public static $levels = array(
 		0                  => 'Error',
@@ -53,13 +54,13 @@ class Error {
 			logger(Fuel::L_ERROR, $severity.' - '.$last_error['message'].' in '.$last_error['file'].' on line '.$last_error['line']);
 
 			$error = new \ErrorException($last_error['message'], $last_error['type'], 0, $last_error['file'], $last_error['line']);
-			if (\Fuel::$env == \Fuel::PRODUCTION AND !\Fuel::$is_cli)
-			{	
-				static::show_production_error($error);
+			if (\Fuel::$env != Fuel::PRODUCTION)
+			{
+				static::show_php_error($error);
 			}
 			else
 			{
-				static::show_php_error($error);
+				static::show_production_error($error);
 			}
 
 			exit(1);
@@ -74,21 +75,21 @@ class Error {
 	 */
 	public static function exception_handler(\Exception $e)
 	{
-		if ($e instanceof Request404Exception)
+		if (method_exists($e, 'handle'))
 		{
-			\Request::show_404();
+			return $e->handle();
 		}
 
 		$severity = ( ! isset(static::$levels[$e->getCode()])) ? $e->getCode() : static::$levels[$e->getCode()];
 		logger(Fuel::L_ERROR, $severity.' - '.$e->getMessage().' in '.$e->getFile().' on line '.$e->getLine());
 
-		if (\Fuel::$env == \Fuel::PRODUCTION AND !\Fuel::$is_cli)
+		if (\Fuel::$env != Fuel::PRODUCTION)
 		{
-			static::show_production_error($e);
+			static::show_php_error($e);
 		}
 		else
 		{
-			static::show_php_error($e);
+			static::show_production_error($e);
 		}
 	}
 
@@ -168,9 +169,9 @@ class Error {
 
 			try
 			{
-				exit(\View::factory('errors'.DS.'php_fatal_error', $data, false));
+				exit(\View::forge('errors'.DS.'php_fatal_error', $data, false));
 			}
-			catch (\Fuel_Exception $view_exception)
+			catch (\FuelException $view_exception)
 			{
 				exit($data['severity'].' - '.$data['message'].' in '.\Fuel::clean_path($data['filepath']).' on line '.$data['error_line']);
 			}
@@ -178,9 +179,9 @@ class Error {
 
 		try
 		{
-			echo \View::factory('errors'.DS.'php_error', $data, false);
+			echo \View::forge('errors'.DS.'php_error', $data, false);
 		}
-		catch (\Fuel_Exception $e)
+		catch (\FuelException $e)
 		{
 			echo $e->getMessage().Html::br();
 		}
@@ -210,7 +211,7 @@ class Error {
 		$data['line']		= $trace['line'];
 		$data['function']	= $trace['function'];
 
-		echo \View::factory('errors'.DS.'php_short', $data, false);
+		echo \View::forge('errors'.DS.'php_short', $data, false);
 	}
 
 	/**
@@ -221,12 +222,18 @@ class Error {
 	 */
 	public static function show_production_error(\Exception $e)
 	{
+		// when we're on CLI, always show the php error
+		if (\Fuel::$is_cli)
+		{
+			return static::show_php_error($e);
+		}
+
 		if ( ! headers_sent())
 		{
 			$protocol = \Input::server('SERVER_PROTOCOL') ? \Input::server('SERVER_PROTOCOL') : 'HTTP/1.1';
 			header($protocol.' 500 Internal Server Error');
 		}
-		exit(\View::factory('errors'.DS.'production'));
+		exit(\View::forge('errors'.DS.'production'));
 	}
 
 	protected static function prepare_exception(\Exception $e, $fatal = true)

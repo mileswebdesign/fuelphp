@@ -26,38 +26,60 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Template_Normal extends Template_Driver {
-
+class Template_Normal extends Template_Driver 
+{
     /**
      * Initiate a new template using factory
      *
      * Example:
-     * <code>$template = \Hybrid\Template_Normal::factory();</code>
+     * <code>$template = \Hybrid\Template_Normal::forge();</code>
      *
      * @static
      * @access  public
-     * @param   string  $theme
-     * @param   string  $filename
+     * @param   string  $name
      * @return  void
      */
-    public static function factory($folder = null, $filename = null)
+    public static function forge($name = null)
     {
-        return new static($folder, $filename);
+        $driver = 'normal';
+        $name   = strtolower($name);
+        
+        if ( ! empty($name))
+        {
+            $driver .= ".{$name}";
+        }
+
+        return Template::forge($driver);
+    }
+
+    /**
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  self::forge()
+     */
+    public static function factory($name = null)
+    {
+        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
+        
+        return static::forge($name);
     }
 
     /**
      * Initiate a new template object
      *
      * @access  public
-     * @param   string  $theme
+     * @param   string  $folder
      * @param   string  $filename
      * @return  void
-     * @throws  \Fuel_Exception
      */
     public function __construct($folder = null, $filename = null)
     {
         // Assets shouldn't be added in APPPATH/views at all
-        if (!empty($folder) and $folder !== '_default_')
+        if ( ! empty($folder) and '_default_' !== $folder)
         {
             $this->set_folder($folder);
         }
@@ -66,7 +88,7 @@ class Template_Normal extends Template_Driver {
             $this->set_folder(static::$config['default_folder']);
         }
 
-        if (!empty($filename) and $filename !== '_default_')
+        if ( ! empty($filename) and '_default_' !== $filename)
         {
             $this->set_filename($filename);
         }
@@ -75,7 +97,7 @@ class Template_Normal extends Template_Driver {
             $this->set_filename(static::$config['default_filename']);
         }
 
-        $this->view = \View::factory();
+        $this->view = \View::forge();
     }
 
     /**
@@ -83,11 +105,11 @@ class Template_Normal extends Template_Driver {
      *
      * @access  private
      * @return  self
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function load_assets($forced_load = false)
     {
-      throw new \Fuel_Exception("No asset loading for \\Hybrid\\Template_Normal");
+      throw new \FuelException(__METHOD__.": Asset loading not available.");
     }
 
     /**
@@ -95,17 +117,17 @@ class Template_Normal extends Template_Driver {
      *
      * @access  public
      * @return  self
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function set_folder($path = null)
     {
         // this is not the best way of doing it, the request is not cached and going to be slow
         // if there's a lot of paths and files
-        $files = \Fuel::list_files('views/' . $path, '*.php');
+        $files = \Finder::search('views/'.$path, '*.*');
 
         if (empty($files))
         {
-            throw new \Fuel_Exception("Path {$path} does not appear to a valid folder or contain any View files");
+            throw new \FuelException(__METHOD__.": Path {$path} does not appear to a valid folder or contain any View files.");
         }
         else 
         {
@@ -125,9 +147,9 @@ class Template_Normal extends Template_Driver {
      */
     public function partial($filename, $data = null)
     {
-        $view = \View::factory();
-        $view->set_filename(rtrim($this->folder, '/') . '/' . $filename);
-        $view->auto_encode(static::$config['auto_encode']);
+        $view = \View::forge();
+        $view->set_filename(rtrim($this->folder, '/').'/'.$filename);
+        $view->auto_filter(static::$config['auto_filter']);
 
         if (is_array($data) and count($data) > 0)
         {
@@ -148,8 +170,8 @@ class Template_Normal extends Template_Driver {
      */
     public function render()
     {
-        $this->view->set_filename(rtrim($this->folder, '/') . '/' . $this->filename);
-        $this->view->auto_encode(static::$config['auto_encode']);
+        $this->view->set_filename(rtrim($this->folder, '/').'/'.$this->filename);
+        $this->view->auto_filter(static::$config['auto_filter']);
 
         $this->view->set('TEMPLATE_FOLDER', $this->folder, false);
         $this->view->set('template', $this, false);

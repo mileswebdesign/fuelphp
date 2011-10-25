@@ -25,16 +25,16 @@ namespace Hybrid;
  * @category    Chart_Scatter
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
-class Chart_Scatter extends Table {
-
+class Chart_Scatter extends Chart_Driver 
+{
     public function __construct() 
     {
         parent::__construct();
 
-        $this->set_options(\Config::get('visualization.chart.scatter', array()));
+        $this->set_options(\Config::get('chart.scatter', array()));
     }
 
-    public function generate($width = '100%', $height = '300px') 
+    public function render($width = '100%', $height = '300px') 
     {
         $columns    = $this->columns;
         $rows       = $this->rows;
@@ -44,7 +44,7 @@ class Chart_Scatter extends Table {
 
         $options    = json_encode($this->options);
 
-        $id         = 'scatter_' . md5($columns . $rows . time() . microtime());
+        $id         = 'scatter_'.md5($columns.$rows.time().microtime());
 
         return <<<SCRIPT
 <div id="{$id}" style="width:{$width}; height:{$height};"></div>

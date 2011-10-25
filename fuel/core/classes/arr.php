@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -19,7 +19,8 @@ namespace Fuel\Core;
  * @package     Fuel
  * @subpackage  Core
  */
-class Arr {
+class Arr
+{
 
 	/**
 	 * Gets a dot-notated key from an array, with a default value if it does
@@ -337,31 +338,11 @@ class Arr {
 	 * @param   mixed  the key to fetch from the array
 	 * @param   mixed  the value returned when not an array or invalid key
 	 * @return  mixed
+	 * @deprecated until 1.2
 	 */
 	public static function element($array, $key, $default = false)
 	{
-		$key = explode('.', $key);
-		if(count($key) > 1)
-		{
-			if ( ! is_array($array) or ! array_key_exists($key[0], $array))
-			{
-				return $default;
-			}
-			$array = $array[$key[0]];
-			unset($key[0]);
-			$key = implode('.', $key);
-			$array = static::element($array, $key, $default);
-			return $array;
-		}
-		else
-		{
-			$key = $key[0];
-			if ( ! is_array($array) or ! array_key_exists($key, $array))
-			{
-				return $default;
-			}
-			return $array[$key];
-		}
+		return static::get($array, $key, $default);
 	}
 
 	/**
@@ -371,29 +352,11 @@ class Arr {
 	 * @param   array  the keys to fetch from the array
 	 * @param   mixed  the value returned when not an array or invalid key
 	 * @return  mixed
+	 * @deprecated until 1.2
 	 */
 	public static function elements($array, $keys, $default = false)
 	{
-		$return = array();
-
-		if ( ! is_array($array) or ! is_array($keys))
-		{
-			throw new \InvalidArgumentException('Arr::elements() - $keys and $array must be arrays.');
-		}
-
-		foreach ($keys as $key)
-		{
-			if ( ! array_key_exists($key, $array))
-			{
-				$return[$key] = $default;
-			}
-			else
-			{
-				$return[$key] = $array[$key];
-			}
-		}
-
-		return $return;
+		return static::get($array, $keys, $default);
 	}
 
 	/**
@@ -521,17 +484,32 @@ class Arr {
 	}
 
 	/**
+	 * Alias for replace_key for backwards compatibility.
+	 */
+	public static function replace_keys($source, $replace, $new_key = null)
+	{
+		logger(\Fuel::L_WARNING, 'This method is deprecated.  Please use a replace_key() instead.', __METHOD__);
+		return static::replace_key($source, $replace, $new_key);
+	}
+
+	/**
 	 * Replaces key names in an array by names in $replace
 	 *
-	 * @param   array    the array containing the key/value combinations
-	 * @param   array    the array containing the replacement keys
-	 * @return  array    the array with the new keys
+	 * @param   array			the array containing the key/value combinations
+	 * @param   array|string	key to replace or array containing the replacement keys
+	 * @param   string			the replacement key
+	 * @return  array			the array with the new keys
 	 */
-	public static function replace_keys($source, $replace)
+	public static function replace_key($source, $replace, $new_key = null)
 	{
+		if(is_string($replace))
+		{
+			$replace = array($replace => $new_key);
+		}
+
 		if ( ! is_array($source) or ! is_array($replace))
 		{
-			throw new \InvalidArgumentException('Arr::replace_keys() - $source and $replace must arrays.');
+			throw new \InvalidArgumentException('Arr::replace_keys() - $source must an array. $replace must be an array or string.');
 		}
 
 		$result = array();
@@ -598,6 +576,19 @@ class Arr {
 		}
 
 		return $array;
+	}
+	
+	/**
+	 * Prepends a value with an asociative key to an array.
+	 * Will overwrite if the value exists.
+	 *
+	 * @param   array           $arr     the array to prepend to
+	 * @param   string|array    $key     the key or array of keys and values
+	 * @param   mixed           $valye   the value to prepend
+	 */
+	public static function prepend(&$arr, $key, $value = null)
+	{
+		$arr = (is_array($key) ? $key : array($key => $value)) + $arr;
 	}
 
 }

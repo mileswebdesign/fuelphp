@@ -26,14 +26,14 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class View extends \Fuel\Core\View {
-
+class View extends \View 
+{
     /**
      * @static
      * @access  protected
      * @var     string
      */
-    protected static $_path = '';
+    protected static $file_path = '';
 
     /**
      * Set the global path.
@@ -50,7 +50,7 @@ class View extends \Fuel\Core\View {
      */
     public static function set_path($path) 
     {
-        static::$_path = $path;
+        static::$file_path = $path;
     }
 
     /**
@@ -63,42 +63,31 @@ class View extends \Fuel\Core\View {
      * 
      * @static
      * @access  public
-     * @param   string  $file view filename
+     * @param   string  $file   a string of view filename
      * @return  self
-     * @throws  Fuel_Exception
+     * @throws  FuelException
      */
     public function set_filename($file) 
     {
+        // locate the view file
         switch (true) 
         {
-            case ($path = $this->find_file($file)) : break;
-            case ($path = \Fuel::find_file('views', $file, '.php', false, false)) : break;
+            case ($path = \Finder::search('views', static::$file_path.$file.'.'.$this->extension)) : break;
             default :
-                throw new \Fuel_Exception('The requested view could not be found: ' . \Fuel::clean_path($file));
+                // set find_file's one-time-only search paths
+                \Finder::instance()->flash($this->request_paths);
+                
+                if (($path = \Finder::search('views', $file, '.'.$this->extension, false, false)) === false)
+                {
+                    throw new \FuelException(__METHOD__.': The requested view could not be found: '.\Fuel::clean_path($file));
+                }
+            
         }
 
         // Store the file path locally
-        $this->_file = $path;
+        $this->file_name = $path;
 
         return $this;
-    }
-
-    /**
-     * Use custom view path if available, eitherwise just return false so we can use 
-     * \Fuel::find_file()
-     *
-     * @access  protected
-     * @param   string  $file
-     * @return  mixed
-     */
-    protected function find_file($file) 
-    {
-        if (empty(static::$_path))
-        {
-            return false;
-        }
-
-        return \Fuel::find_file('views', static::$_path . $file . '.php');
     }
 
 }

@@ -27,8 +27,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-abstract class Controller extends \Fuel\Core\Controller {
-
+abstract class Controller extends \Controller 
+{
     /**
      * Run ACL check and redirect user automatically if user doesn't have the privilege
      * 
@@ -40,12 +40,12 @@ abstract class Controller extends \Fuel\Core\Controller {
      */
     final protected function acl($resource, $type = null, $name = null) 
     {
-        $status = \Hybrid\Acl::instance($name)->access_status($resource, $type);
+        $status = Acl::instance($name)->access_status($resource, $type);
 
         switch ($status) 
         {
             case 401 :
-                throw new \Request404Exception();
+                throw new \HttpNotFoundException();
             break;
         }
     }
@@ -57,8 +57,8 @@ abstract class Controller extends \Fuel\Core\Controller {
      */
     public function before() 
     {
-        $this->language = \Hybrid\Factory::get_language();
-        $this->user     = \Hybrid\Auth::instance('user')->get();
+        $this->language = Factory::get_language();
+        $this->user     = Auth::instance('user')->get();
 
         \Event::trigger('controller_before');
 
@@ -70,11 +70,11 @@ abstract class Controller extends \Fuel\Core\Controller {
      * 
      * @access  public
      */
-    public function after() 
+    public function after($response) 
     {
         \Event::trigger('controller_after');
 
-        return parent::after();
+        return parent::after($response);
     }
 
 }

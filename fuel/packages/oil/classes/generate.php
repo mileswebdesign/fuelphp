@@ -32,16 +32,16 @@ class Generate
 		'char' => 255,
 		'int' => 11
 	);
-	
+
 	public static function config($args, $build = true)
 	{
 		$args = self::_clear_args($args);
 		$file = strtolower(array_shift($args));
-		
+
 		$config = array();
-		
+
 		// load the config
-		if ($paths = \Fuel::find_file('config', $file, '.php', true))
+		if ($paths = \Finder::search('config', $file, '.php', true))
 		{
 			// Reverse the file list so that we load the core configs first and
 			// the app can override anything.
@@ -51,9 +51,9 @@ class Generate
 				$config = \Fuel::load($path) + $config;
 			}
 		}
-		
+
 		unset($path);
-		
+
 		// We always pass in fields to a config, so lets sort them out here.
 		foreach ($args as $conf)
 		{
@@ -66,9 +66,9 @@ class Generate
 				$config[$parts[0]] = $parts[1];
 			}
 		}
-		
-		$overwrite = \Cli::option('o') || \Cli::option('overwrite');
-		
+
+		$overwrite = \Cli::option('o') or \Cli::option('overwrite');
+
 		$content = <<<CONF
 <?php
 /**
@@ -93,41 +93,48 @@ CONF;
 
 		$path = APPPATH.'config'.DS.$file.'.php';
 
-		if (!$overwrite and is_file($path))
+		if ( ! $overwrite and is_file($path))
 		{
 			throw new Exception("APPPATH/config/{$file}.php already exist, please use -overwrite option to force update");
 		}
-		
+
 		$path = pathinfo($path);
-		
+
 		try
 		{
 			\File::update($path['dirname'], $path['basename'], $content);
 			\Cli::write("Created config: APPPATH/config/{$file}.php", 'green');
 		}
-		catch (\File_Exception $e)
+		catch (\InvalidPathException $e)
 		{
-			throw new Exception("APPPATH/config/{$file}.php could not be written.");
+			throw new Exception("Invalid basepath, cannot update at ".APPPATH."config".DS."{$file}.php");
+		}
+		catch (\FileAccessException $e)
+		{
+			throw new Exception(APPPATH."config".DS.$file.".php could not be written.");
 		}
 	}
 
 	public static function controller($args, $build = true)
 	{
 		$args = self::_clear_args($args);
-		$singular = strtolower(array_shift($args));
-		$actions = $args;
-		
-		$plural = \Inflector::pluralize($singular);
-		
-		$filename = trim(str_replace(array('_', '-'), DS, $plural), DS);
 
-		$filepath = APPPATH . 'classes/controller/'.$filename.'.php';
+		if ( ! ($name = \Str::lower(array_shift($args))))
+		{
+			throw new Exception('No controller name was provided.');
+		}
+
+		$actions = $args;
+
+		$filename = trim(str_replace(array('_', '-'), DS, $name), DS);
+
+		$filepath = APPPATH.'classes'.DS.'controller'.DS.$filename.'.php';
 
 		// Uppercase each part of the class name and remove hyphens
-		$class_name = \Inflector::classify($plural, false);
+		$class_name = \Inflector::classify($name);
 
-		// Stick "blogs" to the start of the array
-		array_unshift($args, $plural);
+		// Stick "blog" to the start of the array
+		array_unshift($args, $filename);
 
 		// Create views folder and each view file
 		static::views($args, false);
@@ -140,8 +147,8 @@ CONF;
 			$action_str .= '
 	public function action_'.$action.'()
 	{
-		$this->template->title = \'' . \Inflector::humanize($singular) .' &raquo; ' . \Inflector::humanize($action) . '\';
-		$this->template->content = View::factory(\''.$singular .'/' . $action .'\');
+		$this->template->title = \'' . \Inflector::humanize($name) .' &raquo; ' . \Inflector::humanize($action) . '\';
+		$this->template->content = View::forge(\''.$filename.'/' . $action .'\');
 	}'.PHP_EOL;
 		}
 
@@ -155,19 +162,18 @@ class Controller_{$class_name} extends {$extends} {
 {$action_str}
 }
 
-/* End of file $filename.php */
 CONTROLLER;
 
 		// Write controller
 		static::create($filepath, $controller, 'controller');
-		
+
 		$build and static::build();
 	}
 
 
 	public static function model($args, $build = true)
 	{
-		$singular = \Str::lower(array_shift($args));
+		$singular = \Inflector::singularize(\Str::lower(array_shift($args)));
 
 		if (empty($args))
 		{
@@ -175,34 +181,62 @@ CONTROLLER;
 		}
 
 		$plural = \Inflector::pluralize($singular);
-		
+
 		$filename = trim(str_replace(array('_', '-'), DS, $singular), DS);
 
 		$filepath = APPPATH . 'classes/model/'.$filename.'.php';
 
 		// Uppercase each part of the class name and remove hyphens
-		$class_name = \Inflector::classify($plural);
+		$class_name = \Inflector::classify($singular, false);
 
-		$contents = '';
-		if ( ! \Cli::option('no-timestamps', false))
+		if ( ! \Cli::option('orm', false))
 		{
 			$contents = <<<CONTENTS
 
-	protected static \$_observers = array(
-		'Orm\\Observer_CreatedAt' => array('before_insert'),
-		'Orm\\Observer_UpdatedAt' => array('before_save'),
-	);
+	protected static \$_table_name = '{$plural}';
 
 CONTENTS;
-		}
-
-		$model = <<<MODEL
+			$model = <<<MODEL
 <?php
 
-class Model_{$class_name} extends Orm\Model {{$contents}}
+namespace Model;
 
-/* End of file $filename.php */
+use \Model_Crud;
+
+class {$class_name} extends Model_Crud
+{
+{$contents}
+}
+
 MODEL;
+		}
+		else
+		{
+			$contents = '';
+
+			if ( ! \Cli::option('no-timestamp', false)) 
+			{
+				$contents = <<<CONTENTS
+	
+	protected static \$_observers = array(
+		'Orm\Observer_CreatedAt' => array('before_insert'),
+		'Orm\Observer_UpdatedAt' => array('before_save'),
+	);
+CONTENTS;
+			}
+
+			$model = <<<MODEL
+<?php
+
+namespace Model;
+
+class {$class_name} extends \Orm\Model
+{
+{$contents}
+}
+
+MODEL;
+		}
 
 		// Build the model
 		static::create($filepath, $model, 'model');
@@ -325,13 +359,13 @@ VIEW;
 				{
 					$subjects = array($matches[0], $matches[2]);
 				}
-				
+
 				// rename_field_{field}_to_{field}_in_{table} (with underscores in field names)
 				else if (count($matches) >= 5 && in_array('to', $matches) && in_array('in', $matches))
 				{
 					$subjects = array(
-					 implode('_', array_slice($matches, array_search('in', $matches)+1)), 
-					 implode('_', array_slice($matches, 0, array_search('to', $matches))), 
+					 implode('_', array_slice($matches, array_search('in', $matches)+1)),
+					 implode('_', array_slice($matches, 0, array_search('to', $matches))),
 					 implode('_', array_slice($matches, array_search('to', $matches)+1, array_search('in', $matches)-2))
 				  );
 				}
@@ -340,8 +374,8 @@ VIEW;
 				else if (count($matches) !== 0)
 				{
 					$name = str_replace(array('create_', 'add_', '_to_'), array('create-', 'add-', '-to-'), $migration_name);
-    				
-    				if (preg_match('/^(create|add)\-([a-z0-9\_]*)(\-to\-)?([a-z0-9\_]*)?$/i', $name, $deep_matches)) 
+
+    				if (preg_match('/^(create|add)\-([a-z0-9\_]*)(\-to\-)?([a-z0-9\_]*)?$/i', $name, $deep_matches))
     				{
     					switch ($deep_matches[1])
     					{
@@ -493,6 +527,8 @@ Usage:
 Runtime options:
   -f, [--force]    # Overwrite files that already exist
   -s, [--skip]     # Skip files that already exist
+  -q, [--quiet]    # Supress status output
+  -t, [--speak]    # Speak errors in a robot voice
 
 Description:
   The 'oil' command can be used to generate MVC components, database migrations

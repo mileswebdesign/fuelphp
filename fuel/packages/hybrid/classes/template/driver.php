@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-abstract class Template_Driver {
-
+abstract class Template_Driver 
+{
     /**
      * Template driver configuration
      *
@@ -46,10 +46,10 @@ abstract class Template_Driver {
      */
     public static function _init()
     {
-        if (is_null(static::$config))
+        if (null === static::$config)
         {
-            \Config::load('app', 'app');
-            static::$config = \Config::get('app.template', array());
+            \Config::load('hybrid', 'hybrid');
+            static::$config = \Config::get('hybrid.template', array());
         }
     }
 
@@ -59,7 +59,7 @@ abstract class Template_Driver {
      * @access  protected
      * @var     string
      */
-    protected $folder           = 'default';
+    protected $folder = 'default';
 
     /**
      * Filename
@@ -67,7 +67,7 @@ abstract class Template_Driver {
      * @access  protected
      * @var     string
      */
-    protected $filename         = 'index';
+    protected $filename = 'index';
 
     /**
      * Adapter \Fuel\Core\View
@@ -75,7 +75,7 @@ abstract class Template_Driver {
      * @access  public
      * @var     object
      */
-    public $view                = null;
+    public $view = null;
 
      /**
      * List of loaded asset
@@ -83,33 +83,34 @@ abstract class Template_Driver {
      * @access  protected
      * @staticvar   array
      */
-    protected static $assets    = array();
+    protected static $assets = array();
 
     /**
      * Load asset as subfolder of template
      *
      * @access  public
+     * @param   bool    $forced_load
      * @return  self
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function load_assets($forced_load = false) 
     {
-        $folder_path = $this->folder . 'assets/';
+        $folder_path = $this->folder.'assets/';
 
         if (false === static::$config['load_assets'] and false === $forced_load)
         {
             return $this;
         }
 
-        if (!\is_dir($folder_path))
+        if ( ! is_dir($folder_path))
         {
-            throw new \Fuel_Exception("Unable to load assets at {$folder_path}");
+            throw new \FuelException(__METHOD__.": Unable to load assets at {$folder_path}.");
         }
         else
         {
             $folder_path = str_replace(DOCROOT, '', $folder_path);
 
-            if (!in_array($folder_path, static::$assets))
+            if ( ! in_array($folder_path, static::$assets))
             {
                 \Asset::add_path($folder_path);
                 array_push(static::$assets, $folder_path);
@@ -123,14 +124,15 @@ abstract class Template_Driver {
      * Set folder location
      *
      * @access  public
+     * @param   string  $path
      * @return  self
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function set_folder($path = null)
     {
-        if (!\is_dir($path))
+        if ( ! is_dir($path))
         {
-            throw new \Fuel_Exception("Path {$path} does not appear to a valid folder");
+            throw new \FuelException(__METHOD__.": Path {$path} does not appear to a valid folder.");
         }
         else 
         {
@@ -144,11 +146,12 @@ abstract class Template_Driver {
      * Set filename location
      *
      * @access  public
+     * @param   string  $filename
      * @return  self
      */
     public function set_filename($filename = null)
     {
-        if (!empty($filename))
+        if ( ! empty($filename))
         {
             $this->filename = $filename;
         }
@@ -160,6 +163,7 @@ abstract class Template_Driver {
      * Set data
      *
      * @access  public
+     * @param   array   $data
      * @return  self
      */
     public function set($data = array())
@@ -190,5 +194,15 @@ abstract class Template_Driver {
      * @access  public
      */
     public abstract function render();
+
+    /**
+     * Render self::view
+     *
+     * @access  public
+     */
+    public function __toString()
+    {
+        return $this->render();
+    }
 
 }

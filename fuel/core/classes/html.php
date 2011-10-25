@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -31,19 +31,6 @@ class Html
 	public static $html5 = false;
 
 	/**
-	 * Generates a html heading tag
-	 *
-	 * @param	string			heading text
-	 * @param	int				1 through 6 for h1-h6
-	 * @param	array|string	tag attributes
-	 * @return	string
-	 */
-	public static function h($content = '', $num = 1, $attr = false)
-	{
-		return html_tag('h'.$num, $attr, $content);
-	}
-
-	/**
 	 * Creates an html link
 	 *
 	 * @param	string	the url
@@ -51,17 +38,22 @@ class Html
 	 * @param	array	the attributes array
 	 * @return	string	the html link
 	 */
-	public static function anchor($href, $text, $attr = array())
+	public static function anchor($href, $text = null, $attr = array())
 	{
-		if ( ! preg_match('#^(\w+://|javascript:)# i', $href))
+		if ( ! preg_match('#^(\w+://|javascript:|\#)# i', $href))
 		{
-			$href = \Uri::create($href);
+			$urlparts = explode('?', $href, 2);
+			$href = \Uri::create($urlparts[0], array(), isset($urlparts[1])?$urlparts[1]:array());
 		}
+
+		// Create and display a URL hyperlink
+		is_null($text) and $text = $href;
+
 		$attr['href'] = $href;
 
 		return html_tag('a', $attr, $text);
 	}
-	
+
 	/**
 	 * Creates an html image tag
 	 *
@@ -151,51 +143,6 @@ class Html
 	}
 
 	/**
-	 * Generates a html break tag
-	 *
-	 * @param	int				number of times to repeat the br
-	 * @param	array|string	tag attributes
-	 * @return	string
-	 */
-	public static function br($num = 1, $attr = false)
-	{
-		return str_repeat(html_tag('br', $attr), $num);
-	}
-
-	/**
-	 * Generates a html horizontal rule tag
-	 *
-	 * @param	array|string	tag attributes
-	 * @return	string
-	 */
-	public static function hr($attr = false)
-	{
-		return html_tag('hr', $attr);
-	}
-
-	/**
-	 * Generates a html title tag
-	 *
-	 * @param	string	page title
-	 * @return	string
-	 */
-	public static function title($content = '')
-	{
-		return html_tag('title', array(), $content);
-	}
-
-	/**
-	 * Generates a ascii code for non-breaking whitespaces
-	 *
-	 * @param	int		number of times to repeat
-	 * @return	string
-	 */
-	public static function nbs($num = 1)
-	{
-		return str_repeat('&nbsp;', $num);
-	}
-
-	/**
 	 * Generates a html meta tag
 	 *
 	 * @param	string|array	multiple inputs or name/http-equiv value
@@ -242,25 +189,6 @@ class Html
 		else
 		{
 			return false;
-		}
-	}
-
-	/**
-	 * Generates a html5 header tag or div with id "header"
-	 *
-	 * @param	string	header content
-	 * @param	array	tag attributes
-	 * @return	string
-	 */
-	public static function header($content = '', $attr = array())
-	{
-		if(static::$html5)
-		{
-			return html_tag('header', $attr, $content);
-		}
-		else
-		{
-			return html_tag('div', array_merge(array('id' => 'header'), $attr), $content);
 		}
 	}
 

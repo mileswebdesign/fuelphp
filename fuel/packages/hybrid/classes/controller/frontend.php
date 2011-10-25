@@ -27,8 +27,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-abstract class Controller_Frontend extends Controller {
-
+abstract class Controller_Frontend extends Controller 
+{
     /**
      * Page template
      * 
@@ -77,13 +77,12 @@ abstract class Controller_Frontend extends Controller {
      * This method will be called after we route to the destinated method
      * 
      * @access  public
+     * @param   mixed   $response
      * @return  void
      */
-    public function after() 
+    public function after($response) 
     {
-        $this->render_template();
-
-        return parent::after();
+        return parent::after($this->render_template($response));
     }
     
     /**
@@ -96,7 +95,7 @@ abstract class Controller_Frontend extends Controller {
     {
         if (true === $this->auto_render)
         {
-            $this->template = \Hybrid\Template::factory($this->template);
+            $this->template = Template::forge($this->template);
         }
     }
     
@@ -104,17 +103,21 @@ abstract class Controller_Frontend extends Controller {
      * Render template
      * 
      * @access  protected
+     * @param   mixed   $response
      * @return  void
      */
-    protected function render_template()
+    protected function render_template($response)
     {
         //we dont want to accidentally change our site_name
         $this->template->set(array('site_name' => \Config::get('app.site_name')));
         
-        if (true === $this->auto_render)
+        if (true === $this->auto_render and ! $response instanceof \Response)
         {
-            $this->response->body($this->template->render());
+            $response       = $this->response;
+            $response->body = $this->template;
         }
+
+        return $response;
     }
 
 }

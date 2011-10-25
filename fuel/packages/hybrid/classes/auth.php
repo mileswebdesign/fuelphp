@@ -32,10 +32,10 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Auth {
-    
+class Auth 
+{    
     /**
-     * Cache auth instance so we can reuse it on multiple request
+     * Cache Auth instance so we can reuse it on multiple request.
      * 
      * @static
      * @access  protected
@@ -50,15 +50,15 @@ class Auth {
      * @access  protected
      * @param   string  $type
      * @return  void
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public static function redirect($type)
     {
         $path = \Config::get("autho.urls.{$type}");
 
-        if (is_null($path))
+        if (null === $path)
         {
-            throw new \Fuel_Exception("\Hybrid\Auth_Driver: Unable to redirect using {$type} type.");
+            throw new \FuelException(__METHOD__.": Unable to redirect using {$type} type.");
         }
         
         \Response::redirect($path);
@@ -73,28 +73,28 @@ class Auth {
      * @access  public
      * @param   string  $name       null to fetch the default driver, or a driver id to get a specific one
      * @return  Auth_Driver
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
-        if (is_null($name))
+        if (null === $name)
         {
             $name = 'user';
         }
 
-        $name = \Str::lower($name);
+        $name = strtolower($name);
 
-        if (!isset(static::$instances[$name]))
+        if ( ! isset(static::$instances[$name]))
         {
-            $driver = '\\Hybrid\\Auth_Driver_' . \Str::ucfirst($name);
+            $driver = '\\Hybrid\\Auth_Driver_'.ucfirst($name);
 
-            if (!!class_exists($driver))
+            if ( !! class_exists($driver))
             {
                 static::$instances[$name] = new $driver();
             }
             else
             {
-                throw new \Fuel_Exception("Requested {$driver} does not exist.");
+                throw new \FuelException("Requested {$driver} does not exist.");
             }
         }
 
@@ -102,16 +102,32 @@ class Auth {
     }
 
     /**
-     * Retrieves a loaded driver, when drivers are set in config the first driver will also be the default. 
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  self::forge()
+     */
+    public static function factory($name = null)
+    {
+        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
+        
+        return static::forge($name);
+    }
+
+    /**
+     * Get cached instance, or generate new if currently not available.
      *
      * @static
      * @access  public
      * @return  Auth_Driver
-     * @see     self::factory()
+     * @see     self::forge()
      */
     public static function instance($name = null)
     {
-        return static::factory($name);
+        return static::forge($name);
     }
 
     /**
@@ -126,7 +142,40 @@ class Auth {
     {
         $salt = \Config::get('autho.salt', \Config::get('crypt.crypto_key'));
 
-        return \sha1($salt . $string);
+        return \sha1($salt.$string);
+    }
+
+    /**
+     * Check if user has any of provided roles.
+     * 
+     * @static
+     * @access  public
+     * @param   mixed   $check_roles
+     * @return  bool 
+     */
+    public static function has_roles($check_roles) 
+    {
+        $user = static::instance('user')->get();
+
+        if ( ! is_array($check_roles)) 
+        {
+            $check_roles = func_get_args();
+        }
+
+        foreach ($user->roles as $role) 
+        {
+            $role = \Inflector::friendly_title($role, '-', TRUE);
+
+            foreach ($check_roles as $check_against) 
+            {
+                if ($role == $check_against) 
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -138,11 +187,11 @@ class Auth {
      * @param   string  $password       An unhashed `password` or `token` string from external API.
      * @param   string  $driver         Driver type string, default to 'user'.
      * @return  bool
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public static function login($username, $password, $driver = 'user')
     {
-        return static::factory($driver)->login($username, $password);
+        return static::forge($driver)->login($username, $password);
     }
 
     /**
@@ -162,15 +211,24 @@ class Auth {
         return true;
     }
 
+    /**
+     * Link user account with external provider
+     *
+     * @static
+     * @access  public
+     * @param   int     $user_id
+     * @param   array   $user_data
+     * @return  bool
+     */
     public static function link_account($user_id, $user_data)
     {
-        if (empty($user_data) or !isset($user_data['credentials']))
+        if (empty($user_data) or ! isset($user_data['credentials']))
         {
             return ;
         }
         
         // some provider does not have secret key
-        if (!isset($user_data['credentials']['secret']))
+        if ( ! isset($user_data['credentials']['secret']))
         {
             $user_data['credentials']['secret'] = null;
         }
@@ -190,59 +248,26 @@ class Auth {
         if (\DB::count_last_query() > 0)
         {
             \DB::update('authentications')->set(array(
-                'uid'      => $user_data['credentials']['uid'],
-                'token'    => $user_data['credentials']['token'],
-                'secret'   => $user_data['credentials']['secret'],
-            ))
-            ->where('user_id', '=', $user_id)
-            ->where('provider', '=', $user_data['credentials']['provider'])
-            ->execute();
+                    'uid'      => $user_data['credentials']['uid'],
+                    'token'    => $user_data['credentials']['token'],
+                    'secret'   => $user_data['credentials']['secret'],
+                ))
+                ->where('user_id', '=', $user_id)
+                ->where('provider', '=', $user_data['credentials']['provider'])
+                ->execute();
         }
         else
         {
             \DB::insert('authentications')->set(array(
-                'user_id'  => $user_id,
-                'provider' => $user_data['credentials']['provider'],
-                'uid'      => $user_data['credentials']['uid'],
-                'token'    => $user_data['credentials']['token'],
-                'secret'   => $user_data['credentials']['secret'],
-            ))->execute();
+                    'user_id'  => $user_id,
+                    'provider' => $user_data['credentials']['provider'],
+                    'uid'      => $user_data['credentials']['uid'],
+                    'token'    => $user_data['credentials']['token'],
+                    'secret'   => $user_data['credentials']['secret'],
+                ))->execute();
         }
 
         return true;
-    }
-
-    /**
-     * Check if user has any of provided roles (however this should be in \Hybrid\User IMHO)
-     * 
-     * @static
-     * @access  public
-     * @param   mixed   $check_roles
-     * @return  bool 
-     */
-    public static function has_roles($roles)
-    {
-        $user = static::instance('user')->get();
-
-        if (!is_array($check_roles)) 
-        {
-            $check_roles = array($check_roles);
-        }
-
-        foreach ($user->roles as $role) 
-        {
-            $role = \Inflector::friendly_title($role, '-', TRUE);
-
-            foreach ($check_roles as $check_against) 
-            {
-                if ($role == $check_against) 
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
     
 }

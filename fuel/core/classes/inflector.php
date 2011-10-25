@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -20,11 +20,12 @@ namespace Fuel\Core;
  * @copyright	Flinn Mueller
  * @link		http://fuelphp.com/docs/classes/inlector.html
  */
-class Inflector {
+class Inflector
+{
 
 	protected static $uncountable_words = array(
 		'equipment', 'information', 'rice', 'money',
-		'species', 'series', 'fish'
+		'species', 'series', 'fish', 'meta'
 	);
 
 	protected static $plural_rules = array(

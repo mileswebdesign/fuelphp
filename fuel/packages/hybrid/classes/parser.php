@@ -26,8 +26,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-class Parser {
-    
+class Parser 
+{    
     /**
      * Cache text instance so we can reuse it on multiple request eventhough 
      * it's almost impossible to happen
@@ -45,18 +45,18 @@ class Parser {
      * @access  public
      * @return  object
      */
-    public static function factory($name = null)
+    public static function forge($name = null)
     {
-        if (is_null($name))
+        if (null === $name)
         {
             $name = '';
         }
 
-        $name = \Str::lower($name);
+        $name = strtolower($name);
 
-        if (!isset(static::$instances[$name]))
+        if ( ! isset(static::$instances[$name]))
         {
-            $driver = '\\Hybrid\\Parser_' . \Str::ucfirst($name);
+            $driver = '\\Hybrid\\Parser_'.ucfirst($name);
         
             // instance has yet to be initiated
             if (class_exists($driver))
@@ -65,11 +65,27 @@ class Parser {
             }
             else
             {
-                throw new \Fuel_Exception("Requested {$driver} does not exist");
+                throw new \FuelException("Requested {$driver} does not exist.");
             }
         }
 
         return static::$instances[$name];
+    }
+
+    /**
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  self::forge()
+     */
+    public static function factory($name = null)
+    {
+        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
+        
+        return static::forge($name);
     }
 
 }

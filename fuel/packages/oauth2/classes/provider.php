@@ -43,6 +43,11 @@ abstract class Provider {
 	 * @var  array  additional request parameters to be used for remote requests
 	 */
 	protected $params = array();
+	
+	/**
+	 * @var  string  the method to use when requesting tokens
+	 */
+	protected $method = 'GET';
 
 	/**
 	 * Overloads default class properties from the options.
@@ -60,7 +65,11 @@ abstract class Provider {
 			$this->name = strtolower(substr(get_class($this), strlen('OAuth2\\Provider_')));
 		}
 		
-		$this->client_id = \Arr::get($options, 'id');
+		if ( ! $this->client_id = \Arr::get($options, 'id'))
+		{
+			throw new Exception('Required option not provided: id');
+		}
+		
 		$this->client_secret = \Arr::get($options, 'secret');
 		$this->scope = \Arr::get($options, 'scope');
 		
@@ -111,6 +120,7 @@ abstract class Provider {
 			'client_id' => $this->client_id,
 			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
 			'state' => $state,
+			'response_type' => 'code',
 			'scope' => $this->scope,
 		);
 		
@@ -131,14 +141,46 @@ abstract class Provider {
 			'client_id' => $this->client_id,
 			'client_secret' => $this->client_secret,
 			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
-			'code' => $code,	
+			'code' => $code,
+			'grant_type' => 'authorization_code'
 		);
+	
+		$response = null;	
+		$url = $this->url_access_token();
 		
-		$url = $this->url_access_token().'?'.http_build_query($params);
-		
-		$response = file_get_contents($url);
-		$params = null;
-		parse_str($response, $params); 
+		switch($this->method)
+		{
+			case 'GET':
+				$url .= '?'.http_build_query($params);
+				$response = file_get_contents($url);
+				
+				parse_str($response, $params); 
+				break;
+			case 'POST':
+				//maybe switch to use curl?
+				/*
+				$curl = \Rest::forge('oauth2', array(
+					'server' => $url,
+					'method' => 'curl'
+				));
+				$response = $curl->post('', $params);*/
+				
+				$postdata = http_build_query($params);
+				$opts = array('http' =>
+					array(
+						'method'  => 'POST',
+						'header'  => 'Content-type: application/x-www-form-urlencoded',
+						'content' => $postdata
+					)
+				);
+				$context  = stream_context_create($opts);
+				$response = file_get_contents($url, false, $context);
+				
+				$params = get_object_vars(json_decode($response));
+				break;
+			default:
+				throw new \OutOfBoundsException("Method '{$this->method}' must be either GET or POST");
+		}
 		
 		if (isset($params['error']))
 		{

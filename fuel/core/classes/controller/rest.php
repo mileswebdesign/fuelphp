@@ -2,7 +2,8 @@
 
 namespace Fuel\Core;
 
-abstract class Controller_Rest extends \Controller {
+abstract class Controller_Rest extends \Controller
+{
 
 	/**
 	 * @var  null|string  Set this in a controller to use a default format
@@ -26,6 +27,7 @@ abstract class Controller_Rest extends \Controller {
 		'xml' => 'application/xml',
 		'rawxml' => 'application/xml',
 		'json' => 'application/json',
+		'jsonp'=> 'text/javascript',
 		'serialized' => 'application/vnd.php.serialized',
 		'php' => 'text/plain',
 		'html' => 'text/html',
@@ -52,6 +54,20 @@ abstract class Controller_Rest extends \Controller {
 
 		// Which format should the data be returned in?
 		$this->request->lang = $this->_detect_lang();
+		
+		$this->response = \Response::forge();
+	}
+
+	public function after($response)
+	{
+		// If the response is a Response object, we will use their instead of
+		// ours.
+		if ( ! $response instanceof \Response)
+		{
+			$response = $this->response;
+		}
+
+		return parent::after($response);
 	}
 
 	/**
@@ -120,7 +136,7 @@ abstract class Controller_Rest extends \Controller {
 			// Set the correct format header
 			$this->response->set_header('Content-Type', $this->_supported_formats[$this->format]);
 
-			$this->response->body(Format::factory($data)->{'to_'.$this->format}());
+			$this->response->body(Format::forge($data)->{'to_'.$this->format}());
 		}
 
 		// Format not supported, output directly
@@ -146,7 +162,7 @@ abstract class Controller_Rest extends \Controller {
 		}
 
 		// Otherwise, check the HTTP_ACCEPT (if it exists and we are allowed)
-		if (\Config::get('rest.ignore_http_accept') === false and \Input::server('HTTP_ACCEPT'))
+		if (\Config::get('rest.ignore_http_accept') !== false and \Input::server('HTTP_ACCEPT'))
 		{
 			// Check all formats against the HTTP_ACCEPT header
 			foreach (array_keys($this->_supported_formats) as $format)
@@ -209,7 +225,7 @@ abstract class Controller_Rest extends \Controller {
 			$langs = explode(',', $lang);
 
 			$return_langs = array();
-			$i = 1;
+			
 			foreach ($langs as $lang)
 			{
 				// Remove weight and strip space

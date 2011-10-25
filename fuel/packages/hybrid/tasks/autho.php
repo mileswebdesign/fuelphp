@@ -17,7 +17,7 @@ namespace Fuel\Tasks;
 
 /**
  * Setup commandline:
- *      php oil refine hybrid
+ *      php oil refine autho
  *
  * @package  hybrid
  */
@@ -25,9 +25,9 @@ class Autho {
 
     /**
      * Send command with runtime option:
-     *      php oil refine hybrid --install
-     *      php oil refine hybrid --help
-     *      php oil refine hybrid --test
+     *      php oil refine autho --install
+     *      php oil refine autho --help
+     *      php oil refine autho --test
      *
      * @static
      * @access  public
@@ -35,9 +35,9 @@ class Autho {
      */
     public static function run()
     {
-        $install    = \Cli::option('i') or \Cli::option('install');
-        $help       = \Cli::option('h') or \Cli::option('help');
-        $test       = \Cli::option('t') or \Cli::option('test');
+        $install = \Cli::option('i') or \Cli::option('install');
+        $help    = \Cli::option('h') or \Cli::option('help');
+        $test    = \Cli::option('t') or \Cli::option('test');
 
         switch (true)
         {
@@ -45,12 +45,13 @@ class Autho {
                 static::install();
             break;
 
-            case $help :
-                static::help();
-            break;
-
             case $test :
                 static::test();
+            break;
+
+            case $help :
+            default :
+                static::help();
             break;
         }
     }
@@ -74,19 +75,19 @@ class Autho {
             $has_error = true;
         }
 
-        if (true === class_exists('\\Model_Users_Metum') and false === \Config::get('autho.normal.use_meta', false))
+        if ((true === class_exists("\Model_Users_Metum") or true === class_exists("\Model\Users_Metum")) and false === \Config::get('autho.normal.use_meta', false))
         {
             \Cli::write('Please set autho.normal.use_meta to TRUE in APPPATH/config/autho.php', 'red');
             $has_error = true;
         }
 
-        if (true === class_exists('\\Model_Users_Auth') and false === \Config::get('autho.normal.use_auth', false))
+        if ((true === class_exists("\Model_Users_Auth") or true === class_exists("\Model\Users_Auth")) and false === \Config::get('autho.normal.use_auth', false))
         {
             \Cli::write('Please set app.auth.use_auth to TRUE in APPPATH/config/autho.php', 'red');
             $has_error = true;
         }
 
-        if ('' === \Config::get('autho.salt', ''))
+        if (null === \Config::get('autho.salt'))
         {
             \Cli::write('Please provide autho.salt secret key in APPPATH/config/autho.php', 'red');
             $has_error = true;
@@ -151,12 +152,12 @@ HELP;
     {
         $path = APPPATH.'config'.DS.$file.'.php';
 
-        $content = file_get_contents(PKGPATH.'autho/config/'.$file.'.php');
+        $content = file_get_contents(PKGPATH.'hybrid/config/'.$file.'.php');
 
         switch(true)
         {
-            case (true === \is_file($path) and 'y' === \Cli::prompt("Overwrite APPPATH/config/{$file}.php?", array('y', 'n'))) :
-            case (false === \is_file($path)) : 
+            case (true === is_file($path) and 'y' === \Cli::prompt("Overwrite APPPATH/config/{$file}.php?", array('y', 'n'))) :
+            case (false === is_file($path)) : 
                $path = pathinfo($path);
 
                 try
@@ -166,7 +167,7 @@ HELP;
                 }
                 catch (\File_Exception $e)
                 {
-                    throw new \Fuel_Exception("APPPATH/config/{$file}.php could not be written.");
+                    throw new \FuelException("APPPATH/config/{$file}.php could not be written.");
                 }
             break;
 
@@ -185,9 +186,9 @@ HELP;
      */
     protected static function install_user()
     {
-        if (true === \class_exists('\\Model_User'))
+        if (true === class_exists("\Model_User") or true === class_exists("\Model\User"))
         {
-            throw new \Fuel_Exception("Model User already exist, skipping this process");
+            throw new \FuelException("Model User already exist, skipping this process");
         }
 
         $user_model = array(
@@ -252,7 +253,7 @@ HELP;
             \Oil\Generate::$create_files = array();
 
             \Oil\Generate::model(array(
-                'authenticate',
+                'authentication',
                 'user_id:int',
                 'provider:string[50]',
                 'uid:string',
@@ -262,4 +263,5 @@ HELP;
             \Oil\Generate::$create_files = array();
         }
     }
+    
 }

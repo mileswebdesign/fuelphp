@@ -26,15 +26,15 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-abstract class Controller_Rest extends \Fuel\Core\Controller {
-    
+abstract class Controller_Rest extends \Controller 
+{    
     /**
      * Rest format to be used
      * 
      * @access  protected
      * @var     string
      */
-    protected $rest_format          = null;
+    protected $rest_format = null;
     
     /**
      * Set the default content type using PHP Header
@@ -42,7 +42,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
      * @access  protected
      * @var     bool
      */
-    protected $set_content_type     = true;
+    protected $set_content_type = true;
 
     /**
      * Run ACL check and redirect user automatically if user doesn't have the privilege
@@ -54,12 +54,13 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
      */
     final protected function acl($resource, $type = null, $name = null) 
     {
-        $status = \Hybrid\Acl::instance($name)->access_status($resource, $type);
+        $status = Acl::instance($name)->access_status($resource, $type);
 
         switch ($status) 
         {
             case 401 :
-                $this->response(array('text' => "You doesn't have privilege to do this action"), 401);
+                \Lang::load('autho', 'autho');
+                $this->response(array('text' => \Lang::get('autho.no_privilege')), 401);
                 print $this->response->body;
                 exit();
             break;
@@ -73,18 +74,18 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
      */
     public function before() 
     {
-        $this->language     = \Hybrid\Factory::get_language();
-        $this->user         = \Hybrid\Auth::instance('user')->get();
-        \Fuel::$profiling   = false;
+        $this->language   = Factory::get_language();
+        $this->user       = Auth::instance('user')->get();
+        \Fuel::$profiling = false;
 
         \Event::trigger('controller_before');
         
-        if (\Hybrid\Request::main() !== \Hybrid\Request::active()) 
+        if (Request::main() !== Request::active()) 
         {
             $this->set_content_type = false;
         }
         
-        \Hybrid\Restserver::auth();
+        Restserver::auth();
 
         return parent::before();
     }
@@ -93,12 +94,18 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
      * This method will be called after we route to the destinated method
      * 
      * @access  public
+     * @param   mixed   $response
      */
-    public function after() 
+    public function after($response) 
     {
         \Event::trigger('controller_after');
         
-        return parent::after();
+        if ( ! $response instanceof \Response)
+        {
+            $response = $this->response;    
+        }
+
+        return parent::after($response);
     }
 
     /**
@@ -110,13 +117,13 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
      */
     public function router($resource, $arguments) 
     {
-        $pattern            = \Hybrid\Restserver::$pattern;
+        $pattern           = Restserver::$pattern;
         
         // Remove the extension from arguments too
-        $resource           = preg_replace($pattern, '', $resource);
+        $resource          = preg_replace($pattern, '', $resource);
         
         // If they call user, go to $this->post_user();
-        $controller_method  = strtolower(\Hybrid\Input::method()) . '_' . $resource;
+        $controller_method = strtolower(Input::method()).'_'.$resource;
         
         if (method_exists($this, $controller_method)) 
         {
@@ -125,7 +132,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
         else 
         {
             $this->response->status = 404;
-            return;
+            return ;
         }
     }
 
@@ -137,17 +144,17 @@ abstract class Controller_Rest extends \Fuel\Core\Controller {
      */
     protected function response($data = array(), $http_code = 200) 
     {
-        $rest   = \Hybrid\Restserver::factory($data, $http_code)
-                    ->format($this->rest_format)
-                    ->execute();
+        $rest_server = Restserver::forge($data, $http_code)
+            ->format($this->rest_format)
+            ->execute();
         
-        $this->response->body($rest->body);
-        $this->response->status     = $rest->status;
+        $this->response->body   = $rest_server->body;
+        $this->response->status = $rest_server->status;
         
         if (true === $this->set_content_type) 
         {
             // Set the correct format header
-            $this->response->set_header('Content-Type', \Hybrid\Restserver::content_type($rest->format));
+            $this->response->set_header('Content-Type', Restserver::content_type($rest_server->format));
         }
     }
 }

@@ -26,15 +26,15 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-abstract class Controller_Template extends \Fuel\Core\Controller {
-
+abstract class Controller_Template extends \Controller 
+{
     /**
      * Page template
      * 
      * @access  public
      * @var     string
      */
-    public $template        = 'normal';
+    public $template = 'normal';
     
     /**
      * Auto render template
@@ -42,7 +42,7 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      * @access  public
      * @var     bool    
      */
-    public $auto_render     = true;
+    public $auto_render = true;
 
     /**
      * Run ACL check and redirect user automatically if user doesn't have the privilege
@@ -54,12 +54,12 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      */
     final protected function acl($resource, $type = null, $name = null) 
     {
-        $status = \Hybrid\Acl::instance($name)->access_status($resource, $type);
+        $status = Acl::instance($name)->access_status($resource, $type);
 
         switch ($status) 
         {
             case 401 :
-                throw new \Request404Exception();
+                throw new \HttpNotFoundException();
             break;
         }
     }
@@ -71,8 +71,8 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      */
     public function before() 
     {
-        $this->language     = \Hybrid\Factory::get_language();
-        $this->user         = \Hybrid\Auth::instance('user')->get();
+        $this->language = Factory::get_language();
+        $this->user     = Auth::instance('user')->get();
 
         \Event::trigger('controller_before');
         
@@ -85,14 +85,13 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      * This method will be called after we route to the destinated method
      * 
      * @access  public
+     * @param   mixed   $response
      */
-    public function after() 
+    public function after($response) 
     {
         \Event::trigger('controller_after');
 
-        $this->render_template();
-
-        return parent::after();
+        return parent::after($this->render_template($response));
     }
     
     /**
@@ -117,7 +116,7 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
     {
         if (true === $this->auto_render)
         {
-            $this->template = \Hybrid\Template::factory($this->template);
+            $this->template = Template::forge($this->template);
         }
     }
     
@@ -125,16 +124,20 @@ abstract class Controller_Template extends \Fuel\Core\Controller {
      * Render template
      * 
      * @access  protected
+     * @param   mixed   $response
      */
-    protected function render_template()
+    protected function render_template($response)
     {
         //we dont want to accidentally change our site_name
         $this->template->set(array('site_name' => \Config::get('app.site_name')));
         
-        if (true === $this->auto_render)
+        if (true === $this->auto_render and ! $response instanceof \Response)
         {
-            $this->response->body($this->template->render());
+            $response       = $this->response;
+            $response->body = $this->template;
         }
+
+        return $response;
     }
 
 }

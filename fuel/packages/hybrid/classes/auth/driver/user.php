@@ -33,8 +33,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Auth_Driver_User extends Auth_Driver {
-    
+class Auth_Driver_User extends Auth_Driver 
+{    
     /**
      * Adapter to \Hybrid\Acl
      *
@@ -110,7 +110,7 @@ class Auth_Driver_User extends Auth_Driver {
             return;
         }
 
-        $this->strategy = Auth_Strategy::factory('normal')->authenticate();
+        $this->strategy = Auth_Strategy::forge('normal')->authenticate();
 
         // short-hand variable
         $this->provider = $this->strategy->provider;
@@ -144,7 +144,7 @@ class Auth_Driver_User extends Auth_Driver {
      */
     public function get($name = null)
     {
-        if (is_null($name)) 
+        if (null === $name) 
         {
             return (object) $this->provider->data;
         }
@@ -157,18 +157,18 @@ class Auth_Driver_User extends Auth_Driver {
         return null;
     }
 
-    /**
+     /**
      * Login user using normal authentication (username and password)
      * 
      * @access  public
      * @param   string  $username
      * @param   string  $password
+     * @param   bool    $remember_me
      * @return  bool
-     * @throws  \Fuel_Exception
      */
-    public function login($username, $password) 
+    public function login($username, $password, $remember_me = false) 
     {
-        $this->provider->login($username, $password);
+        $this->provider->login($username, $password, $remember_me);
         return true;
     }
 
@@ -178,12 +178,12 @@ class Auth_Driver_User extends Auth_Driver {
      * @access  public
      * @param   string  $token
      * @param   string  $secret
+     * @param   bool    $remember_me
      * @return  bool
-     * @throws  \Fuel_Exception
      */
-    public function login_token($token, $secret) 
+    public function login_token($token, $secret, $remember_me = false) 
     {
-        $this->provider->login_token($token, $secret);
+        $this->provider->login_token($token, $secret, $remember_me);
         return true;
     }
 

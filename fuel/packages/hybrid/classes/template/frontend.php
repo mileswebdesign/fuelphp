@@ -26,23 +26,46 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Template_Frontend extends Template_Driver {
-
+class Template_Frontend extends Template_Driver 
+{
     /**
-     * Initiate a new template using factory
+     * Initiate a new template using forge
      *
      * Example:
-     * <code>$template = \Hybrid\Template_Frontend::factory();</code>
+     * <code>$template = \Hybrid\Template_Frontend::forge();</code>
      *
      * @static
      * @access  public
-     * @param   string  $theme
-     * @param   string  $filename
+     * @param   string  $name
      * @return  void
      */
-    public static function factory($folder = null, $filename = null)
+    public static function forge($name = null)
     {
-        return new static($folder, $filename);
+        $driver = 'frontend';
+        $name   = strtolower($name);
+
+        if ( ! empty($name))
+        {
+            $driver .= ".{$name}";
+        }
+
+        return Template::forge($driver);
+    }
+
+    /**
+     * Shortcode to self::forge().
+     *
+     * @deprecated  1.3.0
+     * @static
+     * @access  public
+     * @param   string  $name
+     * @return  self::forge()
+     */
+    public static function factory($name = null)
+    {
+        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
+        
+        return static::forge($name);
     }
 
     /**
@@ -52,13 +75,12 @@ class Template_Frontend extends Template_Driver {
      * @param   string  $theme
      * @param   string  $filename
      * @return  void
-     * @throws  \Fuel_Exception
      */
     public function __construct($theme = null, $filename = null)
     {
         $this->set_theme($theme);
 
-        if (!empty($filename) and $filename !== '_default_')
+        if ( ! empty($filename) and '_default_' !== $filename)
         {
             $this->set_filename($filename);
         }
@@ -67,7 +89,7 @@ class Template_Frontend extends Template_Driver {
             $this->set_filename(static::$config['default_filename']);
         }
 
-        $this->view = \Hybrid\View::factory();
+        $this->view = View::forge();
     }
 
     /**
@@ -75,7 +97,7 @@ class Template_Frontend extends Template_Driver {
      *
      * @access  public
      * @return  self
-     * @throws  \Fuel_Exception
+     * @throws  \FuelException
      */
     public function set_theme($theme = null)
     {
@@ -83,10 +105,10 @@ class Template_Frontend extends Template_Driver {
 
         if (empty($available_folders))
         {
-            throw new \Fuel_Exception("\\Hybrid\\Template configuration is not completed");
+            throw new \FuelException(__METHOD__.": configuration is not completed");
         }
 
-        if (is_null($theme) or $theme === '_default_')
+        if (null === $theme or '_default_' === $theme)
         {
             $theme = 'default';
         }
@@ -97,7 +119,7 @@ class Template_Frontend extends Template_Driver {
         }
         else
         {
-            throw new \Fuel_Exception("Requested Template folder is not available");
+            throw new \FuelException(__METHOD__.": Requested {$theme} folder is not available.");
         }
 
         return $this;
@@ -115,10 +137,10 @@ class Template_Frontend extends Template_Driver {
     {
         $this->load_assets();
         
-        $view = \Hybrid\View::factory();
+        $view = View::forge();
         $view->set_path($this->folder);
         $view->set_filename($filename);
-        $view->auto_encode(static::$config['auto_encode']);
+        $view->auto_filter(static::$config['auto_filter']);
 
         if (is_array($data) and count($data) > 0)
         {
@@ -143,7 +165,7 @@ class Template_Frontend extends Template_Driver {
 
         $this->view->set_path($this->folder);
         $this->view->set_filename($this->filename);
-        $this->view->auto_encode(static::$config['auto_encode']);
+        $this->view->auto_filter(static::$config['auto_filter']);
 
         $this->view->set('TEMPLATE_FOLDER', $this->folder, false);
         $this->view->set('template', $this, false);

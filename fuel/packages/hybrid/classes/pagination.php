@@ -25,24 +25,24 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Pagination extends \Fuel\Core\Pagination {
-
+class Pagination extends \Fuel\Core\Pagination 
+{
     /**
      * @var array The HTML for the display
      */
     public static $template = array(
-        'wrapper_start'  => '<div class="pagination"> ',
-        'wrapper_end'    => ' </div>',
-        'page_start'     => '<span class="page-links"> ',
-        'page_end'       => ' </span>',
-        'previous_start' => '<span class="previous"> ',
-        'previous_end'   => ' </span>',
+        'wrapper_start'  => '<div class="pagination"> <ul>',
+        'wrapper_end'    => '</ul> </div>',
+        'page_start'     => '<li> ',
+        'page_end'       => ' </li>',
+        'previous_start' => '<li class="prev"> ',
+        'previous_end'   => ' </li>',
         'previous_mark'  => '&laquo; ',
-        'next_start'     => '<span class="next"> ',
-        'next_end'       => ' </span>',
+        'next_start'     => '<li class="next"> ',
+        'next_end'       => ' </li>',
         'next_mark'      => ' &raquo;',
-        'active_start'   => '<span class="active"> ',
-        'active_end'     => ' </span>',
+        'active_start'   => '<li class="active"><a href="#"> ',
+        'active_end'     => ' </a></li>',
         'disabled'       => array(
             'previous_start' => '<li class="prev disabled"><a href="#">',
             'previous_end'   => '</a></li>',
@@ -58,6 +58,24 @@ class Pagination extends \Fuel\Core\Pagination {
      * @staticvar   mixed
      */
     protected static $suffix_url;
+
+    /**
+     * Init
+     *
+     * Loads in the config and sets the variables
+     *
+     * @access  public
+     * @return  void
+     */
+    public static function _init()
+    {
+        \Config::load('hybrid', 'hybrid');
+        
+        $config = \Config::get('pagination', array());
+        $config = \Config::get('hybrid.pagination', array()) + $config;
+
+        static::set_config($config);
+    }
 
     /**
      * Pagination Page Number links
@@ -84,12 +102,12 @@ class Pagination extends \Fuel\Core\Pagination {
         {
             if (static::$current_page == $i)
             {
-                $pagination .= static::$template['active_start'] . $i . static::$template['active_end'];
+                $pagination .= static::$template['active_start'].$i.static::$template['active_end'];
             }
             else
             {
                 $url = ($i == 1) ? '' : '/'.$i;
-                $pagination .= static::$template['page_start'] . \Html::anchor(rtrim(static::$pagination_url, '/') . $url . '/' . static::$suffix_url, $i) . static::$template['page_end'];
+                $pagination .= static::$template['page_start'].\Html::anchor(rtrim(static::$pagination_url, '/').$url.'/'.static::$suffix_url, $i).static::$template['page_end'];
             }
         }
 
@@ -113,12 +131,12 @@ class Pagination extends \Fuel\Core\Pagination {
 
         if (static::$current_page == static::$total_pages)
         {
-            return static::$template['disabled']['next_start'] . $value . static::$template['next_mark'] . static::$template['disabled']['next_end'];
+            return static::$template['disabled']['next_start'].$value.static::$template['next_mark'].static::$template['disabled']['next_end'];
         }
         else
         {
             $next_page = static::$current_page + 1;
-            return static::$template['next_start'] . \Html::anchor(rtrim(static::$pagination_url, '/') . '/' . $next_page . '/'. static::$suffix_url, $value . static::$template['next_mark']) . static::$template['next_end'];
+            return static::$template['next_start'].\Html::anchor(rtrim(static::$pagination_url, '/').'/'.$next_page.'/'. static::$suffix_url, $value.static::$template['next_mark']).static::$template['next_end'];
         }
     }
 
@@ -139,30 +157,28 @@ class Pagination extends \Fuel\Core\Pagination {
 
         if (static::$current_page == 1)
         {
-            return static::$template['disabled']['previous_start'] . static::$template['previous_mark'] . $value . static::$template['disabled']['previous_end'];
+            return static::$template['disabled']['previous_start'].static::$template['previous_mark'].$value.static::$template['disabled']['previous_end'];
         }
         else
         {
             $previous_page = static::$current_page - 1;
-            $previous_page = ($previous_page == 1) ? '' : '/' . $previous_page;
-            return static::$template['previous_start'] . \Html::anchor(rtrim(static::$pagination_url, '/') . $previous_page . '/' . static::$suffix_url, static::$template['previous_mark'] . $value) . static::$template['previous_end'];
+            $previous_page = ($previous_page == 1) ? '' : '/'.$previous_page;
+            return static::$template['previous_start'].\Html::anchor(rtrim(static::$pagination_url, '/').$previous_page.'/'.static::$suffix_url, static::$template['previous_mark'].$value).static::$template['previous_end'];
         }
     }
     
     /**
      * Build query string
      * 
+     * @deprecated
      * @static
      * @access  public
-     * @deprecated
      * @param   mixed   $values
      * @return  string 
      */
     public static function build_get_query($values) 
     {
-        return \Hybrid\Uri::build_get_query($values);
+        return Uri::build_get_query($values);
     }
 
 }
-
-/* End of file pagination.php */

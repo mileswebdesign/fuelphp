@@ -26,16 +26,16 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
  
-class Chart_Pie extends Chart {
-
+class Chart_Pie extends Chart_Driver 
+{
     public function __construct() 
     {
         parent::__construct();
 
-        $this->set_options(\Config::get('visualization.chart.pie', array()));
+        $this->set_options(\Config::get('chart.pie', array()));
     }
 
-    public function generate($width = '100%', $height = '300px') 
+    public function render($width = '100%', $height = '300px') 
     {
         $columns    = $this->columns;
         $rows       = $this->rows;
@@ -45,7 +45,7 @@ class Chart_Pie extends Chart {
 
         $options    = json_encode($this->options);
 
-        $id         = 'pie_' . md5($columns . $rows . time() . microtime());
+        $id         = 'pie_'.md5($columns.$rows.time().microtime());
 
         return <<<SCRIPT
 <div id="{$id}" style="width:{$width}; height:{$height};"></div>

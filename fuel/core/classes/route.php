@@ -1,6 +1,6 @@
 <?php
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
+ * Part of the Fuel framework.
  *
  * @package    Fuel
  * @version    1.0
@@ -12,7 +12,8 @@
 
 namespace Fuel\Core;
 
-class Route {
+class Route
+{
 
 	public $segments = array();
 
@@ -32,13 +33,15 @@ class Route {
 
 	public $translation = null;
 
+	public $callable = null;
+
 	protected $search = null;
 
 	public function __construct($path, $translation = null)
 	{
 		$this->path = $path;
 		$this->translation = ($translation === null) ? $path : $translation;
-		$this->search = ($translation === null) ? $path : $this->compile();
+		$this->search = ($translation == stripslashes($path)) ? $path : $this->compile();
 	}
 
 	protected function compile()
@@ -48,8 +51,21 @@ class Route {
 			return '';
 		}
 
-		$search = str_replace(array(':any', ':segment'), array('.+', '[^/]*'), $this->path);
-		return preg_replace('|:([a-z\_]+)|uD', '(?P<$1>.+?)', $search);
+		$search = str_replace(array(
+			':any',
+			':alnum',
+			':num',
+			':alpha',
+			':segment',
+		), array(
+			'.+',
+			'[[:alnum:]]+',
+			'[[:digit:]]+',
+			'[[:alpha:]]+',
+			'[^/]*',
+		), $this->path);
+					
+		return preg_replace('#(?<!\[\[):([a-z\_]+)(?!:\]\])#uD', '(?P<$1>.+?)', $search);
 	}
 
 	/**
@@ -87,13 +103,6 @@ class Route {
 	 */
 	public function matched($uri = '', $named_params = array())
 	{
-		$path = $this->translation;
-
-		if ($uri != '')
-		{
-			$path = preg_replace('#^'.$this->search.'$#uD', $this->translation, $uri);
-		}
-
 		// Clean out all the non-named stuff out of $named_params
 		foreach($named_params as $key => $val)
 		{
@@ -104,7 +113,22 @@ class Route {
 		}
 
 		$this->named_params = $named_params;
-		$this->segments = explode('/', trim($path, '/'));
+
+		if ($this->translation instanceof \Closure)
+		{
+			$this->callable = $this->translation;
+		}
+		else
+		{
+			$path = $this->translation;
+
+			if ($uri != '')
+			{
+				$path = preg_replace('#^'.$this->search.'$#uD', $this->translation, $uri);
+			}
+
+			$this->segments = explode('/', trim($path, '/'));
+		}
 
 		return $this;
 	}

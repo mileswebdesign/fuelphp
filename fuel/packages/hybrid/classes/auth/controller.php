@@ -33,8 +33,8 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Auth_Controller extends \Controller {
-    
+class Auth_Controller extends \Controller 
+{    
     public function before()
     {
         parent::before();
@@ -43,14 +43,24 @@ class Auth_Controller extends \Controller {
         \Config::load('autho', 'autho');
     }
 
-    public function action_session($provider)
+    public function action_session($provider = array())
     {
-        Auth_Strategy::factory($provider)->authenticate();
+        if (empty($provider))
+        {
+            throw new \HttpNotFoundException();
+        }
+
+        Auth_Strategy::forge($provider)->authenticate();
     }
 
-    public function action_callback($provider)
+    public function action_callback($provider = array())
     {
-        $strategy = Auth_Strategy::factory($provider);
+        if (empty($provider))
+        {
+            throw new \HttpNotFoundException();
+        }
+        
+        $strategy = Auth_Strategy::forge($provider);
         
         Auth_Strategy::login_or_register($strategy);
     }

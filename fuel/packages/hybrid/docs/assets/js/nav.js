@@ -18,14 +18,18 @@ var nav = {
 
 		"Classes": {
 			"Acl": 					"classes/acl.html",
+			/*"Chart": 				"classes/chart.html",*/
 			"Curl": 				"classes/curl.html",
-			//"Factory": 				"classes/factory.html",
+			/*"Currency": 			"classes/currency.html",*/
+			"Factory": 				"classes/factory.html",
 			"Input": 				"classes/input.html",
 			"Html": 				"classes/html.html",
 			"Pagination": 			"classes/pagination.html",
+			"Parser": 				"classes/parser.html",
 			"Request": 				"classes/request.html",
 			"Restserver": 			"classes/restserver.html",
 			"Swiftmail": 			"classes/swiftmail.html",
+			/*"Tabs": 				"classes/tabs.html",*/
 			"Uri": 					"classes/uri.html",
 			"View": 				"classes/view.html"
 		},
@@ -39,36 +43,25 @@ var nav = {
 				"OAuth/OAuth2": 	"auth/oauth.html"
 			}
 		},
-		/*
-		"Chart" : {
-			"Introduction": 		"chart/todo.html"
-		},*/
 
 		"Controller": {
-			"Introduction": 		"controller/todo.html",
+			"Introduction": 		"controller/introduction.html",
+			/*
 			"Usage": {
-				"Basic": 			"controller/todo.html",
-				"Rest": 			"controller/todo.html",
 				"Hybrid": 			"controller/todo.html",
 				"Frontend": 		"controller/todo.html"
 			},
-			"Using Template": 		"controller/todo.html",
-			"Using ACL": 			"controller/using_acl.html"
+			"Using Template": 		"controller/todo.html"*/
 		},
 		
 		/*
 		"Template": {
 			"Introduction": 		"template/todo.html"
-		},
+		}, */
 
-		"Parser": {
-			"Introduction": 		"parser/todo.html",
-			"Driver types": {
-				"Markdown": 		"parser/todo.html"
-			}
-		},*/
-
-		"Refine": {}
+		"Refine": {
+			"Autho": 				"refine/autho.html"
+		}
 
 };
 
@@ -78,25 +71,19 @@ function show_nav(page, path)
 	active_path = window.location.pathname;
 	path = path == null ? '' : path;
 	$.each(nav, function(section,links) {
-		var h3 = $('<h3></h3>');
-		h3.addClass('collapsible').html(section);
-		h3.attr('id', 'nav_'+section.toLowerCase().replace(' ', ''));
-		h3.bind('click', function() {
-			$(this).next('div').slideToggle();
-		});
+		
+		var li = $('<li>')
+			.addClass('dropdown')
+			.attr('id', 'nav_'+section.toLowerCase().replace(' ', ''));
+		var a  = $('<a href="#"/>').addClass('menu').html(section).appendTo(li);
 
-		$('#main-nav').append(h3);
-		var div = $('<div></div>');
-		if ('nav_'+page != h3.attr('id')) {
-			div.hide();
-		}
-
-		var ul = div.append('<ul></ul>');
-		ul.find('ul').append(generate_nav(path, links));
-
-		$('#main-nav').append(div);
-		$('#main-nav').find('#nav_'+page).next('div').slideDown();
+		$('#topbar > ul').append(li);
+		
+		var ul = $('<ul>').addClass('dropdown-menu').appendTo(li);
+		ul.append(generate_nav(path, links));
 	});
+
+	$('#topbar').dropdown();
 }
 
 //generate the navigation

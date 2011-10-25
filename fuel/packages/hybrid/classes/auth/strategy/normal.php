@@ -33,15 +33,15 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Auth_Strategy_Normal extends Auth_Strategy {
-
+class Auth_Strategy_Normal extends Auth_Strategy 
+{
     public $provider = null;
 
     public function __construct($provider)
     {
         parent::__construct($provider);
 
-        $this->provider = Auth_Provider_Normal::factory();
+        $this->provider = Auth_Provider_Normal::forge();
 
         return $this;
     }
@@ -49,18 +49,18 @@ class Auth_Strategy_Normal extends Auth_Strategy {
     public function authenticate()
     {
         // get user data from cookie
-        $users              = \Cookie::get('_users');
+        $users = \Cookie::get('_users');
 
         // user data shouldn't be null if there user authentication available, if not populate from default
-        if (!is_null($users)) 
+        if (null !== $users) 
         {
-            $users          = unserialize(\Crypt::decode($users));
+            $users = unserialize(\Crypt::decode($users));
         }
         else
         {
-            $users          = new \stdClass();
-            $users->id      = 0;
-            $users->_hash   = '';
+            $users        = new \stdClass();
+            $users->id    = 0;
+            $users->_hash = '';
         }
 
         $this->provider->access_token((array) $users);

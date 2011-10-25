@@ -30,11 +30,11 @@ namespace Hybrid;
  * @package     Fuel
  * @subpackage  Hybrid
  * @category    Auth_Strategy
- * @author      Mior Muhammad Zaki <crynobone@gmail.com>
+ * @author      Phil Sturgeon <https://github.com/philsturgeon>
  */
 
-abstract class Auth_Strategy {
-
+abstract class Auth_Strategy 
+{
     public $provider = null;
     public $config   = array();
     public $name     = null;
@@ -57,7 +57,7 @@ abstract class Auth_Strategy {
         
         $this->config   = \Config::get("autho.providers.{$provider}");
         
-        if (is_null($this->name))
+        if (null === $this->name)
         {
             // Attempt to guess the name from the class name
             $class_name = \Inflector::denamespace(get_class($this));
@@ -65,17 +65,24 @@ abstract class Auth_Strategy {
         }
     }
 
-    public static function factory($provider)
+    public static function forge($provider)
     {
         $strategy = \Arr::get(static::$providers, $provider);
         
-        if (!$strategy)
+        if ( ! $strategy)
         {
-            throw new \Fuel_Exception(sprintf('Provider "%s" has no strategy.', $provider));
+            throw new \FuelException(sprintf('Provider "%s" has no strategy.', $provider));
         }
         
         $class = "\Hybrid\Auth_Strategy_{$strategy}";
         return new $class($provider);
+    }
+
+    public static function factory($provider)
+    {
+        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
+
+        return static::forge($provider);
     }
 
     public static function login_or_register($strategy)
@@ -92,7 +99,7 @@ abstract class Auth_Strategy {
             $num_linked = count($accounts);
         
             // Allowed multiple providers, or not authed yet?
-            if ($num_linked === 0 or \Config::get('autho.link_multiple_providers') === true)
+            if (0 === $num_linked or true === \Config::get('autho.link_multiple_providers'))
             {
                 switch ($strategy->name)
                 {
@@ -114,7 +121,7 @@ abstract class Auth_Strategy {
             {
                 $providers = array_keys($accounts);
 
-                throw new \Fuel_Exception(sprintf('This user is already linked to "%s".', $providers[0]));
+                throw new \FuelException(sprintf('This user is already linked to "%s".', $providers[0]));
             }
         }
         // The user exists, so send him on his merry way as a user
@@ -126,7 +133,7 @@ abstract class Auth_Strategy {
                 // credentials ok, go right in
                 Auth::redirect('logged_in');
             }
-            catch (\Fuel_Exception $e)
+            catch (Auth_Exception $e)
             {
                 switch ($strategy->name)
                 {

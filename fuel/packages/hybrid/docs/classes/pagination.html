@@ -2,50 +2,88 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Pagination Class &mdash; Fuel Hybrid Documentation</title>
+    <title>Pagination Class &mdash; Hybrid for FuelPHP Documentation</title>
+    <link href="../assets/css/bootstrap.min.css" media="screen" rel="stylesheet" />
     <link href="../assets/css/main.css" media="screen" rel="stylesheet" />
     <script type="text/javascript" src="../assets/js/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="../assets/js/bootstrap-dropdown.js"></script>
     <script type="text/javascript" src="../assets/js/nav.js"></script>
-    <script type="text/javascript" src="../assets/js/highlight.pack.js"></script>
+
+    <script type="text/javascript" src="../assets/js/prettify/prettify.js"></script>
+    <link href="../assets/js/prettify/prettify.css" media="screen" rel="stylesheet" />
     <script type="text/javascript">
         $(function() {
             show_nav('classes', '../');
-            hljs.tabReplace = '    ';
-            hljs.initHighlightingOnLoad();
+            prettyPrint();
         });
     </script>
-
 </head>
 <body>
+<div class="topbar">
+    <div class="topbar-inner">
+        <div id="topbar" class="container">
+            <a href="../index.html" class="brand">Hybrid for FuelPHP Documentation</a>
+            <ul></ul>
+        </div>
+    </div>
+</div>
 
-    <header>
-        <h1>Fuel Hybrid Documentation</h1>
+<div class="container after-topbar">
+
+    <header class="page-header">
+        <h1>Pagination <small>Class</small></h1>
     </header>
 
-    <div id="main-nav"></div>
+    <p>
+        The pagination class allows you to easily setup pagination for records you display.
+    </p>
 
-    <section id="content">
-        
-        <h2 id="">Pagination Class</h2>
+    <h2>Extends</h2>
 
-        <p>
-            The pagination class allows you to easily setup pagination for records you display.
-        </p>
+    <p>
+        Pagination class extends <a href="http://fuelphp.com/docs/classes/pagination.html">Fuel\Core\Pagination</a>.
+    </p>
 
-        <h5>Extends</h5>
+    <hr />
 
-        <p>
-            Pagination class extends <a href="http://fuelphp.com/docs/classes/pagination.html">\Fuel\Core\Pagination</a>.
-        </p>
+    <div class="row">
+        <div class="span4">
+            <h2 id="how-to">How To</h2>
+        </div>
 
-    </section>
+        <div class="span12">
+            <p>
+                By default, <code>\Hybrid\Pagination</code> class use <strong>Twitter Bootstrap</strong> CSS Framework and the template configurable from <code>config/hybrid.php</code>.
+            </p>
+
+            <pre class="prettyprint lang-php">
+$config = array(
+    'pagination_url' => 'http://localhost/fuel/welcome/index/',
+    'total_items' => 10,
+    'per_page' => 5,
+    'uri_segment' => 3,
+);
+
+// Config::set('pagination', $config); // you can use this too!
+\Hybrid\Pagination::set_config($config);
+
+$data['example_data'] = DB::select('id', 'value')->from('pagination')
+    ->limit(\Hybrid\Pagination::$per_page)
+    ->offset(\Hybrid\Pagination::$offset)
+    ->execute()
+    ->as_array();
+
+$data['pagination'] = \Hybrid\Pagination::create_links();
+$this->render('welcome/index', $data);</pre>
+        </div>
+    </div>
     
-    <section id="footer">
+    <footer>
         <p>
             <a href="http://github.com/codenitive/fuel-hybrid">Fuel Hybrid Package</a> is released under the MIT license.<br />
             &copy; 2010 - 2011 Fuel Hybrid Development Team
         </p>
-    </section>
+    </footer>
 
 </body>
 </html>
