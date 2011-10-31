@@ -57,6 +57,12 @@ abstract class OAuth {
 		// Get the response
 		$response = curl_exec($remote);
 
+		if (curl_errno($remote) == 60) 
+		{ 
+			curl_setopt($remote, CURLOPT_CAINFO, PKGPATH .'oauth'.DS.'vendor'.DS.'ca_chain_bundle.crt');
+			$response = curl_exec($remote);
+		}
+
 		// Get the response information
 		$code = curl_getinfo($remote, CURLINFO_HTTP_CODE);
 
