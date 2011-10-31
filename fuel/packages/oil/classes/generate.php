@@ -71,8 +71,6 @@ class Generate
 
 		// strip whitespace and add tab
 		$export = str_replace(array('  ', 'array ('), array("\t", 'array('), var_export($config, true));
-		// strip out the key of numeric array
-		$export = preg_replace("/(\d{1,10})\s=>\s/", "", $export);
 
 		$content = <<<CONF
 <?php
@@ -86,7 +84,7 @@ CONF;
 /* End of file $file.php */
 CONF;
 		
-		$module = \Cli::option('module');
+		$module = \Cli::option('module', \Cli::option('m'));
 		
 		// get the namespace path (if available)
 		if ( ! empty($module) and $path = \Autoloader::namespace_path('\\'.ucfirst($module)))
