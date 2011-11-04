@@ -1015,7 +1015,7 @@ class Model implements \ArrayAccess, \Iterator {
 		{
 			if ( ! (in_array($p, $primary_key) and is_null($this->{$p})))
 			{
-				$query->set($p, $this->_data[$p]);
+				$query->set($p, $this->{$p});
 			}
 		}
 
@@ -1026,9 +1026,9 @@ class Model implements \ArrayAccess, \Iterator {
 		if (count($primary_key) == 1 and $id !== false)
 		{
 			$pk = reset($primary_key);
-			if ($this->_data[$pk] === null)
+			if ($this->{$pk} === null)
 			{
-				$this->_data[$pk] = $id;
+				$this->{$pk} = $id;
 			}
 		}
 
@@ -1074,7 +1074,7 @@ class Model implements \ArrayAccess, \Iterator {
 		{
 			if ( ! in_array($p, $primary_key))
 			{
-				$query->set($p, $this->_data[$p]);
+				$query->set($p, isset($this->_data[$p]) ? $this->_data[$p] : null);
 			}
 		}
 
@@ -1245,13 +1245,13 @@ class Model implements \ArrayAccess, \Iterator {
 					return true;
 				}
 			}
-			elseif (isset($relations[$p]))
+			elseif (isset($relations[$p]) and isset($this->_original_relations[$p]))
 			{
 				if ($relations[$p]->singular)
 				{
-					if (empty($this->_original_relations[$p]) !== empty($this->{$p})
+					if (empty($this->_original_relations[$p]) !== empty($this->_data_relations[$p])
 						or ( ! empty($this->_original_relations[$p])
-							and $this->_original_relations[$p] !== $this->{$p}->implode_pk($this->{$p})))
+							and $this->_original_relations[$p] !== $this->_data_relations[$p]->implode_pk($this->{$p})))
 					{
 						return true;
 					}
