@@ -40,15 +40,17 @@ abstract class Auth_Strategy
     public $name     = null;
     
     protected static $providers = array(
-        'normal'   => 'Normal',
-        'facebook' => 'OAuth2',
-        'twitter'  => 'OAuth',
-        'dropbox'  => 'OAuth',
-        'flickr'   => 'OAuth',
-        'google'   => 'OAuth',
-        'github'   => 'OAuth2',
-        'linkedin' => 'OAuth',
-        'youtube'  => 'OAuth',
+        'normal'    => 'Normal',
+        'facebook'  => 'OAuth2',
+        'twitter'   => 'OAuth',
+        'dropbox'   => 'OAuth',
+        'flickr'    => 'OAuth',
+        'gmail'     => 'OAuth',
+        'google'    => 'OAuth2',
+        'github'    => 'OAuth2',
+        'linkedin'  => 'OAuth',
+        'unmagnify' => 'OAuth2',
+        'youtube'   => 'OAuth',
     );
 
     public function __construct($provider)

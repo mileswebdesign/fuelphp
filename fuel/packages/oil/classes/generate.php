@@ -33,10 +33,15 @@ class Generate
 		'int' => 11
 	);
 
-	public static function config($args, $build = true)
+	public static function config($args)
 	{
 		$args = self::_clear_args($args);
 		$file = strtolower(array_shift($args));
+
+		if ( ! $file)
+		{
+			throw new Exception('No config name was provided.');
+		}
 
 		$config = array();
 
@@ -67,7 +72,7 @@ class Generate
 			}
 		}
 
-		$overwrite = \Cli::option('o') or \Cli::option('overwrite');
+		$overwrite = (\Cli::option('o') or \Cli::option('overwrite'));
 
 		// strip whitespace and add tab
 		$export = str_replace(array('  ', 'array ('), array("\t", 'array('), var_export($config, true));
@@ -102,7 +107,7 @@ CONF;
 
 		if ( ! $overwrite and is_file($path))
 		{
-			throw new Exception("{$path_name}config/{$file}.php already exist, please use -overwrite option to force update");
+			throw new Exception("{$path_name}config/{$file}.php already exist, please use --overwrite option to force update");
 		}
 
 		$path = pathinfo($path);
