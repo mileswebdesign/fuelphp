@@ -39,6 +39,7 @@ class Restserver
         'xml'        => 'application/xml',
         'rawxml'     => 'application/xml',
         'json'       => 'application/json',
+        'jsonp'      => 'text/javascript',
         'serialized' => 'application/vnd.php.serialized',
         'php'        => 'text/plain',
         'html'       => 'text/html',
@@ -55,7 +56,7 @@ class Restserver
     public static $pattern = '';
 
     /**
-     * Only called once 
+     * Load the configuration before anything else.
      * 
      * @static
      * @access  public
@@ -401,15 +402,15 @@ class Restserver
     protected static function detect_format()
     {
         // A format has been passed as an argument in the URL and it is supported
-        if (Input::get_post('format') and static::$supported_formats[Input::get_post('format')])
+        if (Input::param('format') and static::$supported_formats[Input::param('format')])
         {
-            return Input::get_post('format');
+            return Input::param('format');
         }
 
         // Otherwise, check the HTTP_ACCEPT (if it exists and we are allowed)
         $http_accept = Input::server('HTTP_ACCEPT');
 
-        if (\Config::get('rest.ignore_http_accept') === false and $http_accept)
+        if (\Config::get('rest.ignore_http_accept') !== false and $http_accept)
         {
 
             // Check all formats against the HTTP_ACCEPT header

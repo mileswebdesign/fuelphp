@@ -38,6 +38,12 @@ namespace Hybrid;
      */
     protected static $instances = array();
 
+    /**
+     * Load the configuration before anything else.
+     *
+     * @static
+     * @access  public
+     */
     public static function _init()
     {
         \Config::load('hybrid', 'hybrid');
@@ -188,7 +194,7 @@ namespace Hybrid;
     }
 
     /**
-     * Render self::view
+     * Shortcut to render()
      *
      * @access  public
      * @see     self::render()
