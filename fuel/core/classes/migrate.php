@@ -178,13 +178,6 @@ class Migrate
 			static::$version[$type][$name] = $ver;
 		}
 
-		// If we are migrating down to 0, but the lowest migration is above that
-		// we need to make sure we update the DB to say we are at 0
-		if ($version === 0 and static::$version[$type][$name] != $version)
-		{
-			static::_update_schema_version(static::$version[$type][$name], $version, $name, $type);
-		}
-
 		logger(Fuel::L_INFO, 'Migrated to '.$ver.' successfully.');
 
 		return static::$version[$type][$name];
@@ -228,7 +221,6 @@ class Migrate
 			$end_version = $temp_version;
 		}
 
-
 		$migrations = array();
 		foreach ($files as $index => $file)
 		{
@@ -238,6 +230,7 @@ class Migrate
 			{
 				if ($end_version === null or $version <= $end_version)
 				{
+					$direction === 'down' and --$version;
 					$migrations[$version] = $full_paths[$index];
 				}
 			}
@@ -246,7 +239,7 @@ class Migrate
 
 		if ($direction === 'down')
 		{
-			$migrations = array_reverse($migrations);
+			$migrations = array_reverse($migrations, true);
 		}
 
 		return $migrations;
@@ -362,5 +355,5 @@ class Migrate
 			))->execute();
 		}
 	}
+	
 }
-
