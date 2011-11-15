@@ -198,6 +198,11 @@ class Migrate
 		$method = '_find_'.$type;
 		$files = static::$method($name);
 
+		if ( ! $files)
+		{
+			return array();
+		}
+
 		// Keep the full paths for use in the return array
 		$full_paths = $files;
 
@@ -230,7 +235,6 @@ class Migrate
 			{
 				if ($end_version === null or $version <= $end_version)
 				{
-					$direction === 'down' and --$version;
 					$migrations[$version] = $full_paths[$index];
 				}
 			}
@@ -239,6 +243,16 @@ class Migrate
 
 		if ($direction === 'down')
 		{
+			$keys = array_keys($migrations);
+
+			$replacement = $keys;
+			array_unshift($replacement, $start_version);
+
+			for ($i=0; $i < count($keys); $i++) {
+				$keys[$i] = $replacement[$i];
+			}
+
+			$migrations = array_combine($keys, $migrations);
 			$migrations = array_reverse($migrations, true);
 		}
 
@@ -355,5 +369,5 @@ class Migrate
 			))->execute();
 		}
 	}
-	
 }
+

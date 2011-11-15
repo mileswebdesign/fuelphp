@@ -187,6 +187,11 @@ CONTROLLER;
 	{
 		$singular = \Inflector::singularize(\Str::lower(array_shift($args)));
 
+		if (empty($singular) or strpos($singular, ':'))
+		{
+			throw new Exception("Command is invalid.".PHP_EOL."\tphp oil g model <modelname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]");
+		}
+
 		if (empty($args))
 		{
 			throw new Exception('No fields have been provided, the model will not know how to build the table.');
@@ -201,9 +206,32 @@ CONTROLLER;
 		// Uppercase each part of the class name and remove hyphens
 		$class_name = \Inflector::classify($singular, false);
 
+		$contents = '';
+		
+		// Turn foo:string into "id", "foo",
+		$properties = implode(",\n\t\t", array_map(function($field) {
+			
+			// Only take valid fields
+			if (($field = strstr($field, ':', true)))
+			{
+				return "'".$field."'";
+			}
+			
+		}, array_merge(array('id:int'), $args)));
+		
+		if ( ! \Cli::option('no-properties')) 
+		{
+			$contents .= <<<CONTENTS
+	protected static \$_properties = array(
+		{$properties}
+	);
+		
+CONTENTS;
+		}
+
 		if ( ! \Cli::option('orm', false))
 		{
-			$contents = <<<CONTENTS
+			$contents .= <<<CONTENTS
 
 	protected static \$_table_name = '{$plural}';
 
@@ -211,11 +239,7 @@ CONTENTS;
 			$model = <<<MODEL
 <?php
 
-namespace Model;
-
-use \Model_Crud;
-
-class {$class_name} extends Model_Crud
+class Model_{$class_name} extends \Model_Crud
 {
 {$contents}
 }
@@ -224,30 +248,9 @@ MODEL;
 		}
 		else
 		{
-			// Go through all arguments after the first and make them into field arrays
-			$fields = array();
-			foreach ($args as $arg)
+			if ( ! \Cli::option('no-timestamp')) 
 			{
-				// Parse the argument for each field in a pattern of name:type[constraint]
-				preg_match('/([a-z0-9_]+):([a-z0-9_]+)(\[([0-9]+)\])?/i', $arg, $matches);
-
-				array_push($fields, \Str::lower($matches[1]));
-			}
-			
-			$contents = '';
-
-			if ( ! \Cli::option('no-timestamp', false)) 
-			{
-				// Only add created_at or updated_at when it not passed as an arguments
-				foreach(array('created_at', 'updated_at') as $field)
-				{
-					if ( ! in_array($field, $fields))
-					{
-						array_push($fields, $field);
-					}
-				}
-
-				$contents = <<<CONTENTS
+				$contents .= <<<CONTENTS
 	
 	protected static \$_observers = array(
 		'Orm\Observer_CreatedAt' => array(
@@ -261,32 +264,6 @@ MODEL;
 	);
 CONTENTS;
 			}
-
-			// Add id as the default primary key
-			if ( ! in_array('id', $fields))
-			{
-				array_unshift($fields, 'id');
-			}
-
-			// Start generate properties list
-			$field_contents = '';
-
-			foreach ($fields as $field)
-			{
-				if (empty($field))
-				{
-					continue;
-				}
-
-				$field_contents .= "\t\t'{$field}',".PHP_EOL;
-			}
-
-			$contents = <<<CONTENTS
-	protected static \$_properties = array(
-{$field_contents}
-	);
-{$contents}
-CONTENTS;
 
 			$model = <<<MODEL
 <?php
@@ -355,6 +332,11 @@ VIEW;
 	{
 		// Get the migration name
 		$migration_name = \Str::lower(str_replace(array('-', '/'), '_', array_shift($args)));
+
+		if (empty($migration_name) or strpos($migration_name, ':'))
+		{
+			throw new Exception("Command is invalid.".PHP_EOL."\tphp oil g migration <migrationname> [<fieldname1>:<type1> |<fieldname2>:<type2> |..]");
+		}
 
 		// Check if a migration with this name already exists
 		if (count($duplicates = glob(APPPATH."migrations/*_{$migration_name}*")) > 0)
