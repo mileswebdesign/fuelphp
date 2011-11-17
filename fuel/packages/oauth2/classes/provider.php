@@ -38,6 +38,16 @@ abstract class Provider {
 	 * @var  string  uid key name
 	 */
 	public $uid_key = 'uid';
+	
+	/**
+	 * @var  string  scope separator, most use "," but some like Google are spaces
+	 */
+	public $scope_seperator = ',';
+
+	/**
+	 * @var  string  additional request parameters to be used for remote requests
+	 */
+	public $callback = null;
 
 	/**
 	 * @var  array  additional request parameters to be used for remote requests
@@ -68,6 +78,11 @@ abstract class Provider {
 		if ( ! $this->client_id = \Arr::get($options, 'id'))
 		{
 			throw new Exception('Required option not provided: id');
+		}
+		
+		if (isset($options['callback']))
+		{
+			$this->callback = $options['callback'];
 		}
 		
 		$this->client_secret = \Arr::get($options, 'secret');
@@ -115,16 +130,14 @@ abstract class Provider {
 	{
 		$state = md5(uniqid(rand(), TRUE));
 		\Session::set('state', $state);
-			
-		$params = array(
-			'client_id' => $this->client_id,
-			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
-			'state' => $state,
-			'response_type' => 'code',
-			'scope' => $this->scope,
-		);
 		
-		$url = $this->url_authorize().'?'.http_build_query($params);
+		$url = $this->url_authorize().'?'.http_build_query(array(
+			'client_id' 		=> $this->client_id,
+			'redirect_uri' 		=> \Arr::get($options, 'redirect_uri', $this->redirect_uri),
+			'state' 			=> $state,
+			'scope'     		=> is_array($this->scope) ? implode($this->scope_seperator, $this->scope) : $this->scope,
+			'response_type' 	=> 'code',
+		));
 		
 		\Response::redirect($url);
 	}
@@ -138,11 +151,11 @@ abstract class Provider {
 	public function access($code, $options = array())
 	{
 		$params = array(
-			'client_id' => $this->client_id,
+			'client_id' 	=> $this->client_id,
 			'client_secret' => $this->client_secret,
-			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
-			'code' => $code,
-			'grant_type' => 'authorization_code'
+			'redirect_uri' 	=> \Arr::get($options, 'redirect_uri', $this->redirect_uri),
+			'code' 			=> $code,
+			'grant_type' 	=> 'authorization_code'
 		);
 	
 		$response = null;	
@@ -156,6 +169,7 @@ abstract class Provider {
 				
 				parse_str($response, $params); 
 				break;
+				
 			case 'POST':
 				//maybe switch to use curl?
 				/*
@@ -166,8 +180,8 @@ abstract class Provider {
 				$response = $curl->post('', $params);*/
 				
 				$postdata = http_build_query($params);
-				$opts = array('http' =>
-					array(
+				$opts = array(
+					'http' => array(
 						'method'  => 'POST',
 						'header'  => 'Content-type: application/x-www-form-urlencoded',
 						'content' => $postdata

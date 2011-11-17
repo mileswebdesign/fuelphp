@@ -45,7 +45,6 @@ abstract class Auth_Strategy
 		'twitter'   => 'OAuth',
 		'dropbox'   => 'OAuth',
 		'flickr'    => 'OAuth',
-		'gmail'     => 'OAuth',
 		'google'    => 'OAuth2',
 		'github'    => 'OAuth2',
 		'linkedin'  => 'OAuth',
@@ -69,7 +68,7 @@ abstract class Auth_Strategy
 
 	public static function forge($provider)
 	{
-		$strategy = \Arr::get(static::$providers, $provider);
+		$strategy = \Config::get("autho.providers.{$provider}.strategy") ?: \Arr::get(static::$providers, $provider);
 		
 		if ( ! $strategy)
 		{
@@ -112,6 +111,10 @@ abstract class Auth_Strategy
 					case 'oauth2':
 						$user_hash = $strategy->provider->get_user_info($response->token);
 					break;
+
+					case 'openid':
+						$user_hash = $strategy->get_user_info($response);
+					break;
 				}
 
 				Auth::instance('user')->link_account($user_hash);
@@ -131,11 +134,17 @@ abstract class Auth_Strategy
 		{
 			try 
 			{
+				$secret = '';
+				if (null !== $response->secret)
+				{
+					$secret = $response->secret;
+				}
+				
 				Auth::instance('user')->login_token($response->token, $response->secret);
 				// credentials ok, go right in
 				Auth::redirect('logged_in');
 			}
-			catch (Auth_Exception $e)
+			catch (AuthException $e)
 			{
 				switch ($strategy->name)
 				{

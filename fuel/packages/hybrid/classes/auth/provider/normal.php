@@ -282,7 +282,7 @@ class Auth_Provider_Normal
 	 * @param   string  $password
 	 * @param   string  $remember_me
 	 * @return  self
-	 * @throws  Auth_Exception
+	 * @throws  AuthException
 	 */
 	public function login($username, $password, $remember_me = false)
 	{
@@ -331,13 +331,13 @@ class Auth_Provider_Normal
 		if ($this->data['id'] < 1)
 		{
 			$this->reset();
-			throw new Auth_Exception(\Lang::get('autho.user.not_exist', array('username' => $username)));
+			throw new AuthException(\Lang::get('autho.user.not_exist', array('username' => $username)));
 		}
 
 		if ($this->data['password'] !== Auth::create_hash($password))
 		{
 			$this->reset();
-			throw new Auth_Exception(\Lang::get('autho.user.bad_combination'));
+			throw new AuthException(\Lang::get('autho.user.bad_combination'));
 		}
 		
 		$this->verify_token();
@@ -368,9 +368,13 @@ class Auth_Provider_Normal
 			->from('users')
 			->join('authentications')
 			->on('authentications.user_id', '=', 'users.id')
-			->where('authentications.token', '=', $token)
-			->where('authentications.secret', '=', $secret);
-		
+			->where('authentications.token', '=', $token);
+
+		if ( ! empty($secret))
+		{
+			$query->where('authentications.secret', '=', $secret);
+		}
+
 		if (true === $this->use_auth)
 		{
 			$query->select(array('users_auths.password', 'password_token'))
@@ -400,7 +404,7 @@ class Auth_Provider_Normal
 
 		if ($this->data['id'] < 1)
 		{
-			throw new Auth_Exception(\Lang::get('autho.user.not_linked'));
+			throw new AuthException(\Lang::get('autho.user.not_linked'));
 		}
 
 		$this->verify_token();

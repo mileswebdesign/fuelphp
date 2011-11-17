@@ -32,6 +32,9 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
+class AuthException extends \FuelException {}
+class AuthCancelException extends AuthException {}
+
 class Auth 
 {
 	/**
@@ -179,7 +182,7 @@ class Auth
 
 			case 'sha1' :
 			default :
-				return \sha1($salt.$string);
+				return sha1($salt.$string);
 		}
 	}
 
@@ -304,7 +307,7 @@ class Auth
 		// some provider does not have secret key
 		if ( ! isset($user_data['credentials']['secret']))
 		{
-			$user_data['credentials']['secret'] = null;
+			$user_data['credentials']['secret'] = '';
 		}
 
 		if ($user_id < 1)
