@@ -151,7 +151,7 @@ abstract class Auth_Strategy
 				{
 					Auth::instance('user')->link_account($user_hash);
 					
-					Event::trigger('link_authentication', $user_hash);
+					\Event::trigger('link_authentication', $user_hash);
 				}
 				catch (AuthException $e)
 				{
@@ -189,7 +189,7 @@ abstract class Auth_Strategy
 
 				Auth::instance('user')->login_token($response->token, $response->secret);
 
-				Event::trigger('link_authentication', $user_hash);
+				\Event::trigger('link_authentication', $user_hash);
 
 				// credentials ok, go right in
 				Auth::redirect('logged_in');
@@ -272,18 +272,18 @@ abstract class Auth_Strategy
 
 		switch (\Config::get('autho.mysql_timestamp'))
 		{
+			case null :
+			default :
+				$date = null;
+			break;
+
 			case false :
 				$date = $date->get_timestamp();
 			break;
 
 			case true :
 				$date = $date->format('mysql');
-			break;
-			 
-			case null :
-			default :
-				$date = null;
-			break;	 	
+			break;	
 		}
 
 		$update = array(
