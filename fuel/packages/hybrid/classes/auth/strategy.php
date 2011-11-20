@@ -30,9 +30,15 @@ namespace Hybrid;
  * @package     Fuel
  * @subpackage  Hybrid
  * @category    Auth_Strategy
- * @author      Phil Sturgeon <https://github.com/philsturgeon>
  */
 
+/**
+ * Auth Strategy Class taken from NinjAuth Package for FuelPHP
+ *
+ * @package     NinjAuth
+ * @author      Phil Sturgeon <https://github.com/philsturgeon>
+ */
+ 
 abstract class Auth_Strategy 
 {
 	public $provider = null;
@@ -118,7 +124,7 @@ abstract class Auth_Strategy
 	 * Determine whether authenticated user should be continue to login or register new user
 	 *
 	 * @static
-	 * @access 	public
+	 * @access  public
 	 * @param   object   $strategy
 	 * @return  void
 	 * @throws  Auth_Strategy_Exception
@@ -164,6 +170,9 @@ abstract class Auth_Strategy
 		// The user exists, so send him on his merry way as a user
 		else 
 		{
+
+			$user_hash = static::get_user_info($strategy, $response);
+			
 			try 
 			{
 				$secret = '';
@@ -171,15 +180,21 @@ abstract class Auth_Strategy
 				{
 					$secret = $response->secret;
 				}
-				
+
+				// google for instance has an limited time entry
+				switch ($strategy->name) 
+				{
+					case 'google' :
+						static::reset_access_token($user_hash);
+					break;
+				}
+
 				Auth::instance('user')->login_token($response->token, $response->secret);
 				// credentials ok, go right in
 				Auth::redirect('logged_in');
 			}
 			catch (AuthException $e)
 			{
-				$user_hash = static::get_user_info($strategy, $response);
-				
 				\Session::set('autho', $user_hash);
 
 				Auth::redirect('registration');
@@ -191,7 +206,7 @@ abstract class Auth_Strategy
 	 * Get user information from provider
 	 *
 	 * @static
-	 * @access 	protected
+	 * @access  protected
 	 * @param   object      $strategy
 	 * @param   object      $response
 	 * @return  array
@@ -218,6 +233,47 @@ abstract class Auth_Strategy
 		}
 
 		return $user_hash;
+	}
+
+	/**
+	 * Certain provider use a limited access token, we need to reassign new access token if these provider
+	 *
+	 * @static
+	 * @access  protected
+	 * @param   array      $user_hash
+	 * @return  mixed
+	 * @throws  AuthException
+	 */
+	protected static function reset_access_token($user_hash)
+	{
+		if (empty($user_data) or ! isset($user_data['credentials']))
+		{
+			return ;
+		}
+		
+		$credentials = $user_data['credentials'];
+
+		// some provider does not have secret key
+		if ( ! isset($credentials['secret']) or null === $credentials['secret'])
+		{
+			$credentials['secret'] = '';
+		}
+
+		foreach (array('uid', 'token') as $field)
+		{
+			if ( ! isset($credentials[$field]) or null === $credentials[$field])
+			{
+				throw new AuthException("Missing required information: {$field}");
+			}
+		}
+
+		\DB::update('authentications')->set(array(
+				'token'    => $credentials['token'],
+				'secret'   => $credentials['secret'],
+			))
+			->where('uid', '=', $credentials['uid'])
+			->where('provider', '=', $credentials['provider'])
+			->execute();
 	}
 
 	abstract public function authenticate();
