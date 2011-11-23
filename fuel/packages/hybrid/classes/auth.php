@@ -299,17 +299,15 @@ class Auth
 	 */
 	public static function link_account($user_id, $user_data)
 	{
-		if (empty($user_data) or ! isset($user_data['credentials']))
+		$provider = null;
+		$token    = null;
+		$info     = null;
+
+		extract($user_data);
+
+		if (empty($token) or empty($info))
 		{
 			return ;
-		}
-		
-		$credentials = $user_data['credentials'];
-		
-		// some provider does not have secret key
-		if ( ! isset($credentials['secret']) or null === $credentials['secret'])
-		{
-			$credentials['secret'] = '';
 		}
 
 		if ($user_id < 1)
@@ -317,75 +315,46 @@ class Auth
 			return ;
 		}
 
-		foreach (array('uid', 'token') as $field)
+		foreach (array('uid' => 'info', 'access_token' => 'token') as $field => $source)
 		{
-			if ( ! isset($credentials[$field]) or null === $credentials[$field])
+			if ( ! isset($user_data[$source][$field]) or null === $user_data[$source][$field])
 			{
 				throw new AuthException("Missing required information: {$field}");
 			}
 		}
 
-		\DB::select()
-			->from('authentications')
-			->where('user_id', '=', $user_id)
-			->where('provider', '=', $credentials['provider'])
-			->execute();
+		$auth = Auth_Model_Authentication::find(array(
+			'where' => array(
+				array('user_id', $user_id),
+				array('provider', $provider)
+			),
+			'limit' => 1,
+		), 0);
 
-		$date = \Date::time();
-
-		switch (\Config::get('autho.mysql_timestamp'))
-		{ 
-			case null :
-			default :
-				$date = null;
-			break;
-
-			case false :
-				$date = $date->get_timestamp();
-			break;
-
-			case true :
-				$date = $date->format('mysql');
-			break;
-		}
+		$values = array(
+			'uid'           => $info['uid'],
+			'access_token'  => isset($token->access_token) ? $token->access_token : '',
+			'secret'        => isset($token->secret) ? $token->secret : '',
+			'expires'       => isset($token->expires) ? $token->expires : -1,
+			'refresh_token' => isset($token->refresh_token) ? $token->refresh_token : '',
+		);
 
 		// Attach this account to the logged in user
-		if (\DB::count_last_query() > 0)
+		if (null !== $auth)
 		{
-			$update = array(
-				'uid'      => $credentials['uid'],
-				'token'    => $credentials['token'],
-				'secret'   => $credentials['secret'],
-			);
-
-			if (null !== $date)
-			{
-				$update['updated_at'] = $date;
-			}
-
-			\DB::update('authentications')->set($update)
-				->where('user_id', '=', $user_id)
-				->where('provider', '=', $credentials['provider'])
-				->execute();
+			$auth->set($values);
 		}
 		else
 		{
-			$insert = array(
+			$values = array(
 				'user_id'  => $user_id,
-				'provider' => $credentials['provider'],
-				'uid'      => $credentials['uid'],
-				'token'    => $credentials['token'],
-				'secret'   => $credentials['secret'],
-			);
+				'provider' => $provider,
+			) + $values;
 
-			if (null !== $date)
-			{
-				$insert['created_at'] = $date;
-				$insert['updated_at'] = $date;
-			}
-
-			\DB::insert('authentications')->set($insert)->execute();
+			$auth = Auth_Model_Authentication::forge($values);
 		}
+
+		$auth->save();
 
 		return true;
 	}

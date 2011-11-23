@@ -1,27 +1,31 @@
 <?php
 
-namespace OAuth2;
+namespace OAuth;
 
-class Provider_Google extends Provider {  
-	
+class Provider_Google extends Provider {
+
 	public $name = 'google';
-
-	public $uid_key = 'uid';
 	
-	public $method = 'POST';
-
+	/**
+	 * @var  string  scope separator, most use "," but some like Google are spaces
+	 */
 	public $scope_seperator = ' ';
+
+	public function url_request_token()
+	{
+		return 'https://www.google.com/accounts/OAuthGetRequestToken';
+	}
 
 	public function url_authorize()
 	{
-		return 'https://accounts.google.com/o/oauth2/auth';
+		return 'https://www.google.com/accounts/OAuthAuthorizeToken';
 	}
 
 	public function url_access_token()
 	{
-		return 'https://accounts.google.com/o/oauth2/token';
+		return 'https://www.google.com/accounts/OAuthGetAccessToken';
 	}
-
+	
 	public function __construct(array $options = array())
 	{
 		// Now make sure we have the default scope to get user data
@@ -37,30 +41,19 @@ class Provider_Google extends Provider {
 		
 		parent::__construct($options);
 	}
-
-	/*
-	* Get access to the API
-	*
-	* @param	string	The access code
-	* @return	object	Success or failure along with the response details
-	*/	
-	public function access($code, $options = array())
+	
+	public function get_user_info(Consumer $consumer, Token $token)
 	{
-		if (null === $code)
-		{
-			throw new Exception('Expected Authorization Code from '.ucfirst($this->name).' is missing');
-		}
-
-		return parent::access($code, $options);
-	}
-
-	public function get_user_info(Token $token)
-	{
-		$url = 'https://www.google.com/m8/feeds/contacts/default/full?max-results=1&alt=json&'.http_build_query(array(
-			'access_token' => $token->access_token,
+		// Create a new GET request with the required parameters
+		$request = Request::forge('resource', 'GET', 'https://www.google.com/m8/feeds/contacts/default/full?max-results=1&alt=json', array(
+			'oauth_consumer_key' => $consumer->key,
+			'oauth_token' => $token->token,
 		));
-		
-		$response = json_decode(file_get_contents($url), true);
+
+		// Sign the request using the consumer and token
+		$request->sign($this->signature, $consumer, $token);
+
+		$response = json_decode($request->execute(), true);
 		
 		// Fetch data parts
 		$email = \Arr::get($response, 'feed.id.$t');
@@ -78,4 +71,5 @@ class Provider_Google extends Provider {
 			'urls' => array(),
 		);
 	}
-}
+
+} // End Provider_Gmail
