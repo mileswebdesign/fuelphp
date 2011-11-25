@@ -59,9 +59,25 @@ class Token {
 			throw new Exception('Required option not passed: access_token'.PHP_EOL.print_r($options, true));
 		}
 		
-		if ( ! isset($options['expires_in']))
+		$expires_in = 0;
+
+		switch (true)
 		{
-			throw new Exception('We do not know when this access_token will expire');
+			case isset($options['expires_in']) :
+				// for Google (@see http://code.google.com/apis/accounts/docs/OAuth2Login.html)
+				$expires_in = $options['expires_in'];
+			break;
+			
+			case isset($options['expires']) :
+				// for Facebook (@see http://developers.facebook.com/docs/authentication/)
+				$expires_in = $options['expires'];
+			break;
+
+			default :
+				// for Github (@see http://developer.github.com/v3/oauth/)
+				// use the largest time() value supported by Cookie
+				$expires_in =  pow(2,31) - 1;
+			break;
 		}
 
 		$this->access_token = $options['access_token'];
@@ -70,7 +86,7 @@ class Token {
 		\Arr::get($options, 'uid') and $this->uid = $options['uid'];
 		
 		// We need to know when the token expires, add num. seconds to current time
-		\Arr::get($options, 'expires_in') and $this->expires = time() + ((int) $options['expires_in']);
+		$this->expires = time() + ((int) $expires_in);
 		
 		// Grab a refresh token so we can update access tokens when they expires
 		\Arr::get($options, 'refresh_token') and $this->refresh_token = $options['refresh_token'];
