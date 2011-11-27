@@ -83,7 +83,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 
 		\Event::trigger('controller_before');
 		
-		if (Request::main() !== Request::active()) 
+		if (Request::is_hmvc()) 
 		{
 			$this->set_content_type = false;
 		}
@@ -150,7 +150,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 	 */
 	protected function response($data = array(), $http_code = 200) 
 	{
-		$rest_server = Restserver::forge($data, $http_code)
+		$rest_server = Restserver::make($data, $http_code)
 			->format($this->rest_format)
 			->execute();
 		

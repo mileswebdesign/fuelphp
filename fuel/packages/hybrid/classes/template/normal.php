@@ -49,7 +49,23 @@ class Template_Normal extends Template_Driver
 			$driver .= ".{$name}";
 		}
 
-		return Template::forge($driver);
+		return Template::make($driver);
+	}
+
+	/**
+	 * Initiate a new template using make
+	 *
+	 * Example:
+	 * <code>$template = \Hybrid\Template_Normal::make();</code>
+	 *
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  void
+	 */
+	public static function make($name = null)
+	{
+		return static::forge($name);
 	}
 
 	/**
