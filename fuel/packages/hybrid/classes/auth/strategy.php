@@ -63,6 +63,7 @@ abstract class Auth_Strategy
 		'normal'    => 'Normal',
 		'facebook'  => 'OAuth2',
 		'twitter'   => 'OAuth',
+		'tumblr'    => 'OAuth',
 		'dropbox'   => 'OAuth',
 		'flickr'    => 'OAuth',
 		'google'    => 'OAuth2',
@@ -83,6 +84,11 @@ abstract class Auth_Strategy
 		$this->provider = $provider;
 		
 		$this->config   = \Config::get("autho.providers.{$provider}");
+
+		if ($this->config === null)
+		{
+			throw new Auth_Strategy_Exception(sprintf('Provider "%s" has no config.', $provider));
+		}
 		
 		if (null === $this->name)
 		{
@@ -161,13 +167,15 @@ abstract class Auth_Strategy
 			'info'     => $user_info,
 			'provider' => $strategy->provider->name,
 		);
+
+		$user_auth = Auth::make('user');
 		
-		if (true === Auth::instance('user')->is_logged())
+		if (true === $user_auth->is_logged())
 		{
 			// User already logged in 
-			$user_id    = Auth::instance('user')->get('id');
+			$user_id    = $user_auth->get('id');
 			
-			$accounts   = Auth::instance('user')->get('accounts');
+			$accounts   = $user_auth->get('accounts');
 			
 			$num_linked = count($accounts);
 		
@@ -176,7 +184,7 @@ abstract class Auth_Strategy
 			{
 				try 
 				{
-					Auth::instance('user')->link_account($user_data);
+					$user_auth->link_account($user_data);
 					
 					\Event::trigger('link_authentication', $user_data);
 				}
@@ -200,7 +208,7 @@ abstract class Auth_Strategy
 		{
 			try 
 			{
-				Auth::instance('user')->login_token($user_data);
+				$user_auth->login_token($user_data);
 
 				\Event::trigger('link_authentication', $user_data);
 
