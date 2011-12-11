@@ -43,6 +43,12 @@ class Auth_Driver_User extends Auth_Driver
 	 */
 	public $acl         = null;
 	
+	/**
+	 * Relation to Auth_Provider_Normal object
+	 *
+	 * @access  protected
+	 * @var     Auth_Provider_Normal
+	 */
 	protected $provider = null;
 
 	/**
@@ -65,7 +71,23 @@ class Auth_Driver_User extends Auth_Driver
 		return $this->acl;
 	}
 
-	 /**
+	/**
+	 * Get self instance from cache instead of initiating a new object if time 
+	 * we need to use this object
+	 *
+	 * @static
+	 * @deprecated  1.2.0
+	 * @access  public
+	 * @return  self
+	 */
+	public static function instance()
+	{
+		\Log::warning('This method is deprecated. Please use make() instead.', __METHOD__);
+		
+		return static::make();
+	}
+
+	/**
 	 * Get self instance from cache instead of initiating a new object if time 
 	 * we need to use this object
 	 *
@@ -73,7 +95,7 @@ class Auth_Driver_User extends Auth_Driver
 	 * @access  public
 	 * @return  self
 	 */
-	public static function instance()
+	public static function make()
 	{
 		return Auth::make('user');
 	}
@@ -231,9 +253,9 @@ class Auth_Driver_User extends Auth_Driver
 		extract($user_data);
 
 		$this->provider->data['accounts'][$provider] = array(
-			'uid'           => $info['uid'],
-			'access_token'  => isset($token->access_token) ? $token->access_token : '',
-			'secret'        => isset($token->secret) ? $token->secret : '',
+			'uid'          => $info['uid'],
+			'access_token' => isset($token->access_token) ? $token->access_token : '',
+			'secret'       => isset($token->secret) ? $token->secret : '',
 		);
 
 		return true;

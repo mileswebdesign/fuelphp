@@ -56,7 +56,7 @@ class Token {
 	{
 		if ( ! isset($options['access_token']))
 		{
-			throw new Exception('Required option not passed: access_token'.PHP_EOL.print_r($options, true));
+			throw new Exception(array('message' => 'Required option not passed: access_token'.PHP_EOL.print_r($options, true)));
 		}
 		
 		$expires_in = 0;
@@ -87,6 +87,9 @@ class Token {
 		
 		// We need to know when the token expires, add num. seconds to current time
 		$this->expires = time() + ((int) $expires_in);
+		
+		// Facebook is just being a spec ignoring jerk
+		\Arr::get($options, 'expires') and $this->expires = time() + ((int) $options['expires']);
 		
 		// Grab a refresh token so we can update access tokens when they expires
 		\Arr::get($options, 'refresh_token') and $this->refresh_token = $options['refresh_token'];
