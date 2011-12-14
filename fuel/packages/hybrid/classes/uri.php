@@ -28,47 +28,49 @@ namespace Hybrid;
 
 class Uri extends \Fuel\Core\Uri 
 {
-    /**
-     * Build query string
-     * 
-     * @static
-     * @access  public
-     * @param   mixed   $values
-     * @param   string  $start_with     Default string set to ?
-     * @return  string 
-     */
-    public static function build_get_query($values, $start_with = '?') 
-    {
-        $dataset = array ();
-        
-        $check_get_input = function($value, & $dataset) 
-        {
-            $data = Input::get($value);
-            
-            if (null === $data)
-            {
-                return false;
-            }
-            else 
-            {
-                array_push($dataset, sprintf('%s=%s', $value, $data));
-                return;
-            }
-        };
-        
-        if (is_array($values))
-        {
-            foreach ($values as $value)
-            {
-                $check_get_input($value, $dataset);
-            }
-        }
-        else 
-        {
-            $check_get_input($values, $dataset);
-        }
-        
-        return $start_with.implode('&', $dataset);
-    }
-    
+	/**
+	 * Build query string
+	 * 
+	 * @static
+	 * @access  public
+	 * @param   mixed   $data
+	 * @param   string  $start_with     Default string set to ?
+	 * @return  string 
+	 */
+	public static function build_get_query($data, $start_with = '?') 
+	{
+		$values = array();
+
+		if (is_string($data))
+		{
+			$data = array($data);
+		}
+
+		if (null === $data or ! is_array($data))
+		{
+			return '';
+		}
+
+		foreach ($data as $key => $value)
+		{
+			// Use $_GET value overwriting if given.
+			if ( ! is_numeric($key))
+			{
+				$input = $value;
+			}
+			else
+			{
+				$key   = $value;
+				$input = Input::get($value);
+			}
+			
+			if (null !== $input and ! empty($input))
+			{
+				$values[$key] = $input;
+			}
+		}
+		
+		return $start_with.http_build_query($values);
+	}
+	
 }

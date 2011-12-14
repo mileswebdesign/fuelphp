@@ -27,27 +27,34 @@ namespace Hybrid;
  * @author      Ignacio Muñoz Fernandez <nmunozfernandez@gmail.com>
  */
 
+/**
+ * Parser_Bbcode class tests
+ *
+ * @group Hybrid
+ * @group Parser_Bbcode
+ */
 class Test_Parser_Bbcode extends \Fuel\Core\TestCase 
 {
-    /**
-     * Setup the test
-     */
-    public function setup()
-    {
-        \Fuel::add_package('hybrid');
-    }
+	/**
+	 * Setup the test
+	 */
+	public function setup()
+	{
+		\Fuel::add_package('hybrid');
+	}
 
-    /**
-     * Test Parser_Bbcode::parse();
-     *
-     * @test
-     */
-    public function test_parse()
-    {
-        $text     = "[b]strong[/b][i]italic[/i]";
-        $output   = Parser::forge('Bbcode')->parse($text);
-        $expected = "<b>strong</b><i>italic</i>";
+	/**
+	 * Test Parser_Bbcode::parse();
+	 *
+	 * @test
+	 */
+	public function test_parse()
+	{
+		$text     = "[b]strong[/b][i]italic[/i]";
+		$output   = Parser::forge('Bbcode')->parse($text);
+		$expected = "<b>strong</b><i>italic</i>";
 
-        $this->assertEquals($expected, $output);
-    }
+		$this->assertEquals($expected, $output);
+	}
+	
 }

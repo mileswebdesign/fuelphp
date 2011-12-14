@@ -27,90 +27,108 @@ namespace Hybrid;
  * @category    Chart
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
- 
+
 class Chart 
 {
-    /**
-     * Cache Chart instance so we can reuse it on multiple request.
-     * 
-     * @static
-     * @access  protected
-     * @var     array
-     */
-    protected static $instances = array();
+	/**
+	 * Cache Chart instance so we can reuse it on multiple request.
+	 * 
+	 * @static
+	 * @access  protected
+	 * @var     array
+	 */
+	protected static $instances = array();
 
-    /**
-     * Initiate a new Chart_Driver instance.
-     * 
-     * @static
-     * @access  public
-     * @return  static 
-     */
-    public static function forge($name = null) 
-    {
-        if (is_null($name))
-        {
-            $name = 'default';
-        }
+	/**
+	 * Shortcode to self::make().
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make()
+	 */
+	public static function factory($name = null)
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
+		
+		return static::make($name);
+	}
 
-        $name = strtolower($name);
+	/**
+	 * Shortcode to self::make().
+	 * 
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make() 
+	 */
+	public static function forge($name = null) 
+	{
+		return static::make($name);
+	}
 
-        if ( ! isset(static::$instances[$name]))
-        {
-            $driver = '\\Hybrid\\Chart_'.ucfirst($name);
-            
-            if (class_exists($driver))
-            {
-                static::$instances[$name] = new $driver();
-            }
-            else 
-            {
-                throw new \FuelException("Requested {$driver} does not exist.");
-            }
-        }
+	/**
+	 * Get cached instance, or generate new if currently not available.
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make()
+	 */
+	public static function instance($name = null)
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
 
-        return static::$instances[$name];
-    }
+		return static::make($name);
+	}
 
-    /**
-     * Shortcode to self::forge().
-     *
-     * @deprecated  1.3.0
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  self::forge()
-     */
-    public static function factory($name = null)
-    {
-        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
-        
-        return static::forge($name);
-    }
+	/**
+	 * Initiate a new Chart_Driver instance.
+	 * 
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  Chart_Driver 
+	 * @throws  \FuelException
+	 */
+	public static function make($name = null) 
+	{
+		if (null === $name)
+		{
+			$name = 'default';
+		}
 
-    /**
-     * Get cached instance, or generate new if currently not available.
-     *
-     * @static
-     * @access  public
-     * @return  Chart_Driver
-     * @see     self::forge()
-     */
-    public static function instance($name = null)
-    {
-        return static::forge($name);
-    }
-    
-    /**
-     * Load Google JavaSript API Library
-     *
-     * @static
-     * @access  public
-     * @return  string
-     */
-    public static function js() 
-    {
-        return '<script type="text/javascript" src="https://www.google.com/jsapi"></script>';
-    }
+		$name = strtolower($name);
+
+		if ( ! isset(static::$instances[$name]))
+		{
+			$driver = "\Hybrid\Chart_".ucfirst($name);
+			
+			if (class_exists($driver))
+			{
+				static::$instances[$name] = new $driver();
+			}
+			else 
+			{
+				throw new \FuelException("Requested {$driver} does not exist.");
+			}
+		}
+
+		return static::$instances[$name];
+	}
+	
+	/**
+	 * Load Google JavaSript API Library
+	 *
+	 * @static
+	 * @access  public
+	 * @return  string
+	 */
+	public static function js() 
+	{
+		return '<script type="text/javascript" src="https://www.google.com/jsapi"></script>';
+	}
 
 }

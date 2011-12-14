@@ -17,13 +17,13 @@ abstract class Provider {
 	 * Create a new provider.
 	 *
 	 *     // Load the Twitter provider
-	 *     $provider = OAuth_Provider::factory('twitter');
+	 *     $provider = OAuth_Provider::forge('twitter');
 	 *
 	 * @param   string   provider name
 	 * @param   array    provider options
 	 * @return  OAuth_Provider
 	 */
-	public static function factory($name, array $options = NULL)
+	public static function forge($name, array $options = null)
 	{	
 		$class = 'OAuth2\\Provider_'.\Inflector::classify($name);
 		return new $class($options);
@@ -38,6 +38,16 @@ abstract class Provider {
 	 * @var  string  uid key name
 	 */
 	public $uid_key = 'uid';
+	
+	/**
+	 * @var  string  scope separator, most use "," but some like Google are spaces
+	 */
+	public $scope_seperator = ',';
+
+	/**
+	 * @var  string  additional request parameters to be used for remote requests
+	 */
+	public $callback = null;
 
 	/**
 	 * @var  array  additional request parameters to be used for remote requests
@@ -57,7 +67,7 @@ abstract class Provider {
 	 * @param   array   provider options
 	 * @return  void
 	 */
-	public function __construct(array $options = NULL)
+	public function __construct(array $options = array())
 	{
 		if ( ! $this->name)
 		{
@@ -67,9 +77,10 @@ abstract class Provider {
 		
 		if ( ! $this->client_id = \Arr::get($options, 'id'))
 		{
-			throw new Exception('Required option not provided: id');
+			throw new Exception(array('message' => 'Required option not provided: id'));
 		}
 		
+		$this->callback = \Arr::get($options, 'callback');
 		$this->client_secret = \Arr::get($options, 'secret');
 		$this->scope = \Arr::get($options, 'scope');
 		
@@ -115,16 +126,14 @@ abstract class Provider {
 	{
 		$state = md5(uniqid(rand(), TRUE));
 		\Session::set('state', $state);
-			
-		$params = array(
-			'client_id' => $this->client_id,
-			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
-			'state' => $state,
-			'response_type' => 'code',
-			'scope' => $this->scope,
-		);
 		
-		$url = $this->url_authorize().'?'.http_build_query($params);
+		$url = $this->url_authorize().'?'.http_build_query(array(
+			'client_id' 		=> $this->client_id,
+			'redirect_uri' 		=> \Arr::get($options, 'redirect_uri', $this->redirect_uri),
+			'state' 			=> $state,
+			'scope'     		=> is_array($this->scope) ? implode($this->scope_seperator, $this->scope) : $this->scope,
+			'response_type' 	=> 'code',
+		));
 		
 		\Response::redirect($url);
 	}
@@ -138,36 +147,49 @@ abstract class Provider {
 	public function access($code, $options = array())
 	{
 		$params = array(
-			'client_id' => $this->client_id,
+			'client_id' 	=> $this->client_id,
 			'client_secret' => $this->client_secret,
-			'redirect_uri' => \Arr::get($options, 'redirect_uri', $this->redirect_uri),
-			'code' => $code,
-			'grant_type' => 'authorization_code'
+			'grant_type' 	=> \Arr::get($options, 'grant_type', 'authorization_code'),
 		);
+	
+		switch ($params['grant_type'])
+		{
+			case 'authorization_code':
+				$params['code'] = $code;
+				$params['redirect_uri'] = \Arr::get($options, 'redirect_uri', $this->redirect_uri);
+			break;
+			
+			case 'refresh_token':
+				$params['refresh_token'] = $code;
+			break;
+		}
+		
 	
 		$response = null;	
 		$url = $this->url_access_token();
 		
-		switch($this->method)
+		// Get ready to make a request
+		// $request = \Request::forge($url, 'curl');
+		// 
+		// $request->set_params($params);
+		
+		switch ($this->method)
 		{
 			case 'GET':
+			
+				// Need to switch to Request library, but need to test it on one that works
 				$url .= '?'.http_build_query($params);
 				$response = file_get_contents($url);
 				
-				parse_str($response, $params); 
-				break;
+				parse_str($response, $body); 
+			
+			break;
+				
 			case 'POST':
-				//maybe switch to use curl?
-				/*
-				$curl = \Rest::forge('oauth2', array(
-					'server' => $url,
-					'method' => 'curl'
-				));
-				$response = $curl->post('', $params);*/
 				
 				$postdata = http_build_query($params);
-				$opts = array('http' =>
-					array(
+				$opts = array(
+					'http' => array(
 						'method'  => 'POST',
 						'header'  => 'Content-type: application/x-www-form-urlencoded',
 						'content' => $postdata
@@ -175,19 +197,48 @@ abstract class Provider {
 				);
 				$context  = stream_context_create($opts);
 				$response = file_get_contents($url, false, $context);
-				
+
 				$params = get_object_vars(json_decode($response));
-				break;
+				
+				/*
+				Fuck the request class
+				try
+				{
+					$request->set_header('Accept', 'application/json');
+					$request->set_method('POST');
+					$request = $request->execute();
+				}
+				catch (RequestException $e)
+				{
+					\Debug::dump($request->response());
+					exit;
+				}
+				catch (HttpNotFoundException $e)
+				{
+					\Debug::dump($request->response());
+					exit;
+				}
+			
+				$response = $request->response();
+				
+				logger(\Fuel::L_INFO, 'Access token response: '.print_r($body, true), __METHOD__);
+				
+				// Try to get the actual response, its hopefully an array
+				$body = $response->body();
+				*/
+				
+			break;
+				
 			default:
 				throw new \OutOfBoundsException("Method '{$this->method}' must be either GET or POST");
 		}
 		
 		if (isset($params['error']))
 		{
-			throw new Exception($params);
+			throw new \Exception($params);
 		}
 		
-		return $params;
+		return Token::forge($params);
 	}
 
 }

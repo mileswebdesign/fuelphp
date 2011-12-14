@@ -44,7 +44,8 @@ abstract class ViewModel
 	 */
 	public static function forge($viewmodel, $method = 'view', $auto_filter = null)
 	{
-		$class = ucfirst(\Request::active()->module).'\\View_'.ucfirst(str_replace(array('/', DS), '_', $viewmodel));
+		$namespace = \Request::active() ? ucfirst(\Request::active()->module) : '';
+		$class = $namespace.'\\View_'.ucfirst(str_replace(array('/', DS), '_', $viewmodel));
 
 		if ( ! class_exists($class))
 		{
@@ -163,9 +164,9 @@ abstract class ViewModel
 	/**
 	 * Fetches an existing value from the template
 	 *
-	 * @return	mixed
+	 * @return  mixed
 	 */
-	public function __get($name)
+	public function & __get($name)
 	{
 		return $this->get($name);
 	}
@@ -173,9 +174,9 @@ abstract class ViewModel
 	/**
 	 * Gets a variable from the template
 	 *
-	 * @param	string
+	 * @param  string
 	 */
-	public function &get($key, $default = null)
+	public function & get($key, $default = null)
 	{
 		if (is_null($default) and func_num_args() === 1)
 		{

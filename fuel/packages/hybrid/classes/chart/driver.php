@@ -28,231 +28,243 @@ namespace Hybrid;
  * @abstract
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
- 
+
 abstract class Chart_Driver 
 {
-    /**
-     * Load config file
-     * 
-     * @static
-     * @access  public
-     */
-    public static function _init() 
-    {
-        \Config::load('chart', true);
-    }
+	/**
+	 * Load config file
+	 * 
+	 * @static
+	 * @access  public
+	 */
+	public static function _init() 
+	{
+		\Config::load('chart', true);
+	}
 
-    /**
-     * A shortcode to initiate this class as a new object
-     * 
-     * @static
-     * @access  public
-     * @return  static 
-     */
-    public static function forge() 
-    {
-        return new static();
-    }
+	/**
+	 * Shortcode to self::make().
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @return  self::make()
+	 */
+	public static function factory()
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
+		
+		return static::make();
+	}
 
-    /**
-     * Shortcode to self::forge().
-     *
-     * @deprecated  1.3.0
-     * @static
-     * @access  public
-     * @return  self::forge()
-     */
-    public static function factory()
-    {
-        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
-        
-        return static::forge();
-    }
+	/**
+	 * Shortcode to self::make().
+	 * 
+	 * @static
+	 * @access  public
+	 * @return  self::make() 
+	 */
+	public static function forge() 
+	{
+		return static::make();
+	}
 
-    protected $options = array();
-    protected $hAxis   = 'string';
-    protected $columns = '';
-    protected $rows    = '';
+	/**
+	 * A shortcode to initiate this class as a new object
+	 * 
+	 * @static
+	 * @access  public
+	 * @return  static 
+	 */
+	public static function make() 
+	{
+		return new static();
+	}
 
-    /**
-     * Clean-up private property on new object
-     * 
-     * @access  public
-     */
-    public function __construct() 
-    {
-        $this->clear();
-    }
+	protected $options = array();
+	protected $hAxis   = 'string';
+	protected $columns = '';
+	protected $rows    = '';
 
-    /**
-     * Run the clean-up
-     * 
-     * @access  public
-     * @return  bool
-     */
-    public function clear() 
-    {
-        $this->options = array();
-        $this->columns = '';
-        $this->rows    = '';
+	/**
+	 * Clean-up private property on new object
+	 * 
+	 * @access  public
+	 */
+	public function __construct() 
+	{
+		$this->clear();
+	}
 
-        return $this;
-    }
+	/**
+	 * Run the clean-up
+	 * 
+	 * @access  public
+	 * @return  bool
+	 */
+	public function clear() 
+	{
+		$this->options = array();
+		$this->columns = '';
+		$this->rows    = '';
 
-    /**
-     * Set columns information
-     * 
-     * @access  public
-     * @param   array   $data 
-     */
-    public function set_columns($data = array()) 
-    {
-        $this->columns = '';
-        
-        $count         = 0;
+		return $this;
+	}
 
-        if (count($data) > 0) 
-        {
-            foreach ($data as $key => $value) 
-            {
-                if ($count === 0) 
-                {
-                    $this->hAxis = $value;
-                }
-                
-                if (is_numeric($key))
-                {
-                    $key = 'string';
-                }
-                
-                $this->columns .= "data.addColumn('{$value}', '{$key}');\r\n";
-                $count++;
-            }
-        }
+	/**
+	 * Set columns information
+	 * 
+	 * @access  public
+	 * @param   array   $data 
+	 */
+	public function set_columns($data = array()) 
+	{
+		$this->columns = '';
+		
+		$count         = 0;
 
-        return $this;
-    }
+		if (count($data) > 0) 
+		{
+			foreach ($data as $key => $value) 
+			{
+				if ($count === 0) 
+				{
+					$this->hAxis = $value;
+				}
+				
+				if (is_numeric($key))
+				{
+					$key = 'string';
+				}
+				
+				$this->columns .= "data.addColumn('{$value}', '{$key}');\r\n";
+				$count++;
+			}
+		}
 
-    /**
-     * Set chart options
-     * 
-     * @access  public
-     * @param   mixed   $name
-     * @param   mixed   $value
-     * @return  bool
-     */
-    public function set_options($name, $value = '') 
-    {
-        if (is_array($name)) 
-        {
-            foreach ($name as $key => $value) 
-            {
-                $this->options[$key] = $value;
-            }
-        }
-        elseif (is_string($name) and ! empty($name)) 
-        {
-            $this->options[$name] = $value;
-        }
-        else
-        {
-            throw new \FuelException(__METHOD__.' require \$name to be set.');
-        }
+		return $this;
+	}
 
-        return $this;
-    }
+	/**
+	 * Set chart options
+	 * 
+	 * @access  public
+	 * @param   mixed   $name
+	 * @param   mixed   $value
+	 * @return  bool
+	 */
+	public function set_options($name, $value = '') 
+	{
+		if (is_array($name)) 
+		{
+			foreach ($name as $key => $value) 
+			{
+				$this->options[$key] = $value;
+			}
+		}
+		elseif (is_string($name) and ! empty($name)) 
+		{
+			$this->options[$name] = $value;
+		}
+		else
+		{
+			throw new \FuelException(__METHOD__.' require \$name to be set.');
+		}
 
-    /**
-     * Set rows information
-     * 
-     * @access  public
-     * @param   array   $data 
-     */
-    public function set_rows($data = array()) 
-    {
-        $this->rows = "";
-        $dataset = '';
+		return $this;
+	}
 
-        $x = 0;
-        $y = 0;
+	/**
+	 * Set rows information
+	 * 
+	 * @access  public
+	 * @param   array   $data 
+	 */
+	public function set_rows($data = array()) 
+	{
+		$this->rows = "";
+		$dataset = '';
 
-        if (count($data) > 0) 
-        {
-            foreach ($data as $key => $value) 
-            {
-                if ($this->hAxis == 'date') 
-                {
-                    $key = $this->parse_date($key);
-                } 
-                else 
-                {
-                    $key = sprintf("'%s'", $key);
-                }
+		$x = 0;
+		$y = 0;
 
-                $dataset .= "data.setValue({$x}, {$y}, ".$key.");\r\n";
+		if (count($data) > 0) 
+		{
+			foreach ($data as $key => $value) 
+			{
+				if ($this->hAxis == 'date') 
+				{
+					$key = $this->parse_date($key);
+				} 
+				else 
+				{
+					$key = sprintf("'%s'", $key);
+				}
 
-                foreach ($value as $k => $v) 
-                {
-                    $y++;
-                    $dataset .= "data.setValue({$x}, {$y}, {$v});\r\n";
-                }
-                $x++;
-                $y = 0;
-            }
-        }
-        
-        $this->rows .= "data.addRows(".$x.");\r\n{$dataset}";
+				$dataset .= "data.setValue({$x}, {$y}, ".$key.");\r\n";
 
-        return $this;
-    }
+				foreach ($value as $k => $v) 
+				{
+					$y++;
+					$dataset .= "data.setValue({$x}, {$y}, {$v});\r\n";
+				}
+				$x++;
+				$y = 0;
+			}
+		}
+		
+		$this->rows .= "data.addRows(".$x.");\r\n{$dataset}";
 
-    /**
-     * Parse PHP Date Object into JavaScript new Date() format
-     * 
-     * @access  protected
-     * @param   date    $date
-     * @return  string 
-     */
-    protected function parse_date($date) 
-    {
-        $key = strtotime($date);
-        return 'new Date('.date('Y', $key).', '.(date('m', $key) - 1).', '.date('d', $key).')';
-    }
+		return $this;
+	}
 
-    /**
-     * Render self
-     *
-     * @abstract
-     * @access  public
-     */
-    public function __toString()
-    {
-        return $this->render();
-    }
+	/**
+	 * Parse PHP Date Object into JavaScript new Date() format
+	 * 
+	 * @access  protected
+	 * @param   date    $date
+	 * @return  string 
+	 */
+	protected function parse_date($date) 
+	{
+		$key = strtotime($date);
+		return 'new Date('.date('Y', $key).', '.(date('m', $key) - 1).', '.date('d', $key).')';
+	}
 
-    /**
-     * Render the chart
-     * 
-     * @abstract
-     * @access  public
-     * @param   int     $width
-     * @param   int     $height
-     */
-    public abstract function render($width, $height);
+	/**
+	 * Render self
+	 *
+	 * @abstract
+	 * @access  public
+	 */
+	public function __toString()
+	{
+		return $this->render();
+	}
 
-    /**
-     * Generate the chart
-     * 
-     * @deprecated
-     * @access  public
-     * @param   int     $width
-     * @param   int     $height
-     */
-    public function generate()
-    {
-        \Log::warning('This method is deprecated. Please use a render() instead.', __METHOD__);
+	/**
+	 * Render the chart
+	 * 
+	 * @abstract
+	 * @access  public
+	 * @param   int     $width
+	 * @param   int     $height
+	 */
+	public abstract function render($width, $height);
 
-        return $this->render();
-    }
-    
+	/**
+	 * Generate the chart
+	 * 
+	 * @deprecated
+	 * @access  public
+	 * @param   int     $width
+	 * @param   int     $height
+	 */
+	public function generate()
+	{
+		\Log::warning('This method is deprecated. Please use a render() instead.', __METHOD__);
+
+		return $this->render();
+	}
+	
 }

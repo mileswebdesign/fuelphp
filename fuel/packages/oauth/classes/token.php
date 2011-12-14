@@ -17,15 +17,15 @@ abstract class Token {
 	/**
 	 * Create a new token object.
 	 *
-	 *     $token = Token::factory($name);
+	 *     $token = Token::forge($name);
 	 *
 	 * @param   string  token type
 	 * @param   array   token options
 	 * @return  Token
 	 */
-	public static function factory($name, array $options = NULL)
+	public static function forge($name, array $options = NULL)
 	{
-		$class = 'OAuth\\Token_'.\Inflector::classify($name);
+		$class = '\\OAuth\\Token_'.\Inflector::classify($name);
 
 		return new $class($options);
 	}
@@ -38,7 +38,7 @@ abstract class Token {
 	/**
 	 * @var  string  token key
 	 */
-	protected $token;
+	protected $access_token;
 
 	/**
 	 * @var  string  token secret
@@ -58,19 +58,17 @@ abstract class Token {
 	 */
 	public function __construct(array $options = NULL)
 	{
-		if ( ! isset($options['token']))
+		if ( ! isset($options['access_token']))
 		{
-			throw new Exception('Required option not passed: :option',
-				array(':option' => 'token'));
+			throw new \FuelException('Required option not passed: access_token');
 		}
 
 		if ( ! isset($options['secret']))
 		{
-			throw new Exception('Required option not passed: :option',
-				array(':option' => 'secret'));
+			throw new \FuelException('Required option not passed: secret');
 		}
 
-		$this->token = $options['token'];
+		$this->access_token = $options['access_token'];
 
 		$this->secret = $options['secret'];
 		
@@ -91,6 +89,20 @@ abstract class Token {
 	{
 		return $this->$key;
 	}
+	
+	/**
+	 * Return a boolean if the property is set
+	 *
+	 *     // Get the token secret
+	 *     if ($token->secret) exit('YAY SECRET');
+	 *
+	 * @param   string  variable name
+	 * @return  bool
+	 */
+	public function __isset($key)
+	{
+		return isset($this->$key);
+	}
 
 	/**
 	 * Returns the token key.
@@ -99,7 +111,7 @@ abstract class Token {
 	 */
 	public function __toString()
 	{
-		return (string) $this->token;
+		return (string) $this->access_token;
 	}
 
 } // End Token

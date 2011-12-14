@@ -17,12 +17,12 @@ class Consumer {
 	/**
 	 * Create a new consumer object.
 	 *
-	 *     $consumer = OAuth_Consumer::factory($options);
+	 *     $consumer = Consumer::forge($options);
 	 *
 	 * @param   array  consumer options, key and secret are required
-	 * @return  OAuth_Consumer
+	 * @return  Consumer
 	 */
-	public static function factory(array $options = NULL)
+	public static function forge(array $options = NULL)
 	{
 		return new static($options);
 	}
@@ -108,4 +108,4 @@ class Consumer {
 		return $this;
 	}
 
-} // End OAuth_Consumer
+} // End Consumer

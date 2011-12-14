@@ -34,355 +34,373 @@ namespace Hybrid;
  */
 
 class Acl 
-{    
-    /**
-     * Cache ACL instance so we can reuse it on multiple request. 
-     * 
-     * @static
-     * @access  protected
-     * @var     array
-     */
-    protected static $instances = array();
+{
+	/**
+	 * Cache ACL instance so we can reuse it on multiple request. 
+	 * 
+	 * @static
+	 * @access  protected
+	 * @var     array
+	 */
+	protected static $instances = array();
 
-    /**
-     * List of types
-     * 
-     * @access      protected
-     * @staticvar   array
-     */
-    protected static $types = array('deny', 'view', 'create', 'edit', 'delete', 'all');
+	/**
+	 * List of types
+	 * 
+	 * @access      protected
+	 * @staticvar   array
+	 */
+	protected static $types = array('deny', 'view', 'create', 'edit', 'delete', 'all');
 
-    /**
-     * Only called once 
-     * 
-     * @static 
-     * @access  public
-     */
-    public static function _init() 
-    {
-        \Event::trigger('init_acl');
-    }
-    
-    /**
-     * Initiate a new Acl instance.
-     * 
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  object  Acl
-     */
-    public static function forge($name = null)
-    {
-        if (null === $name)
-        {
-            $name = 'default';
-        }
+	/**
+	 * Only called once 
+	 * 
+	 * @static 
+	 * @access  public
+	 */
+	public static function _init() 
+	{
+		\Event::trigger('init_acl');
+	}
 
-        if ( ! isset(static::$instances[$name]))
-        {
-            static::$instances[$name] = new static();
-        }
+	/**
+	 * Shortcode to self::make().
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  object  Acl
+	 * @see     self::make()
+	 */
+	public static function factory($name = null)
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
+		
+		return static::make($name);
+	}
+	
+	/**
+	 * Shortcode to self::make().
+	 * 
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make()
+	 */
+	public static function forge($name = null)
+	{
+		return static::make($name);
+	}
 
-        return static::$instances[$name];
-    }
+	/**
+	 * Get cached instance, or generate new if currently not available.
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  object  Acl
+	 * @see     self::make()
+	 */
+	public static function instance($name = null)
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
+		
+		return static::make($name);
+	}
 
-    /**
-     * Shortcode to self::forge().
-     *
-     * @deprecated  1.3.0
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  object  Acl
-     * @see     self::forge()
-     */
-    public static function factory($name = null)
-    {
-        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
-        
-        return static::forge($name);
-    }
+	/**
+	 * Initiate a new Acl instance.
+	 * 
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  Acl
+	 */
+	public static function make($name = null)
+	{
+		if (null === $name)
+		{
+			$name = 'default';
+		}
 
-    /**
-     * Get cached instance, or generate new if currently not available.
-     *
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  object  Acl
-     * @see     self::forge()
-     */
-    public static function instance($name = null)
-    {
-        return static::forge($name);
-    }
+		if ( ! isset(static::$instances[$name]))
+		{
+			static::$instances[$name] = new static();
+		}
 
-    /**
-     * Construct a new object.
-     *
-     * @access  protected
-     */
-    protected function __construct() {}
+		return static::$instances[$name];
+	}
 
-    /**
-     * List of roles
-     * 
-     * @access  protected
-     * @var     array
-     */
-    protected $roles = array('guest');
-     
-    /**
-     * List of resources
-     * 
-     * @access  protected
-     * @var     array
-     */
-    protected $resources = array();
-     
-    /**
-     * List of ACL map between roles, resources and types
-     * 
-     * @access  protected
-     * @var     array
-     */
-    protected $acl = array();
+	/**
+	 * Construct a new object.
+	 *
+	 * @access  protected
+	 */
+	protected function __construct() {}
 
-    /**
-     * Verify whether current user has sufficient roles to access the resources based 
-     * on available type of access.
-     *
-     * @access  public
-     * @param   mixed   $resource
-     * @param   string  $type       need to be any one of deny, view, create, edit, delete or all
-     * @return  bool
-     */
-    public function access($resource, $type = 'view') 
-    {
-        $types = static::$types;
+	/**
+	 * List of roles
+	 * 
+	 * @access  protected
+	 * @var     array
+	 */
+	protected $roles = array('guest');
+	 
+	/**
+	 * List of resources
+	 * 
+	 * @access  protected
+	 * @var     array
+	 */
+	protected $resources = array();
+	 
+	/**
+	 * List of ACL map between roles, resources and types
+	 * 
+	 * @access  protected
+	 * @var     array
+	 */
+	protected $acl = array();
 
-        if ( ! in_array($resource, $this->resources)) 
-        {
-            throw new \FuelException(__METHOD__.": Unable to verify unknown resource {$resource}.");
-        }
+	/**
+	 * Verify whether current user has sufficient roles to access the resources based 
+	 * on available type of access.
+	 *
+	 * @access  public
+	 * @param   mixed   $resource
+	 * @param   string  $type       need to be any one of deny, view, create, edit, delete or all
+	 * @return  bool
+	 */
+	public function access($resource, $type = 'view') 
+	{
+		$types = static::$types;
 
-        $user    = Auth::instance('user')->get();
-        
-        $type_id = array_search($type, $types);
-        $length  = count($types);
+		if ( ! in_array($resource, $this->resources)) 
+		{
+			throw new \FuelException(__METHOD__.": Unable to verify unknown resource {$resource}.");
+		}
 
-        if (empty($user->roles) and in_array('guest', $this->roles))
-        {
-            array_push($user->roles, 'guest');
-        }
+		$user    = Auth::make('user')->get();
+		
+		$type_id = array_search($type, $types);
+		$length  = count($types);
 
-        foreach ($user->roles as $role) 
-        {
-            if ( ! isset($this->acl[$role.'/'.$resource])) 
-            {
-                continue;
-            }
+		if (empty($user->roles) and in_array('guest', $this->roles))
+		{
+			array_push($user->roles, 'guest');
+		}
 
-            if ($this->acl[$role.'/'.$resource] == $type) 
-            {
-                return true;
-            }
+		foreach ($user->roles as $role) 
+		{
+			if ( ! isset($this->acl[$role.'/'.$resource])) 
+			{
+				continue;
+			}
 
-            for ($i = ($type_id + 1); $i < $length; $i++) 
-            {
-                if ($this->acl[$role.'/'.$resource] == $types[$i]) 
-                {
-                    return true;
-                }
-            }
-        }
+			if ($this->acl[$role.'/'.$resource] == $type) 
+			{
+				return true;
+			}
 
-        return false;
-    }
+			for ($i = ($type_id + 1); $i < $length; $i++) 
+			{
+				if ($this->acl[$role.'/'.$resource] == $types[$i]) 
+				{
+					return true;
+				}
+			}
+		}
 
-    /**
-     * Verify whether current user has sufficient roles to access the resources based 
-     * on available type of access.
-     *
-     * @access  public
-     * @param   mixed   $resource
-     * @param   string  $type       need to be any one of static::$type
-     * @return  bool
-     * @see     self::access()
-     */
-    public function access_status($resource, $type = 'view') 
-    {
+		return false;
+	}
 
-        switch ($this->access($resource, $type)) 
-        {
-            case true :
-                return 200;
-            break;
+	/**
+	 * Verify whether current user has sufficient roles to access the resources based 
+	 * on available type of access.
+	 *
+	 * @access  public
+	 * @param   mixed   $resource
+	 * @param   string  $type       need to be any one of static::$type
+	 * @return  bool
+	 * @see     self::access()
+	 */
+	public function access_status($resource, $type = 'view') 
+	{
 
-            case false :
-                return 401;
-            break;
-        }
-    }
+		switch ($this->access($resource, $type)) 
+		{
+			case true :
+				return 200;
+			break;
 
-    /**
-     * Check if user has any of provided roles, deprecated and will be removed in v1.3.0
-     * 
-     * @deprecated
-     * @static
-     * @access  public
-     * @param   mixed   $check_roles
-     * @return  bool 
-     */
-    public static function has_roles($check_roles) 
-    {
-       return Auth::has_roles($check_roles);
-    }
+			case false :
+				return 401;
+			break;
+		}
+	}
 
-    /**
-     * Add new user roles to the this instance
-     * 
-     * @access  public
-     * @param   mixed   $roles
-     * @return  bool
-     */
-    public function add_roles($roles = null) 
-    {
-        if (null === $roles) 
-        {
-            throw new \FuelException(__METHOD__.": Can't add NULL roles.");
-        }
+	/**
+	 * Check if user has any of provided roles, deprecated and will be removed in v1.3.0
+	 * 
+	 * @deprecated
+	 * @static
+	 * @access  public
+	 * @param   mixed   $check_roles
+	 * @return  bool 
+	 */
+	public static function has_roles($check_roles) 
+	{
+	   return Auth::has_roles($check_roles);
+	}
 
-        if (is_string($roles)) 
-        {
-            $roles = func_get_args();
-        }
-        
-        if (is_array($roles)) 
-        {
-            foreach ($roles as $role)
-            {
-                $role = trim(\Inflector::friendly_title($role, '-', true));
+	/**
+	 * Add new user roles to the this instance
+	 * 
+	 * @access  public
+	 * @param   mixed   $roles
+	 * @return  bool
+	 * @throws  \FuelException
+	 */
+	public function add_roles($roles = null) 
+	{
+		if (null === $roles) 
+		{
+			throw new \FuelException(__METHOD__.": Can't add NULL roles.");
+		}
 
-                if ( ! in_array($role, $this->roles))
-                {
-                    array_push($this->roles, $role);
-                }
-            }
+		if (is_string($roles)) 
+		{
+			$roles = func_get_args();
+		}
+		
+		if (is_array($roles)) 
+		{
+			foreach ($roles as $role)
+			{
+				$role = trim(\Inflector::friendly_title($role, '-', true));
 
-            return true;
-        }
+				if ( ! in_array($role, $this->roles))
+				{
+					array_push($this->roles, $role);
+				}
+			}
 
-        return false;
-    }
+			return true;
+		}
 
-    /**
-     * Add new resource to this instance
-     * 
-     * @access  public
-     * @param   mixed   $resources
-     * @return  bool
-     */
-    public function add_resources($resources = null) 
-    {
-        if (null === $resources) 
-        {
-            throw new \FuelException(__METHOD__.": Can't add NULL resources.");
-        }
+		return false;
+	}
+
+	/**
+	 * Add new resource to this instance
+	 * 
+	 * @access  public
+	 * @param   mixed   $resources
+	 * @return  bool
+	 * @throws  \FuelException
+	 */
+	public function add_resources($resources = null) 
+	{
+		if (null === $resources) 
+		{
+			throw new \FuelException(__METHOD__.": Can't add NULL resources.");
+		}
 
 
-        if ( ! is_array($resources)) 
-        {
-            $resources = func_get_args();
-        }
+		if ( ! is_array($resources)) 
+		{
+			$resources = func_get_args();
+		}
 
-        if (is_array($resources)) 
-        {
-            foreach ($resources as $resource)
-            {
-                $resource = trim(\Inflector::friendly_title($resource, '-', true));
-                
-                if ( ! in_array($resource, $this->resources))
-                {
-                    array_push($this->resources, $resource);
-                }
-            }
+		if (is_array($resources)) 
+		{
+			foreach ($resources as $resource)
+			{
+				$resource = trim(\Inflector::friendly_title($resource, '-', true));
+				
+				if ( ! in_array($resource, $this->resources))
+				{
+					array_push($this->resources, $resource);
+				}
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    /**
-     * Assign single or multiple $roles + $resources to have $type access
-     * 
-     * @access  public
-     * @param   mixed   $roles
-     * @param   mixed   $resources
-     * @param   string  $type
-     * @return  bool
-     * @throws  \FuelException
-     */
-    public function allow($roles, $resources, $type = 'view') 
-    {
-        if ( ! in_array($type, static::$types)) 
-        {
-            throw new \FuelException(__METHOD__.": Type {$type} does not exist.");
-        }
+	/**
+	 * Assign single or multiple $roles + $resources to have $type access
+	 * 
+	 * @access  public
+	 * @param   mixed   $roles
+	 * @param   mixed   $resources
+	 * @param   string  $type
+	 * @return  bool
+	 * @throws  \FuelException
+	 */
+	public function allow($roles, $resources, $type = 'view') 
+	{
+		if ( ! in_array($type, static::$types)) 
+		{
+			throw new \FuelException(__METHOD__.": Type {$type} does not exist.");
+		}
 
-        if ( ! is_array($roles)) 
-        {
-            $roles = array($roles);
-        }
+		if ( ! is_array($roles)) 
+		{
+			$roles = array($roles);
+		}
 
-        if ( ! is_array($resources)) 
-        {
-            $resources = array($resources);
-        }
+		if ( ! is_array($resources)) 
+		{
+			$resources = array($resources);
+		}
 
-        foreach ($roles as $role) 
-        {
-            $role = \Inflector::friendly_title($role, '-', true);
+		foreach ($roles as $role) 
+		{
+			$role = \Inflector::friendly_title($role, '-', true);
 
-            if ( ! in_array($role, $this->roles)) 
-            {
-                throw new \FuelException(__METHOD__.": Role {$role} does not exist.");
+			if ( ! in_array($role, $this->roles)) 
+			{
+				throw new \FuelException(__METHOD__.": Role {$role} does not exist.");
 
-                continue;
-            }
+				continue;
+			}
 
-            foreach ($resources as $resource) 
-            {
-                $resource = \Inflector::friendly_title($resource, '-', true);
+			foreach ($resources as $resource) 
+			{
+				$resource = \Inflector::friendly_title($resource, '-', true);
 
-                if ( ! in_array($resource, $this->resources)) 
-                {
-                    throw new \FuelException(__METHOD__.": Resource {$resource} does not exist.");
+				if ( ! in_array($resource, $this->resources)) 
+				{
+					throw new \FuelException(__METHOD__.": Resource {$resource} does not exist.");
 
-                    continue;
-                }
+					continue;
+				}
 
-                $id = $role.'/'.$resource;
+				$id = $role.'/'.$resource;
 
-                $this->acl[$id] = $type;
-            }
-        }
+				$this->acl[$id] = $type;
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * Shorthand function to deny access for single or multiple $roles and $resouces
-     * 
-     * @access  public
-     * @param   mixed   $roles
-     * @param   mixed   $resources
-     * @return  bool
-     */
-    public function deny($roles, $resources) 
-    {
-        return $this->allow($roles, $resources, 'deny');
-    }
+	/**
+	 * Shorthand function to deny access for single or multiple $roles and $resouces
+	 * 
+	 * @access  public
+	 * @param   mixed   $roles
+	 * @param   mixed   $resources
+	 * @return  bool
+	 */
+	public function deny($roles, $resources) 
+	{
+		return $this->allow($roles, $resources, 'deny');
+	}
 
 }

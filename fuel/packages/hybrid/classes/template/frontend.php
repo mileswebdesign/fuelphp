@@ -28,149 +28,165 @@ namespace Hybrid;
 
 class Template_Frontend extends Template_Driver 
 {
-    /**
-     * Initiate a new template using forge
-     *
-     * Example:
-     * <code>$template = \Hybrid\Template_Frontend::forge();</code>
-     *
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  void
-     */
-    public static function forge($name = null)
-    {
-        $driver = 'frontend';
-        $name   = strtolower($name);
+	/**
+	 * Shortcode to self::make().
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make()
+	 */
+	public static function factory($name = null)
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
+		
+		return static::make($name);
+	}
 
-        if ( ! empty($name))
-        {
-            $driver .= ".{$name}";
-        }
+	/**
+	 * Initiate a new template using forge
+	 *
+	 * Example:
+	 * <code>$template = \Hybrid\Template_Frontend::forge();</code>
+	 *
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make()
+	 */
+	public static function forge($name = null)
+	{
+		return static::make($name);
+	}
 
-        return Template::forge($driver);
-    }
+	/**
+	 * Initiate a new template using make
+	 *
+	 * Example:
+	 * <code>$template = \Hybrid\Template_Frontend::make();</code>
+	 *
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  Template_Frontend
+	 */
+	public static function make($name = null)
+	{
+		$driver = 'frontend';
+		$name   = strtolower($name);
 
-    /**
-     * Shortcode to self::forge().
-     *
-     * @deprecated  1.3.0
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  self::forge()
-     */
-    public static function factory($name = null)
-    {
-        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
-        
-        return static::forge($name);
-    }
+		if ( ! empty($name))
+		{
+			$driver .= ".{$name}";
+		}
 
-    /**
-     * Initiate a new template object
-     *
-     * @access  public
-     * @param   string  $theme
-     * @param   string  $filename
-     * @return  void
-     */
-    public function __construct($theme = null, $filename = null)
-    {
-        $this->set_theme($theme);
+		return Template::make($driver);
+	}
 
-        if ( ! empty($filename) and '_default_' !== $filename)
-        {
-            $this->set_filename($filename);
-        }
-        else 
-        {
-            $this->set_filename(static::$config['default_filename']);
-        }
+	/**
+	 * Initiate a new template object
+	 *
+	 * @access  public
+	 * @param   string  $theme
+	 * @param   string  $filename
+	 * @return  void
+	 */
+	public function __construct($theme = null, $filename = null)
+	{
+		$this->set_theme($theme);
 
-        $this->view = View::forge();
-    }
+		if ( ! empty($filename) and '_default_' !== $filename)
+		{
+			$this->set_filename($filename);
+		}
+		else 
+		{
+			$this->set_filename(static::$config['default_filename']);
+		}
 
-    /**
-     * Set theme location
-     *
-     * @access  public
-     * @return  self
-     * @throws  \FuelException
-     */
-    public function set_theme($theme = null)
-    {
-        $available_folders = array_keys(static::$config['frontend']);
+		$this->view = View::forge();
+	}
 
-        if (empty($available_folders))
-        {
-            throw new \FuelException(__METHOD__.": configuration is not completed");
-        }
+	/**
+	 * Set theme location
+	 *
+	 * @access  public
+	 * @return  self
+	 * @throws  \FuelException
+	 */
+	public function set_theme($theme = null)
+	{
+		$available_folders = array_keys(static::$config['frontend']);
 
-        if (null === $theme or '_default_' === $theme)
-        {
-            $theme = 'default';
-        }
+		if (empty($available_folders))
+		{
+			throw new \FuelException(__METHOD__.": configuration is not completed");
+		}
 
-        if (in_array(trim(strval($theme)), $available_folders))
-        {
-            $this->set_folder(static::$config['frontend'][$theme]);
-        }
-        else
-        {
-            throw new \FuelException(__METHOD__.": Requested {$theme} folder is not available.");
-        }
+		if (null === $theme or '_default_' === $theme)
+		{
+			$theme = 'default';
+		}
 
-        return $this;
-    }
+		if (in_array(trim(strval($theme)), $available_folders))
+		{
+			$this->set_folder(static::$config['frontend'][$theme]);
+		}
+		else
+		{
+			throw new \FuelException(__METHOD__.": Requested {$theme} folder is not available.");
+		}
 
-    /**
-     * Load partial view
-     *
-     * @access  public
-     * @param   string  $filename
-     * @param   array   $data
-     * @return  string
-     */
-    public function partial($filename, $data = null)
-    {
-        $this->load_assets();
-        
-        $view = View::forge();
-        $view->set_path($this->folder);
-        $view->set_filename($filename);
-        $view->auto_filter(static::$config['auto_filter']);
+		return $this;
+	}
 
-        if (is_array($data) and count($data) > 0)
-        {
-            $view->set($data);
-        }
+	/**
+	 * Load partial view
+	 *
+	 * @access  public
+	 * @param   string  $filename
+	 * @param   array   $data
+	 * @return  string
+	 */
+	public function partial($filename, $data = null)
+	{
+		$this->load_assets();
+		
+		$view = View::forge();
+		$view->set_path($this->folder);
+		$view->set_filename($filename);
+		$view->auto_filter(static::$config['auto_filter']);
 
-        $view->set('TEMPLATE_FOLDER', $this->folder, false);
-        $view->set('template', $this, false);
-        
-        return $view->render();
-    }
+		if (is_array($data) and count($data) > 0)
+		{
+			$view->set($data);
+		}
 
-    /**
-     * Render self::view
-     *
-     * @access  public
-     * @return  string
-     */
-    public function render()
-    {
-        $this->load_assets();
+		$view->set('TEMPLATE_FOLDER', $this->folder, false);
+		$view->set('template', $this, false);
+		
+		return $view->render();
+	}
 
-        $this->view->set_path($this->folder);
-        $this->view->set_filename($this->filename);
-        $this->view->auto_filter(static::$config['auto_filter']);
+	/**
+	 * Render self::view
+	 *
+	 * @access  public
+	 * @return  string
+	 */
+	public function render()
+	{
+		$this->load_assets();
 
-        $this->view->set('TEMPLATE_FOLDER', $this->folder, false);
-        $this->view->set('template', $this, false);
+		$this->view->set_path($this->folder);
+		$this->view->set_filename($this->filename);
+		$this->view->auto_filter(static::$config['auto_filter']);
 
-        return $this->view->render();
-    }
+		$this->view->set('TEMPLATE_FOLDER', $this->folder, false);
+		$this->view->set('template', $this, false);
+
+		return $this->view->render();
+	}
 
 }

@@ -27,37 +27,50 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
+/**
+ * Template class tests
+ *
+ * @group Hybrid
+ * @group Template
+ */
 class Test_Template extends \Fuel\Core\TestCase 
 {
-    /**
-     * Setup the test
-     */
-    public function setup()
-    {
-        \Package::load('hybrid');
-    }
+	/**
+	 * Setup the test
+	 */
+	public function setup()
+	{
+		\Package::load('hybrid');
+	}
 
-    /**
-     * Test Template::forge();
-     *
-     * @test
-     */
-    public function test_forge()
-    {
-        $output = Template::forge('normal');
-        
-        $this->assertTrue($output instanceof \Hybrid\Template_Normal); 
-    }
+	/**
+	 * Test Template::forge();
+	 *
+	 * @test
+	 */
+	public function test_forge()
+	{
+		try
+		{
+			$output = Template::make('normal');
+		}
+		catch (\FuelException $e)
+		{
+			$this->markTestSkipped("config/hybrid.php is not configured or Template_Normal not in used");
+		}
+		
+		$this->assertTrue($output instanceof \Hybrid\Template_Normal); 
+	}
 
-    /**
-     * Test Template::forge() given invalid driver
-     *
-     * @test
-     * @expectedException \FuelException
-     */
-    public function test_forge_expected_exception_given_invalid_driver()
-    {
-        Template::forge('helloworld');
-    }
+	/**
+	 * Test Template::forge() given invalid driver
+	 *
+	 * @test
+	 * @expectedException \FuelException
+	 */
+	public function test_forge_expected_exception_given_invalid_driver()
+	{
+		Template::make('helloworld');
+	}
 
 }

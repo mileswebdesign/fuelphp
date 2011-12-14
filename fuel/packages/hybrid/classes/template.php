@@ -28,102 +28,114 @@ namespace Hybrid;
 
 class Template 
 {
-    /**
-     * Default template driver
-     *
-     * @var     constant
-     */
-    const DEFAULT_TEMPLATE = 'normal';
+	/**
+	 * Default template driver
+	 *
+	 * @var     constant
+	 */
+	const DEFAULT_TEMPLATE = 'normal';
 
-    /**
-     * Cache template instance so we can reuse it on multiple request eventhough 
-     * it's almost impossible to happen
-     * 
-     * @static
-     * @access  protected
-     * @var     array
-     */
-    protected static $instances = array();
+	/**
+	 * Cache template instance so we can reuse it on multiple request eventhough 
+	 * it's almost impossible to happen
+	 * 
+	 * @static
+	 * @access  protected
+	 * @var     array
+	 */
+	protected static $instances = array();
 
-    /**
-     * Only load the configuration once
-     *
-     * @static
-     * @access  public
-     */
-    public static function _init()
-    {
-        \Config::load('hybrid', 'hybrid');
-    }
+	/**
+	 * Only load the configuration once
+	 *
+	 * @static
+	 * @access  public
+	 */
+	public static function _init()
+	{
+		\Config::load('hybrid', 'hybrid');
+	}
 
-    /**
-     * Initiate a new Template instance
-     * 
-     * @static
-     * @access  public
-     * @return  Template_Abstract
-     */
-    public static function forge($name = null)
-    {
-        if (null === $name)
-        {
-            $name = \Config::get('hybrid.template.default', self::DEFAULT_TEMPLATE);   
-        }
+	/**
+	 * Shortcode to self::make().
+	 *
+	 * @deprecated  1.2.0
+	 * @static
+	 * @access  public
+	 * @param   string  $name
+	 * @return  self::make()
+	 */
+	public static function factory($name = null)
+	{
+		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
+		
+		return static::make($name);
+	}
 
-        $name       = strtolower($name);
+	/**
+	 * Shortcut to self::make().
+	 * 
+	 * @static
+	 * @access  public
+	 * @return  self::make()
+	 */
+	public static function forge($name = null)
+	{
+		return static::make($name);
+	}
 
-        $folder     = null;
-        $filename   = null;
-        $type       = explode('.', strval($name));
+	/**
+	 * Initiate a new Template instance
+	 * 
+	 * @static
+	 * @access  public
+	 * @return  Template_Driver
+	 */
+	public static function make($name = null)
+	{
+		if (null === $name)
+		{
+			$name = \Config::get('hybrid.template.default', self::DEFAULT_TEMPLATE);   
+		}
+
+		$name     = strtolower($name);
+		
+		$folder   = null;
+		$filename = null;
+		$type     = explode('.', strval($name));
 
 
-        if (count($type) > 1) 
-        {
-            // set filename if available
-            if (isset($type[2]))
-            {
-                $filename = $type[2];
-            }
+		if (count($type) > 1) 
+		{
+			// set filename if available
+			if (isset($type[2]))
+			{
+				$filename = $type[2];
+			}
 
-            // folder should be available if type count > 1
-            $folder = $type[1];
-        }
-        
-        $type   = $type[0];
-        $name   = $type.'.'.$folder;
+			// folder should be available if type count > 1
+			$folder = $type[1];
+		}
+		
+		$type = $type[0];
+		$name = $type.'.'.$folder;
 
-        if ( ! isset(static::$instances[$name]))
-        {
-            $driver = '\\Hybrid\\Template_'.ucfirst($type);
-         
-            if (class_exists($driver)) 
-            {
-                // load a new template if class exist
-                static::$instances[$name] = new $driver($folder, $filename);
-            }
-            else 
-            {
-                throw new \Fuel_Exception("Requested {$driver} does not exist.");
-            }
-        }
-        
-        return static::$instances[$name];
-    }
-
-    /**
-     * Shortcode to self::forge().
-     *
-     * @deprecated  1.3.0
-     * @static
-     * @access  public
-     * @param   string  $name
-     * @return  self::forge()
-     */
-    public static function factory($name = null)
-    {
-        \Log::warning('This method is deprecated. Please use a forge() instead.', __METHOD__);
-        
-        return static::forge($name);
-    }
+		if ( ! isset(static::$instances[$name]))
+		{
+			$driver = "\Hybrid\Template_".ucfirst($type);
+		 
+			if (class_exists($driver)) 
+			{
+				// load a new template if class exist
+				static::$instances[$name] = new $driver($folder, $filename);
+			}
+			else 
+			{
+				throw new \FuelException("Requested {$driver} does not exist.");
+			}
+		}
+		
+		return static::$instances[$name];
+	}
 
 }

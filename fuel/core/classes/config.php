@@ -52,8 +52,16 @@ class Config
 		elseif (is_string($file))
 		{
 			$info = pathinfo($file);
-			$type = isset($info['extension']) ? $info['extension'] : 'php';
-			$file = $info['filename'];
+			$type = 'php';
+			if (isset($info['extension']))
+			{
+				$type = $info['extension'];
+				// Keep extension when it's an absolute path, because the finder won't add it
+				if ($file[0] !== '/' and $file[1] !== ':')
+				{
+					$file = substr($file, 0, -(strlen($type) + 1));
+				}
+			}
 			$class = '\\Config_'.ucfirst($type);
 
 			if (class_exists($class))

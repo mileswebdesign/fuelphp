@@ -27,34 +27,40 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Test_Parser_Markdown extends \Fuel\Core\TestCase {
-    
-    /**
-     * Setup the test
-     */
-    public function setup()
-    {
-        \Package::load('hybrid');
-    }
+/**
+ * Parser_Bbcode class tests
+ *
+ * @group Hybrid
+ * @group Parser_Bbcode
+ */
+class Test_Parser_Markdown extends \Fuel\Core\TestCase 
+{
+	/**
+	 * Setup the test
+	 */
+	public function setup()
+	{
+		\Package::load('hybrid');
+	}
 
-    /**
-     * Test Parser_Markdown::parse()
-     *
-     * @test
-     */
-    public function test_parse()
-    {
-        $text = "Hello world
+	/**
+	 * Test Parser_Markdown::parse()
+	 *
+	 * @test
+	 */
+	public function test_parse()
+	{
+		$text = "Hello world
 
 * Thank you";
-        $output   = Parser::forge('markdown')->parse($text);
-        $expected = "<p>Hello world</p>
+		$output   = Parser::forge('markdown')->parse($text);
+		$expected = "<p>Hello world</p>
 
 <ul>
 <li>Thank you</li>
 </ul>
 ";
-        $this->assertEquals($expected, $output);
-    }
-    
+		$this->assertEquals($expected, $output);
+	}
+	
 }

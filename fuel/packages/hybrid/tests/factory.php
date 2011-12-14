@@ -27,40 +27,46 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
+/**
+ * Factory class tests
+ *
+ * @group Hybrid
+ * @group Factory
+ */
 class Test_Factory extends \Fuel\Core\TestCase 
-{    
-    /**
-     * Setup the test
-     */
-    public function setup() 
-    {
-        \Package::load('hybrid');
-    }
+{
+	/**
+	 * Setup the test
+	 */
+	public function setup() 
+	{
+		\Package::load('hybrid');
+	}
 
-    /**
-     * Test Factory::get_language();
-     *
-     * @test
-     */
-    public function test_language() 
-    {
-        $expected = \Config::get('language');
-        $output   = Factory::get_language();
-        
-        $this->assertEquals($expected, $output);
-    }
-    
-    /**
-     * Test Factory::get_identity();
-     *
-     * @test
-     */
-    public function test_identity() 
-    {
-        $expected = \Config::get('app.identity');
-        $output = \Hybrid\Factory::get_identity();
-        
-        $this->assertEquals($expected, $output);
-    }
+	/**
+	 * Test Factory::get_language();
+	 *
+	 * @test
+	 */
+	public function test_language() 
+	{
+		$expected = \Config::get('language');
+		$output   = Factory::get_language();
+		
+		$this->assertEquals($expected, $output);
+	}
+	
+	/**
+	 * Test Factory::get_identity();
+	 *
+	 * @test
+	 */
+	public function test_identity() 
+	{
+		$expected = \Config::get('app.identity');
+		$output   = Factory::get_identity();
+		
+		$this->assertEquals($expected, $output);
+	}
 
 }

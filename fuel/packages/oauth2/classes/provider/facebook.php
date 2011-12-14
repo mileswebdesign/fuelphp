@@ -8,7 +8,7 @@ class Provider_Facebook extends Provider {
 
 	public $uid_key = 'uid';
 	
-	public $scope = 'email,read_stream';
+	public $scope = array('email', 'read_stream');
 
 	public function url_authorize()
 	{
@@ -20,29 +20,25 @@ class Provider_Facebook extends Provider {
 		return 'https://graph.facebook.com/oauth/access_token';
 	}
 
-	public function get_user_info($token)
+	public function get_user_info(Token $token)
 	{
 		$url = 'https://graph.facebook.com/me?'.http_build_query(array(
-			'access_token' => $token,
+			'access_token' => $token->access_token,
 		));
 
 		$user = json_decode(file_get_contents($url));
 
 		// Create a response from the request
 		return array(
+			'uid' => $user->id,
 			'nickname' => $user->username,
 			'name' => $user->name,
 			'email' => $user->email,
 			'location' => $user->hometown->name,
 			'description' => $user->bio,
-			'image' => 'http://graph.facebook.com/'.$user->id.'/picture?type=normal',
+			'image' => 'https://graph.facebook.com/me/picture?type=normal&access_token='.$token->access_token,
 			'urls' => array(
 			  'Facebook' => $user->link,
-			),
-			'credentials' => array(
-				'uid' => $user->id,
-				'provider' => $this->name,
-				'token' => $token,
 			),
 		);
 	}

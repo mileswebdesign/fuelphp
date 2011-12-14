@@ -27,30 +27,46 @@ namespace Hybrid;
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Test_Auth extends \Fuel\Core\TestCase {
+/**
+ * Auth class tests
+ *
+ * @group Hybrid
+ * @group Auth
+ */
+class Test_Auth extends \Fuel\Core\TestCase 
+{
 
-    /**
-     * Setup the test
-     */
-    public function setup()
-    {
-        \Package::load('hybrid');
-        \Config::load('autho', 'autho');
-        \Config::set('autho.salt', '12345');
-    }
+	/**
+	 * Setup the test
+	 */
+	public function setup()
+	{
+		\Package::load('hybrid');
 
-    /**
-     * Test Auth::add_salt();
-     *
-     * @test
-     */
-    public function test_add_salt()
-    {
-        $string   = 'helloworld123';
-        $expected = sha1('12345'.$string);
-        $output   = Auth::add_salt($string);
+		\Config::load('autho', 'autho');
 
-        $this->assertEquals($expected, $output);
-    }
-    
+		\Config::set('autho.hash_type', 'sha1');
+		\Config::set('autho.salt', '12345');
+	}
+
+	/**
+	 * Test Auth::create_hash();
+	 *
+	 * @test
+	 */
+	public function test_create_hash()
+	{
+		$string   = 'helloworld123';
+		$expected = sha1('12345'.$string);
+		$output   = Auth::create_hash($string);
+
+		$this->assertEquals($expected, $output);
+
+		$string   = 'helloworld123';
+		$expected = md5('12345'.$string);
+		$output   = Auth::create_hash($string, 'md5');
+
+		$this->assertEquals($expected, $output);
+	}
+	
 }

@@ -17,7 +17,7 @@ class Request {
 	/**
 	 * Create a new request object.
 	 *
-	 *     $request = Request::factory('token', 'GET', 'http://example.com/oauth/request_token');
+	 *     $request = Request::forge('token', 'GET', 'http://example.com/oauth/request_token');
 	 *
 	 * @param   string  request type
 	 * @param   string  request URL
@@ -25,9 +25,9 @@ class Request {
 	 * @param   array   request parameters
 	 * @return  Request
 	 */
-	public static function factory($type, $method, $url = NULL, array $params = NULL)
+	public static function forge($type, $method, $url = NULL, array $params = NULL)
 	{
-		$class = 'OAuth\\Request_'.\Inflector::classify($type);
+		$class = '\\OAuth\\Request_'.\Inflector::classify($type);
 
 		return new $class($method, $url, $params);
 	}
