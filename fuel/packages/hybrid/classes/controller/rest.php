@@ -77,9 +77,8 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 	 */
 	public function before() 
 	{
-		$this->language   = Factory::get_language();
-		$this->user       = Auth::make('user')->get();
-		\Fuel::$profiling = false;
+		$this->language = Factory::get_language();
+		$this->user     = Auth::make('user')->get();
 
 		\Event::trigger('controller_before');
 		
