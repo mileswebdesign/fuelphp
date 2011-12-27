@@ -7,9 +7,12 @@ Note that this Cell ONLY provides the authorization mechanism. You will need to 
 ## Currently Supported
 
 - Facebook
+- Foursquare
 - GitHub
 - Google
+- Instagram
 - Unmagnify
+- Windows Live
 - YouTube
 
 ## TODO
