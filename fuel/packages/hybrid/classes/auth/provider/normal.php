@@ -116,7 +116,7 @@ class Auth_Provider_Normal
 	 * @return  object  Auth_Provider_Normal
 	 * @throws  \FuelException
 	 */
-	public static function __callStatic($method, $arguments)
+	public static function __callStatic($method, array $arguments)
 	{
 		if ( ! in_array($method, array('factory', 'forge', 'instance', 'make')))
 		{
@@ -168,7 +168,7 @@ class Auth_Provider_Normal
 			$config['optionals'] = $config['optional_fields'];
 		}
 		
-		$this->optionals = array_merge($config['optionals'], $this->optional_fields);
+		$this->optionals = array_merge($config['optionals'], $this->optionals);
 
 		foreach ($this->optionals as $field)
 		{
