@@ -26,7 +26,6 @@ Autoloader::add_classes(array (
 	'Hybrid\\Pagination' => __DIR__.'/classes/pagination.php',
 	'Hybrid\\Request'    => __DIR__.'/classes/request.php',
 	'Hybrid\\Restserver' => __DIR__.'/classes/restserver.php',
-	'Hybrid\\Tabs'       => __DIR__.'/classes/tabs.php',
 	'Hybrid\\Uri'        => __DIR__.'/classes/uri.php',
 	'Hybrid\\View'       => __DIR__.'/classes/view.php',
 	
@@ -84,5 +83,10 @@ Autoloader::add_classes(array (
 	'Hybrid\\Template_Driver'   => __DIR__.'/classes/template/driver.php',
 	'Hybrid\\Template_Normal'   => __DIR__.'/classes/template/normal.php',
 	'Hybrid\\Template_Frontend' => __DIR__.'/classes/template/frontend.php',
+
+	'Hybrid\\Widget'            => __DIR__.'/classes/widget.php',
+	'Hybrid\\Widget_Breadcrumb' => __DIR__.'/classes/widget/breadcrumb.php',
+	'Hybrid\\Widget_Driver'     => __DIR__.'/classes/widget/driver.php',
+	'Hybrid\\Widget_Tab'        => __DIR__.'/classes/widget/tab.php',
 ));
 /* End of file bootstrap.php */
