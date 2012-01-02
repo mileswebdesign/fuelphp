@@ -79,8 +79,13 @@ class Registry
 
 		list($instance_name, $config) = $arguments;
 		
-		$instance_name = $instance_name ?: '.default';
+		$instance_name = $instance_name ?: 'runtime.default';
 		$instance_name = strtolower($instance_name);
+
+		if (false === strpos($instance_name, '.'))
+		{
+			$instance_name = $instance_name.'.default';
+		}
 
 		list($storage, $name) = explode('.', $instance_name, 2);
 
@@ -90,6 +95,7 @@ class Registry
 			case 'db' :
 				$storage = 'database';
 			break;
+			case 'runtime' :
 			default :
 				$storage = 'runtime';
 			break;
