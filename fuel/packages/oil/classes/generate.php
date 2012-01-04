@@ -144,13 +144,20 @@ CONF;
 		$filepath = APPPATH.'classes'.DS.'controller'.DS.$filename.'.php';
 
 		// Uppercase each part of the class name and remove hyphens
-		$class_name = \Inflector::classify($name);
+		$class_name = \Inflector::classify($name, false);
 
 		// Stick "blog" to the start of the array
 		array_unshift($args, $filename);
 
 		// Create views folder and each view file
-		static::views($args, 'crud', false);
+		if (\Cli::option('crud'))
+		{
+			static::views($args, 'scaffolding'.DS.'crud'.DS.'views', false);
+		}
+		else
+		{
+			static::views($args, 'scaffolding'.DS.'orm'.DS.'views', false);
+		}
 
 		$actions or $actions = array('index');
 
