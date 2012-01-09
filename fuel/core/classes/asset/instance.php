@@ -110,7 +110,7 @@ class Asset_Instance
 	 *
 	 * @param   string  the path to add
 	 * @param   string  optional path type (js, css or img)
-	 * @return  void
+	 * @return  object  current instance
 	 */
 	public function add_path($path, $type = null)
 	{
@@ -137,7 +137,7 @@ class Asset_Instance
 	 *
 	 * @param   string  the path to remove
 	 * @param   string  optional path type (js, css or img)
-	 * @return  void
+	 * @return  object  current instance
 	 */
 	public function remove_path($path, $type = null)
 	{
@@ -161,6 +161,8 @@ class Asset_Instance
 				unset($this->_asset_paths[$type][$key]);
 			}
 		}
+
+		return $this;
 	}
 
 	/**
@@ -193,8 +195,13 @@ class Asset_Instance
 			$filename = $item['file'];
 			$attr = $item['attr'];
 
-			if ( ! preg_match('|^(\w+:)?//|', $filename) and ($file = $this->find_file($filename, $type)))
+			if ( ! preg_match('|^(\w+:)?//|', $filename))
 			{
+				if ( ! ($file = $this->find_file($filename, $type)))
+				{
+					throw new \FuelException('Could not find asset: '.$filename);
+				}
+				
 				$raw or $file = $this->_asset_url.$file.($this->_add_mtime ? '?'.filemtime($file) : '');
 			}
 			else
@@ -205,22 +212,25 @@ class Asset_Instance
 			switch($type)
 			{
 				case 'css':
+					$attr['type'] = 'text/css';
 					if ($raw)
 					{
-						return '<style type="text/css">'.PHP_EOL.file_get_contents($file).PHP_EOL.'</style>';
+						return html_tag('style', $attr, PHP_EOL.file_get_contents($file).PHP_EOL).PHP_EOL;
 					}
-					$attr['rel'] = 'stylesheet';
-					$attr['type'] = 'text/css';
+					if ( ! isset($attr['rel']) or empty($attr['rel']))
+					{
+						$attr['rel'] = 'stylesheet';
+					}
 					$attr['href'] = $file;
 
 					$css .= $this->_indent.html_tag('link', $attr).PHP_EOL;
 				break;
 				case 'js':
+					$attr['type'] = 'text/javascript';
 					if ($raw)
 					{
-						return html_tag('script', array('type' => 'text/javascript'), PHP_EOL.file_get_contents($file).PHP_EOL).PHP_EOL;
+						return html_tag('script', $attr, PHP_EOL.file_get_contents($file).PHP_EOL).PHP_EOL;
 					}
-					$attr['type'] = 'text/javascript';
 					$attr['src'] = $file;
 
 					$js .= $this->_indent.html_tag('script', $attr, '').PHP_EOL;
@@ -247,10 +257,10 @@ class Asset_Instance
 	 * Either adds the stylesheet to the group, or returns the CSS tag.
 	 *
 	 * @access	public
-	 * @param	mixed	The file name, or an array files.
-	 * @param	array	An array of extra attributes
-	 * @param	string	The asset group name
-	 * @return	string
+	 * @param	mixed	       The file name, or an array files.
+	 * @param	array	       An array of extra attributes
+	 * @param	string	       The asset group name
+	 * @return	string|object  Rendered asset or current instance when adding to group
 	 */
 	public function css($stylesheets = array(), $attr = array(), $group = null, $raw = false)
 	{
@@ -273,7 +283,7 @@ class Asset_Instance
 			return $this->render($group, $raw);
 		}
 
-		return '';
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -284,10 +294,10 @@ class Asset_Instance
 	 * Either adds the javascript to the group, or returns the script tag.
 	 *
 	 * @access	public
-	 * @param	mixed	The file name, or an array files.
-	 * @param	array	An array of extra attributes
-	 * @param	string	The asset group name
-	 * @return	string
+	 * @param	mixed	       The file name, or an array files.
+	 * @param	array	       An array of extra attributes
+	 * @param	string	       The asset group name
+	 * @return	string|object  Rendered asset or current instance when adding to group
 	 */
 	public function js($scripts = array(), $attr = array(), $group = null, $raw = false)
 	{
@@ -310,7 +320,7 @@ class Asset_Instance
 			return $this->render($group, $raw);
 		}
 
-		return '';
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -321,10 +331,10 @@ class Asset_Instance
 	 * Either adds the image to the group, or returns the image tag.
 	 *
 	 * @access	public
-	 * @param	mixed	The file name, or an array files.
-	 * @param	array	An array of extra attributes
-	 * @param	string	The asset group name
-	 * @return	string
+	 * @param	mixed	       The file name, or an array files.
+	 * @param	array	       An array of extra attributes
+	 * @param	string	       The asset group name
+	 * @return	string|object  Rendered asset or current instance when adding to group
 	 */
 	public function img($images = array(), $attr = array(), $group = null)
 	{
@@ -347,7 +357,7 @@ class Asset_Instance
 			return $this->render($group);
 		}
 
-		return '';
+		return $this;
 	}
 
 	// --------------------------------------------------------------------
@@ -375,6 +385,28 @@ class Asset_Instance
 
 				return $file;
 			}
+		}
+
+		return false;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Get File
+	 *
+	 * Locates a file in all the asset paths, and return it relative to the docroot
+	 *
+	 * @access	public
+	 * @param	string	The filename to locate
+	 * @param	string	The sub-folder to look in (optional)
+	 * @return	mixed	Either the path to the file or false if not found
+	 */
+	public function get_file($file, $type, $folder = '')
+	{
+		if ($file = $this->find_file($file, $type, $folder))
+		{
+			return $this->_asset_url.$file;
 		}
 
 		return false;
