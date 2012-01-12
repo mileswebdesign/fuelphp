@@ -419,7 +419,10 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess {
 
 			if ($validated)
 			{
-				$vars = $this->validation()->validated() + $vars;
+				$validated = array_filter($this->validation()->validated(), function($val){
+					return ($val !== null);
+				});
+				$vars = $validated + $vars;
 			}
 			else
 			{
@@ -428,6 +431,18 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess {
 		}
 
 		$vars = $this->prep_values($vars);
+		
+		if(isset(static::$_updated_at))
+		{
+			if(isset(static::$_mysql_timestamp) and static::$_mysql_timestamp === true)
+			{
+				$vars[static::$_updated_at] = \Date::forge()->format('mysql');
+			}
+			else
+			{
+				$vars[static::$_updated_at] = \Date::forge()->get_timestamp();
+			}
+		}
 
 		if ($this->is_new())
 		{
@@ -462,18 +477,6 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess {
 			}
 
 			return $this->post_save($result);
-		}
-
-		if(isset(static::$_updated_at))
-		{
-			if(isset(static::$_mysql_timestamp) and static::$_mysql_timestamp === true)
-			{
-				$vars[static::$_updated_at] = \Date::forge()->format('mysql');
-			}
-			else
-			{
-				$vars[static::$_updated_at] = \Date::forge()->get_timestamp();
-			}
 		}
 
 		$query = \DB::update(static::$_table_name)
