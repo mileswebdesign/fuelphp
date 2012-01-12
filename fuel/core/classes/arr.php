@@ -321,13 +321,13 @@ class Arr
 		$return = array();
 		foreach ($keys as $key)
 		{
-			if (isset($array[$key]) and  ! $remove)
+			if (isset($array[$key]))
 			{
-				$return[$key] = $array[$key];
-			}
-			elseif (isset($array[$key]) and $remove)
-			{
-				unset($array[$key]);
+				$remove or $return[$key] = $array[$key];
+				if($remove)
+				{
+					unset($array[$key]);
+				}
 			}
 		}
 		return $remove ? $array : $return;
