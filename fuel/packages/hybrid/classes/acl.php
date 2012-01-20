@@ -13,7 +13,6 @@
 
 namespace Hybrid;
 
-
 /**
  * Hybrid 
  * 
@@ -26,7 +25,6 @@ namespace Hybrid;
  * Why another class? FuelPHP does have it's own Auth package but what Hybrid does 
  * it not defining how you structure your database but instead try to be as generic 
  * as possible so that we can support the most basic structure available
- * 
  * 
  * @package     Fuel
  * @subpackage  Hybrid
@@ -65,70 +63,33 @@ class Acl
 	}
 
 	/**
-	 * Shortcode to self::make().
-	 *
-	 * @deprecated  1.2.0
-	 * @static
-	 * @access  public
-	 * @param   string  $name
-	 * @return  object  Acl
-	 * @see     self::make()
-	 */
-	public static function factory($name = null)
-	{
-		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
-		
-		return static::make($name);
-	}
-	
-	/**
-	 * Shortcode to self::make().
-	 * 
-	 * @static
-	 * @access  public
-	 * @param   string  $name
-	 * @return  self::make()
-	 */
-	public static function forge($name = null)
-	{
-		return static::make($name);
-	}
-
-	/**
-	 * Get cached instance, or generate new if currently not available.
-	 *
-	 * @deprecated  1.2.0
-	 * @static
-	 * @access  public
-	 * @param   string  $name
-	 * @return  object  Acl
-	 * @see     self::make()
-	 */
-	public static function instance($name = null)
-	{
-		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
-		
-		return static::make($name);
-	}
-
-	/**
 	 * Initiate a new Acl instance.
 	 * 
 	 * @static
 	 * @access  public
 	 * @param   string  $name
 	 * @return  Acl
+	 * @throws  \FuelException
 	 */
-	public static function make($name = null)
+	public static function __callStatic($method, array $arguments)
 	{
-		if (null === $name)
+		if ( ! in_array($method, array('factory', 'forge', 'instance', 'make')))
 		{
-			$name = 'default';
+			throw new \FuelException(__CLASS__.'::'.$method.'() does not exist.');
 		}
+		
+		foreach (array(null, null) as $key => $default)
+		{
+			isset($arguments[$key]) or $arguments[$key] = $default;
+		}
+
+		list($name, $registry) = $arguments;
+
+		$name = $name ?: 'default';
 
 		if ( ! isset(static::$instances[$name]))
 		{
-			static::$instances[$name] = new static();
+			static::$instances[$name] = new static($name, $registry);
 		}
 
 		return static::$instances[$name];
@@ -139,7 +100,30 @@ class Acl
 	 *
 	 * @access  protected
 	 */
-	protected function __construct() {}
+	protected function __construct($name = null, $registry = null) 
+	{
+		$this->name = $name;
+
+		if ($registry instanceof Registry_Database)
+		{
+			$this->registry = $registry;
+
+			foreach ($this->registry->get("acl_".$this->name, array()) as $role => $resources)
+			{
+				$this->add_roles($role);
+
+				foreach ($resources as $name => $type)
+				{
+					$this->add_resources($name);
+
+					$this->allow($role, $name, $type);
+				}
+			}
+		}
+	}
+
+	protected $name = null;
+	protected $registry = null;
 
 	/**
 	 * List of roles
@@ -520,6 +504,16 @@ class Acl
 				$id = $role.'/'.$resource;
 
 				$this->acl[$id] = $type;
+
+				if ($this->registry instanceof Registry_Database)
+				{
+					$value = \Arr::merge(
+						$this->registry->get("acl_".$this->name, array()), 
+						array("{$role}" => array("{$resource}" => $type))
+					);
+					
+					$this->registry->set("acl_".$this->name, $value);
+				}
 			}
 		}
 

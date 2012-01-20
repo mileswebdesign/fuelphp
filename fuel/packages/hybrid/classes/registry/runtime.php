@@ -4,7 +4,7 @@
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
- * @version    1.0
+ * @version    1.1
  * @author     Fuel Development Team
  * @license    MIT License
  * @copyright  2010 - 2011 Fuel Development Team
@@ -19,21 +19,25 @@ namespace Hybrid;
  * A set of class that extends the functionality of FuelPHP without 
  * affecting the standard workflow when the application doesn't actually 
  * utilize Hybrid feature.
- *
- * Authentication Class
  * 
- * Why another class? FuelPHP does have it's own Auth package but what Hybrid does 
- * it not defining how you structure your database but instead try to be as generic 
- * as possible so that we can support the most basic structure available
- * 
+ * Registry Class
  * 
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Auth_Attempts
+ * @category    Registry_Runtime
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Auth_Attempts
+class Registry_Runtime extends Registry_Driver
 {
+	/**
+	 * @access  protected
+	 * @var     string  storage configuration, currently only support runtime.
+	 */
+	protected $storage = 'runtime';
 
+	public function initiate() {}
+
+	public function shutdown() {}
+	
 }

@@ -90,50 +90,6 @@ class Auth
 	}
 
 	/**
-	 * Shortcode to self::make().
-	 *
-	 * @deprecated  1.2.0
-	 * @static
-	 * @access  public
-	 * @param   string  $name
-	 * @return  self::make()
-	 */
-	public static function factory($name = null)
-	{
-		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
-		
-		return static::make($name);
-	}
-
-	/**
-	 * Shortcode to self::make().
-	 * 
-	 * @static
-	 * @access  public
-	 * @param   string  $name       null to fetch the default driver, or a driver id to get a specific one
-	 * @return  self::make()
-	 */
-	public static function forge($name = null)
-	{
-		return static::make($name);
-	}
-
-	/**
-	 * Get cached instance, or generate new if currently not available.
-	 *
-	 * @deprecated  1.2.0
-	 * @static
-	 * @access  public
-	 * @return  self::make()
-	 */
-	public static function instance($name = null)
-	{
-		\Log::warning('This method is deprecated. Please use a make() instead.', __METHOD__);
-		
-		return static::make($name);
-	}
-
-	/**
 	 * Initiate a new Auth_Driver instance.
 	 * 
 	 * @static
@@ -142,13 +98,15 @@ class Auth
 	 * @return  Auth_Driver
 	 * @throws  \FuelException
 	 */
-	public static function make($name = null)
+	public static function __callStatic($method, array $arguments)
 	{
-		if (null === $name)
+		if ( ! in_array($method, array('factory', 'forge', 'instance', 'make')))
 		{
-			$name = 'user';
+			throw new \FuelException(__CLASS__.'::'.$method.'() does not exist.');
 		}
 
+		$name = empty($arguments) ? null : $arguments[0];
+		$name = $name ?: 'user';
 		$name = strtolower($name);
 
 		if ( ! isset(static::$instances[$name]))
@@ -285,9 +243,14 @@ class Auth
 	 * @return  bool
 	 * @throws  \FuelException
 	 */
-	public static function login($username, $password, $driver = 'user')
+	public static function login($username, $password, $remember_me = false, $driver = 'user')
 	{
-		return static::make($driver)->login($username, $password);
+		if ( ! is_bool($remember_me))
+		{
+			$driver      = $remember_me;
+			$remember_me = false;
+		}
+		return static::make($driver)->login($username, $password, $remember_me);
 	}
 
 	/**
@@ -371,7 +334,7 @@ class Auth
 			throw new AuthException("Missing required information: access_token");	
 		}
 
-		$auth = Auth_Model_Authentication::find(array(
+		$auth = Auth_Model_Social::find(array(
 			'where' => array(
 				array('user_id', '=', $user_id),
 				array('provider', '=', $provider)
@@ -400,7 +363,7 @@ class Auth
 				'provider' => $provider,
 			) + $values;
 
-			$auth = Auth_Model_Authentication::forge($values);
+			$auth = Auth_Model_Social::forge($values);
 		}
 
 		$auth->save();

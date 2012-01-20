@@ -4,7 +4,7 @@
  * Fuel is a fast, lightweight, community driven PHP5 framework.
  *
  * @package    Fuel
- * @version    1.0
+ * @version    1.1
  * @author     Fuel Development Team
  * @license    MIT License
  * @copyright  2010 - 2011 Fuel Development Team
@@ -22,15 +22,14 @@ namespace Hybrid;
  * 
  * @package     Fuel
  * @subpackage  Hybrid
- * @category    Parser
+ * @category    Widget
  * @author      Mior Muhammad Zaki <crynobone@gmail.com>
  */
 
-class Parser 
+class Widget 
 {
 	/**
-	 * Cache text instance so we can reuse it on multiple request eventhough 
-	 * it's almost impossible to happen
+	 * Cache Tab instance so we can reuse it on multiple request.
 	 * 
 	 * @static
 	 * @access  protected
@@ -39,11 +38,24 @@ class Parser
 	protected static $instances = array();
 
 	/**
-	 * Initiate a new Parser instance
+	 * Load the configuration before anything else.
+	 *
+	 * @static
+	 * @access  public
+	 */
+	public static function _init()
+	{
+		\Config::load('hybrid', 'hybrid');
+	}
+
+	/**
+	 * Initiate a new Tab instance.
 	 * 
 	 * @static
 	 * @access  public
-	 * @return  object
+	 * @param   string  $name
+	 * @param   array   $config
+	 * @return  Tab
 	 * @throws  \FuelException
 	 */
 	public static function __callStatic($method, array $arguments)
@@ -53,18 +65,30 @@ class Parser
 			throw new \FuelException(__CLASS__.'::'.$method.'() does not exist.');
 		}
 
-		$name = empty($arguments) ? null : $arguments[0];
-		$name = $name ?: '';
-		$name = strtolower($name);
-
-		if ( ! isset(static::$instances[$name]))
+		foreach (array(null, array()) as $key => $default)
 		{
-			$driver = "\Hybrid\Parser_".ucfirst($name);
+			isset($arguments[$key]) or $arguments[$key] = $default;
+		}
+
+		list($instance_name, $config) = $arguments;
 		
-			// instance has yet to be initiated
+		$instance_name = $instance_name ?: 'default';
+		$instance_name = strtolower($instance_name);
+
+		if (false === strpos($instance_name, '.'))
+		{
+			$instance_name = $instance_name.'.default';
+		}
+		
+		list($type, $name) = explode('.', $instance_name, 2);
+
+		if ( ! isset(static::$instances[$instance_name]))
+		{
+			$driver = "\Hybrid\Widget_".ucfirst($type);
+
 			if (class_exists($driver))
 			{
-				static::$instances[$name] = new $driver();
+				static::$instances[$instance_name] = new $driver($name, $config);
 			}
 			else
 			{
@@ -72,7 +96,6 @@ class Parser
 			}
 		}
 
-		return static::$instances[$name];
+		return static::$instances[$instance_name];
 	}
-
 }

@@ -39,22 +39,19 @@ class Registry
 	 */
 	protected static $instances = array();
 
-	protected static function _init()
-	{
-		\Config::load('hybrid', 'hybrid');
-	}
+	protected static $initiated = false;
 
-	/**
-	 * Shortcode to self::make().
-	 * 
-	 * @static
-	 * @access  public
-	 * @param   string  $name       instance name
-	 * @return  self::make()
-	 */
-	public static function forge($name = null)
+	public static function _init()
 	{
-		return static::make($name);	
+		if (true === static::$initiated)
+		{
+			return ;
+		}
+
+		\Config::load('hybrid', 'hybrid');
+		\Event::register('shutdown', "\Hybrid\Registry::shutdown");
+
+		static::$initiated = true;
 	}
 
 	/**
@@ -64,81 +61,72 @@ class Registry
 	 * @access  public
 	 * @param   string  $name       instance name
 	 * @return  object
+	 * @throws  \FuelException
 	 */
-	public static function make($name = null)
+	public static function __callStatic($method, array $arguments)
 	{
-		if (null === $name)
+		if ( ! in_array($method, array('factory', 'forge', 'instance', 'make')))
 		{
-			$name = 'default';
+			throw new \FuelException(__CLASS__.'::'.$method.'() does not exist.');
 		}
 
-		if ( ! isset(static::$instances[$name]))
+		foreach (array(null, array()) as $key => $default)
 		{
-			static::$instances[$name] = new static();
+			isset($arguments[$key]) or $arguments[$key] = $default;
 		}
 
-		return static::$instances[$name];
+		list($name, $config) = $arguments;
+
+		list($instance_name, $config) = $arguments;
+		
+		$instance_name = $instance_name ?: 'runtime.default';
+		$instance_name = strtolower($instance_name);
+
+		if (false === strpos($instance_name, '.'))
+		{
+			$instance_name = $instance_name.'.default';
+		}
+
+		list($storage, $name) = explode('.', $instance_name, 2);
+
+		switch ($storage)
+		{
+			case 'database' :
+			case 'db' :
+				$storage = 'database';
+			break;
+			case 'runtime' :
+			default :
+				$storage = 'runtime';
+			break;
+		}
+
+		$instance_name = $storage.'.'.$name;
+		
+		if ( ! isset(static::$instances[$instance_name]))
+		{
+			$driver = "\Hybrid\Registry_".ucfirst($storage);
+
+			// instance has yet to be initiated
+			if (class_exists($driver))
+			{
+				static::$instances[$instance_name] = new $driver($name, $config);
+			}
+			else
+			{
+				throw new \FuelException("Requested {$driver} does not exist.");
+			}
+		}
+
+		return static::$instances[$instance_name];
 	}
 
-	/**
-	 * @access  protected
-	 * @var     array   collection of key-value pair of either configuration or data
-	 */
-	protected $data = array();
-
-	/**
-	 * @access  protected
-	 * @var     string  storage configuration, currently only support runtime.
-	 */
-	protected $storage = 'runtime';
-
-	/**
-	 * Construct an instance.
-	 *
-	 * @access  protected
-	 * @param   string  $storage    set storage configuration (default to 'runtime').
-	 */
-	protected function __construct($storage = 'runtime') 
+	public static function shutdown()
 	{
-		$this->storage = $storage;
-	}
-
-	/**
-	 * Get value of a key
-	 *
-	 * @access  public
-	 * @param   string  $key        A string of key to search.
-	 * @param   mixed   $default    Default value if key doesn't exist.
-	 * @return  mixed
-	 */
-	public function get($key, $default = null)
-	{
-		return \Arr::get($this->data, $key, $default);
-	}
-
-	/**
-	 * Set a value from a key
-	 *
-	 * @access  public
-	 * @param   string  $key        A string of key to add the value.
-	 * @param   mixed   $value      The value.
-	 * @return  void
-	 */
-	public function set($key, $value = '')
-	{
-		\Arr::set($this->data, $key, $value);
-	}
-
-	/**
-	 * Delete value of a key
-	 *
-	 * @access  public
-	 * @param   string  $key        A string of key to delete.
-	 * @return  bool
-	 */
-	public function delete($key)
-	{
-		return \Arr::delete($this->data, $key);
+		foreach (static::$instances as $name => $class)
+		{
+			$class->shutdown();
+		}
 	}
 
 }
