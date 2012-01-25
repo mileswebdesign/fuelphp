@@ -4,12 +4,13 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="./../assets/css/combined.css">
+	<link rel="shortcut icon" href="./../favicon.ico" />
 	<script src="http://www.google.com/jsapi" type="text/javascript"></script>
 	<script type="text/javascript">
 		var path = './../';
 	</script>
 	<script src="./../assets/js/combined.js"></script>
-	<title>HMCV Requests - General - FuelPHP Documentation</title>
+	<title>HMVC Requests - General - FuelPHP Documentation</title>
 </head>
 <body>
 	<div id="container">
@@ -114,7 +115,7 @@ catch (HttpNotFoundException $e)
 			<h3>Traversing Request instances</h3>
 
 			<p>If you want to access other Requests, you can traverse them using two methods:
-				<kbd>$request->parent()</kbd> and <kbd>$request->children</kbd>. The parent is the Request during
+				<kbd>$request->parent()</kbd> and <kbd>$request->children()</kbd>. The parent is the Request during
 				which the current Request was created (<kbd>null</kbd> for the main Request). The children are all the Requests
 				created during the current Request.</p>
 
